@@ -13,7 +13,7 @@ end points
 */
 
 server.get("/healthcheck", (req, res) => {
-	res.send({ message: "auth server 1 is running" });
+	res.send({ message: "smart latch server is running" });
 });
 
 server.get("/", (req, res, next) => {
