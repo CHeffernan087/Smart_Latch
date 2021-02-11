@@ -54,7 +54,7 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
             break;
         case WStype_TEXT:
             DEBUG_SERIAL.printf("[WSc] RESPONSE: %s\n", payload);
-            DEBUG_SERIAL.printf("Response Recieved - Toggling Servo ...");
+            DEBUG_SERIAL.printf("Response Recieved - Toggling Servo ...\n");
             if(ServoToggle){
               servo1.write(ZERO_DEGREES);
             }
@@ -127,7 +127,7 @@ void loop() {
     // if connected, button is pushed, and message interval is reached we send message to server
     // try press and release button in under 500ms, otherwise it will start to spam the server
     if (connected && digitalRead(pushButton) && lastUpdate+messageInterval<millis()){
-        DEBUG_SERIAL.println("-> Button Pressed - Sending Message ...");
+        DEBUG_SERIAL.println("\n-> Button Pressed - Sending Message ...");
         DEBUG_SERIAL.println("[WSc] SENT: Simple js client message!!");
         webSocket.sendTXT("Simple js client message!!");
         DEBUG_SERIAL.println("-> Message Sent - Waiting for Response ...");
