@@ -1,15 +1,22 @@
 package com.example.smart_latch_app;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.ContextWrapper;
 import android.os.Bundle;
+import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.textclassifier.TextLinks;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ComponentActivity;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 
 import java.io.IOException;
 
@@ -22,7 +29,8 @@ import okhttp3.Response;
 public class FirstFragment extends Fragment {
 
     private TextView mTextViewResult;
-    EditText mEdit;
+    private TextView mTextViewUrl;
+    public static String responseString = "";
 
     @Override
     public View onCreateView(
@@ -36,24 +44,23 @@ public class FirstFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        mTextViewResult = view.findViewById(R.id.textview2);
-        mEdit = view.findViewById(R.id.textInput);
+        mTextViewResult = view.findViewById(R.id.textview_result);
+        mTextViewUrl = view.findViewById(R.id.textview_url);
 
         OkHttpClient client = new OkHttpClient();
-        String testUrl = "https://www.sci.utah.edu/~macleod/docs/txt2html/sample.txt";
 
-        // onClick handler for button 1
+        String herokuHostUrl = "https://smart-latch.herokuapp.com";
+
+        // === OPEN ===
         view.findViewById(R.id.button1).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String hostName = mEdit.getText().toString();
-                String url = "https://" + hostName + "/toggleLatch?state=1";
-                System.out.println("> Clicked OPEN");
+                String url = herokuHostUrl + "/toggleLatch?state=1";
 
                 Request request = new Request.Builder().url(url).build();
-                String builtUrl = "The URL built is: " + url;
+                String builtUrl = "The endpoint URL is: " + url;
                 System.out.println(builtUrl);
-                mTextViewResult.setText(builtUrl);
+                mTextViewUrl.setText(builtUrl);
 
                 client.newCall(request).enqueue(new Callback() {
                     @Override
@@ -64,23 +71,30 @@ public class FirstFragment extends Fragment {
 
                     @Override
                     public void onResponse(Call call, Response response) throws IOException {
-                        System.out.println("> Success, response:");
-                        System.out.println(response.body().string());
+                        responseString = response.body().string();
+                        System.out.println("> Response received: " + responseString);
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mTextViewResult.setText("Response: " + responseString);
+                            }
+                        });
+
                     }
                 });
+
             }
         });
 
-        // onClick handler for button 2
+        // === CLOSE ===
         view.findViewById(R.id.button2).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String hostName = mEdit.getText().toString();
-                String url = "https://" + hostName + "/toggleLatch?state=0";
-                System.out.println("Clicked CLOSE");
-                String builtUrl = "The URL built is: " + url;
+                String url = herokuHostUrl + "/toggleLatch?state=0";
+
+                String builtUrl = "The endpoint URL is: " + url;
                 System.out.println(builtUrl);
-                mTextViewResult.setText(builtUrl);
+                mTextViewUrl.setText(builtUrl);
 
                 Request request2 = new Request.Builder().url(url).build();
 
@@ -93,9 +107,18 @@ public class FirstFragment extends Fragment {
 
                     @Override
                     public void onResponse(Call call, Response response) throws IOException {
-                        System.out.println("> Success");
+                        responseString = response.body().string();
+                        System.out.println("> Response received: " + responseString);
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mTextViewResult.setText("Response: " + responseString);
+                            }
+                        });
                     }
                 });
+
+
             }
         });
     }
