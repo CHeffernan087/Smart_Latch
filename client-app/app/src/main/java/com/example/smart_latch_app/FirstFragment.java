@@ -1,23 +1,12 @@
 package com.example.smart_latch_app;
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.ContextWrapper;
 import android.os.Bundle;
-import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.TextView;
-
-import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ComponentActivity;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
-
 import java.io.IOException;
 
 import okhttp3.Call;
@@ -49,13 +38,13 @@ public class FirstFragment extends Fragment {
 
         OkHttpClient client = new OkHttpClient();
 
-        String herokuHostUrl = "https://smart-latch.herokuapp.com";
+        String hostUrl = getString(R.string.smart_latch_url);
 
         // === OPEN ===
         view.findViewById(R.id.button1).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String url = herokuHostUrl + "/toggleLatch?state=1";
+                String url = hostUrl + "/toggleLatch?state=1";
 
                 Request request = new Request.Builder().url(url).build();
                 String builtUrl = "The endpoint URL is: " + url;
@@ -90,7 +79,7 @@ public class FirstFragment extends Fragment {
         view.findViewById(R.id.button2).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String url = herokuHostUrl + "/toggleLatch?state=0";
+                String url = hostUrl + "/toggleLatch?state=0";
 
                 String builtUrl = "The endpoint URL is: " + url;
                 System.out.println(builtUrl);
