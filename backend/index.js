@@ -23,6 +23,9 @@ app.get("/", (req, res, next) => {
 
 app.get("/toggleLatch", (req, res) => {
 	const desiredState = req.query && req.query.state;
+	webSocketServer.clients.forEach((client) => {
+		client.send("[SERVER MESSAGE]: Open the door!");
+	});
 	res.send({ Authorization: "ok", newDoorState: desiredState });
 });
 
@@ -35,10 +38,11 @@ const webSocketServer = new WebSocket.Server({
 });
 
 webSocketServer.on("connection", (webSocket) => {
+	console.log("board trying to connect...");
 	webSocket.on("message", (data) => {
 		webSocketServer.clients.forEach((client) => {
-			if (client !== webSocket && client.readyState === WebSocket.OPEN) {
-				client.send(data);
+			if (client === webSocket && client.readyState === WebSocket.OPEN) {
+				client.send("[SERVER MESSAGE]: You are connected to the server :)");
 			}
 		});
 	});
