@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Smart Latch App</string>
+    <string name="action_settings">Settings</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="open">Open</string>
+    <string name="close">Close</string>
+    <string name="settings_placeholer">Nothing here yet...</string>
+    <string name="smart_latch_url">https://smart-latch.herokuapp.com</string>
+</resources>
