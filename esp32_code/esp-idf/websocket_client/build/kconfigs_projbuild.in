@@ -1,6 +1,0 @@
-source "/home/cmcnally/esp/esp-idf/components/app_update/Kconfig.projbuild"
-source "/home/cmcnally/esp/esp-idf/components/bootloader/Kconfig.projbuild"
-source "/home/cmcnally/esp/esp-idf/components/esptool_py/Kconfig.projbuild"
-source "/home/cmcnally/esp/esp-idf/components/partition_table/Kconfig.projbuild"
-source "/home/cmcnally/Repos/Smart_Latch/esp32_code/esp-idf/websocket_client/main/Kconfig.projbuild"
-source "/home/cmcnally/esp/esp-idf/examples/common_components/protocol_examples_common/Kconfig.projbuild"

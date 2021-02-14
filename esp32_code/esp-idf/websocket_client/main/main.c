@@ -38,11 +38,12 @@
 #define INPUT_PIN_SEL   (1ULL<<BTN_IN)                                  // input gpio mask
 
 // Tags
-static const char *W_TAG    = "WEBSOCKET";          // tag for websocket logs
-static const char *L_TAG    = "SMART-LATCH";        // tag for latch logs
+static const char *W_TAG    = "WEBSOCKET";         // tag for websocket logs
+static const char *L_TAG    = "SMART-LATCH";       // tag for latch logs
 
 // Network
-static const char *MESSAGE_SEND  = "ToggleLatch";   // client request message
+static const char *MESSAGE_SEND = "ToggleLatch";   // client request message
+static const char *TOGGLE_LATCH  = "ToggleLatch";   // response message to toggle the latch
 
 // Timing
 unsigned long lastUpdate        = 0;    // stores time(ms) at last latch update
@@ -67,6 +68,27 @@ static void open_latch(){
     gpio_set_level(RED_LED_OUT, 0);     // turn off red LED
     gpio_set_level(GREEN_LED_OUT, 1);   // turn on green LED
     latchState = 0;                     // toggle latch state
+}
+
+// process response message
+static void process_message(char *message, int message_len){
+    ESP_LOGI(L_TAG, "Processing Response Message ...\n");
+
+    // if payload data is larger than 0 bytes
+    if(message_len){
+
+        // if message requests the latch to toggle
+        if(strcmp(message, TOGGLE_LATCH)){
+            // if latch state is 1
+            if(latchState){
+                open_latch();   // open the latch
+            }
+            else{
+                close_latch();  // close the latch
+            }
+        }
+    }
+
 }
 
 // websocket event handler callback function
@@ -94,16 +116,8 @@ static void websocket_event_handler(void *handler_args, esp_event_base_t base, i
             ESP_LOGI(W_TAG, "Received opcode=%d", data->op_code);
             ESP_LOGW(W_TAG, "Received=%.*s", data->data_len, (char *)data->data_ptr);
             ESP_LOGW(W_TAG, "Total payload length=%d, data_len=%d, current payload offset=%d\r\n", data->payload_len, data->data_len, data->payload_offset);
-            // if payload data is greater than 0 bytes
-            if(data->data_len){
-                // if latch state is 1
-                if(latchState){
-                    open_latch();   // open the latch
-                }
-                else{
-                    close_latch();  // close the latch
-                }
-            }
+            // process and act on incoming message
+            process_message(data->data_ptr, data->data_len);
             break;
 
         // error event
