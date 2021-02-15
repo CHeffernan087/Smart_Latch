@@ -7,6 +7,10 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 
 import okhttp3.Call;
@@ -18,8 +22,11 @@ import okhttp3.Response;
 public class FirstFragment extends Fragment {
 
     private TextView mTextViewResult;
-    private TextView mTextViewUrl;
-    public static String responseString = "";
+
+    String responseString = "";
+    private String[] doorStates = {"Locked", "Open"};
+    JSONObject jObj = null;
+    Integer state = 0;
 
     @Override
     public View onCreateView(
@@ -47,22 +54,30 @@ public class FirstFragment extends Fragment {
 
                 Request request = new Request.Builder().url(url).build();
 
-
                 client.newCall(request).enqueue(new Callback() {
                     @Override
                     public void onFailure(Call call, IOException e) {
-                        System.out.println("> Error");
                         e.printStackTrace();
                     }
 
                     @Override
                     public void onResponse(Call call, Response response) throws IOException {
                         responseString = response.body().string();
-                        System.out.println("> Response received: " + responseString);
+
+                        try {
+                            jObj = new JSONObject(responseString);
+                            state = jObj.getInt("newDoorState");
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        System.out.println("THE DOOR STATE IS!: " + doorStates[state]);
+
+                        String currentStatus = getString(R.string.current_door_status_hint);
+
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                mTextViewResult.setText("Response: " + responseString);
+                                mTextViewResult.setText(currentStatus + " " + doorStates[state]);
                             }
                         });
 
@@ -76,30 +91,32 @@ public class FirstFragment extends Fragment {
         view.findViewById(R.id.button2).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                System.out.println("BUTTON CLICKED" + view.getId());
                 String url = hostUrl + "/toggleLatch?state=0";
-
-                String builtUrl = "The endpoint URL is: " + url;
-                System.out.println(builtUrl);
-                mTextViewUrl.setText(builtUrl);
 
                 Request request2 = new Request.Builder().url(url).build();
 
                 client.newCall(request2).enqueue(new Callback() {
                     @Override
                     public void onFailure(Call call, IOException e) {
-                        System.out.println("> Error");
                         e.printStackTrace();
                     }
 
                     @Override
                     public void onResponse(Call call, Response response) throws IOException {
                         responseString = response.body().string();
-                        System.out.println("> Response received: " + responseString);
+                        try {
+                            jObj = new JSONObject(responseString);
+                            state = jObj.getInt("newDoorState");
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        System.out.println("THE DOOR STATE IS!: " + doorStates[state]);
+
+                        String currentStatus = getString(R.string.current_door_status_hint);
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                mTextViewResult.setText("Response: " + responseString);
+                                mTextViewResult.setText(currentStatus + " " + doorStates[state]);
                             }
                         });
                     }
