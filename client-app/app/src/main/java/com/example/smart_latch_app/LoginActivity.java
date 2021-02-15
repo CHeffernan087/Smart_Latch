@@ -3,7 +3,6 @@ package com.example.smart_latch_app;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -15,7 +14,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
-import com.google.android.gms.common.api.GoogleApi;
 import com.google.android.gms.common.api.GoogleApiClient;
 
 
@@ -58,8 +56,7 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
 
             if (result.isSuccess()) {
                 // GET(/POST) /user/register (if unregistered, register them in the DB - if they are already there, grand!)
-                // GET /user/permissions (check what door permissions they have)
-
+                // GET /user/permissions?user={user-id} (check what door permissions they have)
                 startActivity(new Intent(LoginActivity.this, MainActivity.class));
                 finish();
             } else {

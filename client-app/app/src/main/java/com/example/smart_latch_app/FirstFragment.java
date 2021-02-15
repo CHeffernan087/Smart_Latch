@@ -12,7 +12,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -24,7 +23,7 @@ public class FirstFragment extends Fragment {
     private TextView mTextViewResult;
 
     String responseString = "";
-    private String[] doorStates = {"Locked", "Open"};
+
     JSONObject jObj = null;
     Integer state = 0;
 
@@ -39,12 +38,10 @@ public class FirstFragment extends Fragment {
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
-        mTextViewResult = view.findViewById(R.id.textview_result);
-
         OkHttpClient client = new OkHttpClient();
-
         String hostUrl = getString(R.string.smart_latch_url);
+        String[] doorStates = {getString(R.string.door_state_locked), getString(R.string.door_state_open)};
+        mTextViewResult = view.findViewById(R.id.textview_result);
 
         // === OPEN ===
         view.findViewById(R.id.button1).setOnClickListener(new View.OnClickListener() {
@@ -70,7 +67,6 @@ public class FirstFragment extends Fragment {
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-                        System.out.println("THE DOOR STATE IS!: " + doorStates[state]);
 
                         String currentStatus = getString(R.string.current_door_status_hint);
 
@@ -110,7 +106,6 @@ public class FirstFragment extends Fragment {
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-                        System.out.println("THE DOOR STATE IS!: " + doorStates[state]);
 
                         String currentStatus = getString(R.string.current_door_status_hint);
                         getActivity().runOnUiThread(new Runnable() {

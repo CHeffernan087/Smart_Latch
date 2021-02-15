@@ -8,6 +8,8 @@
     <string name="sign_out">Sign Out</string>
     <string name="smart_latch_url">https://smart-latch.herokuapp.com</string>
     <string name="title_activity_login">LoginActivity</string>
-    <string name="sign_in_with_google">Click to sign in with Google</string>
-    <string name="current_door_status_hint">Current door status:</string>
+    <string name="sign_in_with_google">Sign in with Google:</string>
+    <string name="current_door_status_hint">Door status - </string>
+    <string name="door_state_locked">Locked</string>
+    <string name="door_state_open">Open</string>
 </resources>

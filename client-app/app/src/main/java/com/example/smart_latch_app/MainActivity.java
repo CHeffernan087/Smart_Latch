@@ -34,8 +34,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestEmail().build();
         googleApiClient = new GoogleApiClient.Builder(this).enableAutoManage(this, this).addApi(Auth.GOOGLE_SIGN_IN_API, gso).build();
-
-
+        Toast.makeText(this, "Successfully logged in!", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -54,7 +53,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
 
         switch (id) {
             case R.id.sign_out:
-                System.out.println("Selected sign out!");
                 Auth.GoogleSignInApi.signOut(googleApiClient).setResultCallback(new ResultCallback<Status>() {
                     @Override
                     public void onResult(@NonNull Status status) {
@@ -67,7 +65,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                 });
 
             case R.id.action_settings:
-                System.out.print("Do something else!");
                 Toast.makeText(MainActivity.this, "Add more settings!", Toast.LENGTH_SHORT).show();
             default:
 
@@ -76,6 +73,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     }
 
     private void gotoLoginActivity() {
+        System.out.println("> Starting LOGIN activity");
         startActivity(new Intent(MainActivity.this, LoginActivity.class));
         finish();
     }
