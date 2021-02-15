@@ -34,7 +34,6 @@ public class FirstFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         mTextViewResult = view.findViewById(R.id.textview_result);
-        mTextViewUrl = view.findViewById(R.id.textview_url);
 
         OkHttpClient client = new OkHttpClient();
 
@@ -47,9 +46,7 @@ public class FirstFragment extends Fragment {
                 String url = hostUrl + "/toggleLatch?state=1";
 
                 Request request = new Request.Builder().url(url).build();
-                String builtUrl = "The endpoint URL is: " + url;
-                System.out.println(builtUrl);
-                mTextViewUrl.setText(builtUrl);
+
 
                 client.newCall(request).enqueue(new Callback() {
                     @Override
@@ -79,6 +76,7 @@ public class FirstFragment extends Fragment {
         view.findViewById(R.id.button2).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                System.out.println("BUTTON CLICKED" + view.getId());
                 String url = hostUrl + "/toggleLatch?state=0";
 
                 String builtUrl = "The endpoint URL is: " + url;

@@ -5,6 +5,9 @@
     <string name="first_fragment_label">First Fragment</string>
     <string name="open">Open</string>
     <string name="close">Close</string>
-    <string name="settings_placeholer">Nothing here yet...</string>
+    <string name="sign_out">Sign Out</string>
     <string name="smart_latch_url">https://smart-latch.herokuapp.com</string>
+    <string name="title_activity_login">LoginActivity</string>
+    <string name="sign_in_with_google">Click to sign in with Google</string>
+    <string name="current_door_status_hint">Current door status:</string>
 </resources>
