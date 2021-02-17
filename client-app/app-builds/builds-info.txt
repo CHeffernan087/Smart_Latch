@@ -1,0 +1,7 @@
+Just quickly noting the progress between builds; 
+
+v1. Initial setup, very bare 
+
+v2. Integration with heroku test server 
+
+v3. Implements Google sign in and makes things look a bit nicer
