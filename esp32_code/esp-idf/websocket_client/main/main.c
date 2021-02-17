@@ -9,8 +9,6 @@
  * 
  * The button is only polled every 500ms to prevent the server from being spammed with requests.
  * So as long as the button is pressed and released within 500ms it will only send a single request.
- * 
- * NOTE: Servo control to be added
 */
 
 #include <stdio.h>
