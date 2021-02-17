@@ -81,13 +81,14 @@ static void open_latch(){
 
 // process response message
 static void process_message(char *message, int message_len){
-    ESP_LOGI(L_TAG, "Processing Response Message ...\n");
+    ESP_LOGI(L_TAG, "Processing Response Message ...");
 
     // if payload data is larger than 0 bytes
     if(message_len){
 
         // if message requests the latch to toggle
-        if(strcmp(message, TOGGLE_LATCH)){
+        if(!strcmp(message, TOGGLE_LATCH)){
+            ESP_LOGI(L_TAG, "Toggling Latch ...");
             // if latch state is 1
             if(latchState){
                 open_latch();   // open the latch
@@ -96,8 +97,13 @@ static void process_message(char *message, int message_len){
                 close_latch();  // close the latch
             }
         }
+        else{
+            ESP_LOGI(L_TAG, "Response Message '%s' Not Recognised", message);
+        }
     }
-
+    else{
+        ESP_LOGI(L_TAG, "Response Message Length = %d bytes", message_len);
+    }
 }
 
 // websocket event handler callback function
@@ -124,9 +130,9 @@ static void websocket_event_handler(void *handler_args, esp_event_base_t base, i
             ESP_LOGI(W_TAG, "WEBSOCKET_EVENT_DATA");
             ESP_LOGI(W_TAG, "Received opcode=%d", data->op_code);
             ESP_LOGW(W_TAG, "Received=%.*s", data->data_len, (char *)data->data_ptr);
-            ESP_LOGW(W_TAG, "Total payload length=%d, data_len=%d, current payload offset=%d\r\n", data->payload_len, data->data_len, data->payload_offset);
+            ESP_LOGW(W_TAG, "Total payload length=%d, data_len=%d, current payload offset=%d", data->payload_len, data->data_len, data->payload_offset);
             // process and act on incoming message
-            process_message(data->data_ptr, data->data_len);
+            process_message((char *)data->data_ptr, data->data_len);
             break;
 
         // error event
@@ -203,7 +209,7 @@ void app_main(void){
         if (esp_websocket_client_is_connected(client) && buttonValue && lastUpdate+messageInterval<currentTime){
 
             int len = sprintf(data, MESSAGE_SEND);
-            ESP_LOGI(W_TAG, "Sending %s", data);
+            ESP_LOGI(W_TAG, "\nSending %s", data);
             esp_websocket_client_send_text(client, data, len, portMAX_DELAY);   // send toggle request message buffer
             lastUpdate = xTaskGetTickCount() * portTICK_RATE_MS;                // update the lastUpdate value
         }
