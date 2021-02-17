@@ -7,8 +7,11 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import java.io.IOException;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -18,8 +21,11 @@ import okhttp3.Response;
 public class FirstFragment extends Fragment {
 
     private TextView mTextViewResult;
-    private TextView mTextViewUrl;
-    public static String responseString = "";
+
+    String responseString = "";
+
+    JSONObject jObj = null;
+    Integer state = 0;
 
     @Override
     public View onCreateView(
@@ -32,13 +38,10 @@ public class FirstFragment extends Fragment {
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
-        mTextViewResult = view.findViewById(R.id.textview_result);
-        mTextViewUrl = view.findViewById(R.id.textview_url);
-
         OkHttpClient client = new OkHttpClient();
-
         String hostUrl = getString(R.string.smart_latch_url);
+        String[] doorStates = {getString(R.string.door_state_locked), getString(R.string.door_state_open)};
+        mTextViewResult = view.findViewById(R.id.textview_result);
 
         // === OPEN ===
         view.findViewById(R.id.button1).setOnClickListener(new View.OnClickListener() {
@@ -47,25 +50,30 @@ public class FirstFragment extends Fragment {
                 String url = hostUrl + "/toggleLatch?state=1";
 
                 Request request = new Request.Builder().url(url).build();
-                String builtUrl = "The endpoint URL is: " + url;
-                System.out.println(builtUrl);
-                mTextViewUrl.setText(builtUrl);
 
                 client.newCall(request).enqueue(new Callback() {
                     @Override
                     public void onFailure(Call call, IOException e) {
-                        System.out.println("> Error");
                         e.printStackTrace();
                     }
 
                     @Override
                     public void onResponse(Call call, Response response) throws IOException {
                         responseString = response.body().string();
-                        System.out.println("> Response received: " + responseString);
+
+                        try {
+                            jObj = new JSONObject(responseString);
+                            state = jObj.getInt("newDoorState");
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                        String currentStatus = getString(R.string.current_door_status_hint);
+
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                mTextViewResult.setText("Response: " + responseString);
+                                mTextViewResult.setText(currentStatus + " " + doorStates[state]);
                             }
                         });
 
@@ -81,27 +89,29 @@ public class FirstFragment extends Fragment {
             public void onClick(View view) {
                 String url = hostUrl + "/toggleLatch?state=0";
 
-                String builtUrl = "The endpoint URL is: " + url;
-                System.out.println(builtUrl);
-                mTextViewUrl.setText(builtUrl);
-
                 Request request2 = new Request.Builder().url(url).build();
 
                 client.newCall(request2).enqueue(new Callback() {
                     @Override
                     public void onFailure(Call call, IOException e) {
-                        System.out.println("> Error");
                         e.printStackTrace();
                     }
 
                     @Override
                     public void onResponse(Call call, Response response) throws IOException {
                         responseString = response.body().string();
-                        System.out.println("> Response received: " + responseString);
+                        try {
+                            jObj = new JSONObject(responseString);
+                            state = jObj.getInt("newDoorState");
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                        String currentStatus = getString(R.string.current_door_status_hint);
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                mTextViewResult.setText("Response: " + responseString);
+                                mTextViewResult.setText(currentStatus + " " + doorStates[state]);
                             }
                         });
                     }
