@@ -29,6 +29,8 @@
 #include "esp_websocket_client.h"
 #include "esp_event.h"
 #include "driver/gpio.h"
+#include "driver/mcpwm.h"
+#include "soc/mcpwm_periph.h"
 
 // Peripherals
 #define RED_LED_OUT     26                                              // red led pin
@@ -36,6 +38,7 @@
 #define OUTPUT_PIN_SEL  ((1ULL<<RED_LED_OUT) | (1ULL<<GREEN_LED_OUT))   // output gpio mask
 #define BTN_IN          32                                              // input button pin
 #define INPUT_PIN_SEL   (1ULL<<BTN_IN)                                  // input gpio mask
+#define SERVO_PIN       18
 
 // Tags
 static const char *W_TAG    = "WEBSOCKET";          // tag for websocket logs
@@ -59,6 +62,9 @@ static void close_latch(){
     gpio_set_level(RED_LED_OUT, 1);     // turn on red LED
     gpio_set_level(GREEN_LED_OUT, 0);   // turn off green LED
     latchState = 1;                     // toggle latch state
+    // set pwm signal to activate servo and open latch
+    int duty_cycle = 500;
+    mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, duty_cycle);
 }
 
 // function to open latch
@@ -67,6 +73,9 @@ static void open_latch(){
     gpio_set_level(RED_LED_OUT, 0);     // turn off red LED
     gpio_set_level(GREEN_LED_OUT, 1);   // turn on green LED
     latchState = 0;                     // toggle latch state
+    // set pwm signal to activate servo and open latch
+    int duty_cycle = 2250;
+    mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, duty_cycle);
 }
 
 // websocket event handler callback function
@@ -132,6 +141,16 @@ void app_main(void){
     io_conf.pull_up_en = 0;                     // disable pin pull-up
     // configure output GPIO with the given settings
     gpio_config(&io_conf);
+
+    //servo mcpwm gpio initialization
+    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, SERVO_PIN);    //Set GPIO 18 as PWM0A, to which servo is connected
+    mcpwm_config_t pwm_config;
+    pwm_config.frequency = 50;    //frequency = 50Hz, i.e. for every servo motor time period should be 20ms
+    pwm_config.cmpr_a = 0;    //duty cycle of PWMxA = 0
+    pwm_config.cmpr_b = 0;    //duty cycle of PWMxb = 0
+    pwm_config.counter_mode = MCPWM_UP_COUNTER;
+    pwm_config.duty_mode = MCPWM_DUTY_MODE_0;
+    mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &pwm_config);    //Configure PWM0A & PWM0B with above settings
 
     // system initialisation
     ESP_LOGI(W_TAG, "[APP] Startup..");
