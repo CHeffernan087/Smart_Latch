@@ -100,6 +100,27 @@ static void process_message(char *message, int message_len){
 
 }
 
+// process response message
+static void process_message(char *message, int message_len){
+    ESP_LOGI(L_TAG, "Processing Response Message ...\n");
+
+    // if payload data is larger than 0 bytes
+    if(message_len){
+
+        // if message requests the latch to toggle
+        if(strcmp(message, TOGGLE_LATCH)){
+            // if latch state is 1
+            if(latchState){
+                open_latch();   // open the latch
+            }
+            else{
+                close_latch();  // close the latch
+            }
+        }
+    }
+
+}
+
 // websocket event handler callback function
 static void websocket_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data){
 
