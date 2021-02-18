@@ -1,4 +1,5 @@
 backend/node_modules
+backend/google_vm_esp32/node_modules
 esp32_code/esp-idf/websocket_client/build
 .DS_Store
 .vscode
