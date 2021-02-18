@@ -3,6 +3,9 @@ const WebSocket = require("ws");
 const http = require("http");
 const express = require("express");
 const port = process.env.PORT || 3000;
+const {OAuth2Client} = require('google-auth-library');
+// todo: move this to json file
+const APP_GOOGLE_CLIENT_ID = "203181786221-4rllfugkn3o5ulgdn9gtpags73tbek1g.apps.googleusercontent.com";
 
 /*
 server definition and config
@@ -27,6 +30,31 @@ app.get("/toggleLatch", (req, res) => {
 		client.send("[SERVER MESSAGE]: Open the door!");
 	});
 	res.send({ Authorization: "ok", newDoorState: desiredState });
+});
+
+app.post("/verifyUser", (req, res, next) => {
+	const client = new OAuth2Client(APP_GOOGLE_CLIENT_ID);
+	let payload; // lets just send the payload back for now to see what it is 
+	
+	// ugly for the moment, just trying to see how the java POST is built...
+	let token = req.body.idToken;
+	if (token === undefined) token = req.query.idToken;
+	if (token === undefined) token = req.params.idToken;
+	
+	async function verify() {
+	const ticket = await client.verifyIdToken({
+		idToken: token,
+		audience: APP_GOOGLE_CLIENT_ID, 
+	});
+	payload = ticket.getPayload();
+	console.log(payload);
+	const userid = payload['sub'];
+	// use userid as a unique identifer for the user in our database 
+
+	}
+	verify().catch(console.error);
+
+	res.send({success: payload});
 });
 
 /*
