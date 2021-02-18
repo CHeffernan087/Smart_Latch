@@ -9,6 +9,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import android.view.Menu;
 import android.view.MenuItem;
@@ -44,6 +46,15 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        MainFragment mainFragment;
+        FragmentManager fragmentManager;
+        FragmentTransaction fragmentTransaction;
+        mainFragment = new MainFragment();
+        fragmentManager = getSupportFragmentManager();
+        fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.add(R.id.fragmentContainer,mainFragment);
+        fragmentTransaction.commit(); // add the home fragment
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestEmail().build();
         googleApiClient = new GoogleApiClient.Builder(this).enableAutoManage(this, this).addApi(Auth.GOOGLE_SIGN_IN_API, gso).build();
@@ -101,13 +112,20 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_doors) {
+        if (id == R.id.nav_home) {
+            gotoMainFragment();
+            Toast.makeText(MainActivity.this, "Home", Toast.LENGTH_SHORT).show();
+        } else if (id == R.id.nav_doors) {
+            gotoMainFragment();
             Toast.makeText(MainActivity.this, "View available doors", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_add) {
+            gotoMainFragment();
             Toast.makeText(MainActivity.this, "Add a door", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_manual) {
-            Toast.makeText(MainActivity.this, "We could add buttons here to operate without NFC", Toast.LENGTH_SHORT).show();
+            gotoFirstFragment();
+            Toast.makeText(MainActivity.this, "We can add buttons here to operate without NFC", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_share) {
+            gotoMainFragment();
             Toast.makeText(MainActivity.this, "Just for show", Toast.LENGTH_SHORT).show();
         }
 
@@ -120,6 +138,28 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         System.out.println("> Starting LOGIN activity");
         startActivity(new Intent(MainActivity.this, LoginActivity.class));
         finish();
+    }
+
+    private void gotoMainFragment() {
+        MainFragment mainFragment;
+        FragmentManager fragmentManager;
+        FragmentTransaction fragmentTransaction;
+        mainFragment = new MainFragment();
+        fragmentManager = getSupportFragmentManager();
+        fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.fragmentContainer,mainFragment);
+        fragmentTransaction.commit();// replace the fragment
+    }
+
+    private void gotoFirstFragment() {
+        FirstFragment firstFragment;
+        FragmentManager fragmentManager;
+        FragmentTransaction fragmentTransaction;
+        firstFragment = new FirstFragment();
+        fragmentManager = getSupportFragmentManager();
+        fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.fragmentContainer,firstFragment);
+        fragmentTransaction.commit();// replace the fragment
     }
 
     @Override

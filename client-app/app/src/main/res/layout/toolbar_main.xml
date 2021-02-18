@@ -15,7 +15,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@drawable/side_nav_bar"
+            android:background="@drawable/teal_gradient"
             app:popupTheme="@style/Theme.Smartlatchapp.PopupOverlay" />
 
     </com.google.android.material.appbar.AppBarLayout>
