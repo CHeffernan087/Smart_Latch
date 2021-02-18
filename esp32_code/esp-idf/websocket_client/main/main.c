@@ -9,8 +9,6 @@
  * 
  * The button is only polled every 500ms to prevent the server from being spammed with requests.
  * So as long as the button is pressed and released within 500ms it will only send a single request.
- * 
- * NOTE: Servo control to be added
 */
 
 #include <stdio.h>
@@ -41,11 +39,12 @@
 #define SERVO_PIN       18
 
 // Tags
-static const char *W_TAG    = "WEBSOCKET";          // tag for websocket logs
-static const char *L_TAG    = "SMART-LATCH";        // tag for latch logs
+static const char *W_TAG    = "WEBSOCKET";         // tag for websocket logs
+static const char *L_TAG    = "SMART-LATCH";       // tag for latch logs
 
 // Network
-static const char *MESSAGE_SEND  = "ToggleLatch";   // client request message
+static const char *MESSAGE_SEND = "ToggleLatch";   // client request message
+static const char *TOGGLE_LATCH  = "ToggleLatch";   // response message to toggle the latch
 
 // Timing
 unsigned long lastUpdate        = 0;    // stores time(ms) at last latch update
@@ -78,6 +77,33 @@ static void open_latch(){
     mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, duty_cycle);
 }
 
+// process response message
+static void process_message(char *message, int message_len){
+    ESP_LOGI(L_TAG, "Processing Response Message ...");
+
+    // if payload data is larger than 0 bytes
+    if(message_len){
+
+        // if message requests the latch to toggle
+        if(!strcmp(message, TOGGLE_LATCH)){
+            ESP_LOGI(L_TAG, "Toggling Latch ...");
+            // if latch state is 1
+            if(latchState){
+                open_latch();   // open the latch
+            }
+            else{
+                close_latch();  // close the latch
+            }
+        }
+        else{
+            ESP_LOGI(L_TAG, "Response Message '%s' Not Recognised", message);
+        }
+    }
+    else{
+        ESP_LOGI(L_TAG, "Response Message Length = %d bytes", message_len);
+    }
+}
+
 // websocket event handler callback function
 static void websocket_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data){
 
@@ -102,17 +128,9 @@ static void websocket_event_handler(void *handler_args, esp_event_base_t base, i
             ESP_LOGI(W_TAG, "WEBSOCKET_EVENT_DATA");
             ESP_LOGI(W_TAG, "Received opcode=%d", data->op_code);
             ESP_LOGW(W_TAG, "Received=%.*s", data->data_len, (char *)data->data_ptr);
-            ESP_LOGW(W_TAG, "Total payload length=%d, data_len=%d, current payload offset=%d\r\n", data->payload_len, data->data_len, data->payload_offset);
-            // if payload data is greater than 0 bytes
-            if(data->data_len){
-                // if latch state is 1
-                if(latchState){
-                    open_latch();   // open the latch
-                }
-                else{
-                    close_latch();  // close the latch
-                }
-            }
+            ESP_LOGW(W_TAG, "Total payload length=%d, data_len=%d, current payload offset=%d", data->payload_len, data->data_len, data->payload_offset);
+            // process and act on incoming message
+            process_message((char *)data->data_ptr, data->data_len);
             break;
 
         // error event
@@ -189,7 +207,7 @@ void app_main(void){
         if (esp_websocket_client_is_connected(client) && buttonValue && lastUpdate+messageInterval<currentTime){
 
             int len = sprintf(data, MESSAGE_SEND);
-            ESP_LOGI(W_TAG, "Sending %s", data);
+            ESP_LOGI(W_TAG, "\nSending %s", data);
             esp_websocket_client_send_text(client, data, len, portMAX_DELAY);   // send toggle request message buffer
             lastUpdate = xTaskGetTickCount() * portTICK_RATE_MS;                // update the lastUpdate value
         }
