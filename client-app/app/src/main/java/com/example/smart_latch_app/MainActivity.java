@@ -58,6 +58,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                     public void onResult(@NonNull Status status) {
                         if (status.isSuccess()) {
                             gotoLoginActivity();
+                            Toast.makeText(MainActivity.this, "Signed out.", Toast.LENGTH_SHORT).show();
                         } else {
                             Toast.makeText(MainActivity.this, "Log out failed...", Toast.LENGTH_SHORT).show();
                         }
@@ -65,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                 });
 
             case R.id.action_settings:
-                Toast.makeText(MainActivity.this, "Add more settings!", Toast.LENGTH_SHORT).show();
+
             default:
 
         }
