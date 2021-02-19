@@ -9,7 +9,7 @@ const port = process.env.PORT || 3000;
 server definition and config
 */
 const app = express();
-var jsonParser = bodyParser.json();
+app.use(bodyParser.json());
 const server = http.createServer(app);
 /*
 end points
