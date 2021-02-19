@@ -4,29 +4,30 @@
     "description": "backend service for the smart_latch project",
     "main": "index.js",
     "scripts": {
-      "test": "echo \"Error: no test specified\" && exit 1",
-      "start": "node index.js",
-      "deploy": "gcloud functions deploy '${ENDPOINT}' --runtime nodejs10 --trigger-http --entry-point=${ENDPOINT}"
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "node index.js",
+        "deploy": "gcloud functions deploy $npm_config_endpoint --runtime nodejs10 --trigger-http --entry-point=$npm_config_endpoint"
     },
     "repository": {
-      "type": "git",
-      "url": "git+https://github.com/CHeffernan087/Smart_Latch.git"
+        "type": "git",
+        "url": "git+https://github.com/CHeffernan087/Smart_Latch.git"
     },
     "keywords": [
-      "IoT",
-      "security",
-      "esp32"
+        "IoT",
+        "security",
+        "esp32"
     ],
     "author": "Conor Heffernan, Owen Burke, Ciaran Donnegan, Conor McNally, Tom Kelly",
     "license": "ISC",
     "bugs": {
-      "url": "https://github.com/CHeffernan087/Smart_Latch/issues"
+        "url": "https://github.com/CHeffernan087/Smart_Latch/issues"
     },
     "homepage": "https://github.com/CHeffernan087/Smart_Latch#readme",
     "dependencies": {
-      "express": "^4.17.1",
-      "nodemon": "^2.0.7",
-      "ws": "^7.4.3"
+        "body-parser": "^1.19.0",
+        "express": "^4.17.1",
+        "node-fetch": "^2.6.1",
+        "nodemon": "^2.0.7",
+        "ws": "^7.4.3"
     }
-  }
-  
+}
