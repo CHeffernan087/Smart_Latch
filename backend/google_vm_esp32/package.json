@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "PORT=8080 node index.js &",
-    "deploy":"gcloud compute ssh cheffernan087@smart-latch-embedded"
+    "deploy":"gcloud compute ssh cheffernan087@smart-latch-embedded",
+    "node-ls": "ps -e|grep node"
   },
   "repository": {
     "type": "git",
