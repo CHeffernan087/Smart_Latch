@@ -1,4 +1,5 @@
 /* requirements */
+var bodyParser = require("body-parser");
 const WebSocket = require("ws");
 const http = require("http");
 const express = require("express");
@@ -8,6 +9,7 @@ const port = process.env.PORT || 3000;
 server definition and config
 */
 const app = express();
+var jsonParser = bodyParser.json();
 const server = http.createServer(app);
 /*
 end points
