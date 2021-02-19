@@ -145,7 +145,7 @@ public class LoginActivity extends AppCompatActivity {
                 try {
                     jObj = new JSONObject(responseString);
                     userIsVerified = jObj.getString("success");
-                    System.out.println("IS USER VERIRIED? " + userIsVerified.toString());
+                    System.out.println("IS USER VERIFiED? " + userIsVerified.toString());
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
