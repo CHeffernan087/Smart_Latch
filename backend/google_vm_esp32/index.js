@@ -13,6 +13,13 @@ const server = http.createServer(app);
 end points
 */
 
+const sampleDoorId = 31415;
+const sampleWebsocketConnection = 926535;
+
+const openConnections = {
+	sampleDoorId: sampleWebsocketConnection,
+};
+
 app.get("/healthcheck", (req, res) => {
 	res.send({ message: "smart latch server is running" });
 });
@@ -21,12 +28,19 @@ app.get("/", (req, res, next) => {
 	next("Error: Not found. Please specify a valid endpoint");
 });
 
-app.get("/toggleLatch", (req, res) => {
-	const desiredState = req.query && req.query.state;
-	webSocketServer.clients.forEach((client) => {
-		client.send("[SERVER MESSAGE]: Open the door!");
-	});
-	res.send({ Authorization: "ok", newDoorState: desiredState });
+app.post("/openDoor", (req, res) => {
+	const { body } = req;
+	const doorId = body && body.doorId;
+	const userId = body && body.userId;
+
+	if (doorId && openConnections[doorId]) {
+		const client = openConnections[doorId];
+		if (client.readyState === WebSocket.OPEN) {
+			client.send("Open up ya bollix");
+		}
+		res.status(200).send({ message: "Door opening..." });
+	}
+	res.status(404).send({ error: "This door is not online" });
 });
 
 /*
