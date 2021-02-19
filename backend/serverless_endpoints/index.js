@@ -1,9 +1,7 @@
 const fetch = require("node-fetch");
 
-var bodyParser = require("body-parser");
-var jsonParser = bodyParser.json();
-
 const SMART_LATCH_ESP_API = "https://smart-latchxyz.xyz";
+const sampleDoorId = 31415;
 
 const smartLatchGet = (endpoint = "/healtcheck") => {
 	return fetch(`${SMART_LATCH_ESP_API}${endpoint}`)
@@ -26,7 +24,13 @@ const smartLatchPost = (endpoint = "/", data = {}) => {
 		referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
 		body: JSON.stringify(data), // body data type must match "Content-Type" header
 	})
-		.then((res) => res.json())
+		.then((res) => {
+			if (res.ok) {
+				return res.json();
+			} else {
+				throw new Error("HTTP status " + response.status);
+			}
+		})
 		.catch((err) => err);
 };
 
@@ -36,15 +40,26 @@ const openDoor = ({ doorId, userId }) => {
 
 exports.toggleLatch = (req, res) => {
 	const desiredState = req.query && req.query.state;
-	openDoor({ doorId: 69, userId: 420 })
-		.then((data) => {
-			console.log("response from google compute engine");
-			console.log(data);
-			res.status(200).send({ Authorization: "ok", newDoorState: desiredState });
-		})
-		.catch((err) => {
-			console.log(err);
-		});
+	const doorId = req.query && req.query.doorId;
+	const userId = req.query && req.query.userId;
+	// todo : add some validation here if the user is allowed to open the door
+	const userIsAuthorized = true;
+	if (userIsAuthorized) {
+		openDoor({ doorId: sampleDoorId, userId: 420 })
+			.then((data) => {
+				console.log("response from google compute engine");
+				console.log(data);
+				res
+					.status(200)
+					.send({ Authorization: "ok", newDoorState: desiredState });
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+	} else {
+		// todo close connection on the board
+		res.status(400).send({ error: "You are not authorised to open this door" });
+	}
 };
 
 exports.healthCheck = (req, res) => {
