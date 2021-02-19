@@ -40,6 +40,7 @@ app.post("/openDoor", (req, res) => {
 		const client = openConnections[doorId];
 		res.status(200).send({ message: "Door opening..." });
 		if (client.readyState === WebSocket.OPEN) {
+			// todo: get right message from esp code
 			client.send("Open up ya bollix");
 		}
 		return;
@@ -56,6 +57,7 @@ const webSocketServer = new WebSocket.Server({
 });
 
 webSocketServer.on("connection", (webSocket) => {
+	//todo. We need to add the users doorId in here
 	console.log("board trying to connect...");
 	webSocket.on("message", (data) => {
 		webSocketServer.clients.forEach((client) => {
