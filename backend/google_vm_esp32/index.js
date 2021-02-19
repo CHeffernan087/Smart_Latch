@@ -31,6 +31,7 @@ app.get("/", (req, res, next) => {
 app.post("/openDoor", (req, res) => {
 	const { body } = req;
 	const doorId = body && body.doorId;
+	console.log("doorId : ", doorId);
 	const userId = body && body.userId;
 
 	if (doorId && openConnections[doorId]) {
