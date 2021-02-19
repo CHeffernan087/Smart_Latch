@@ -37,9 +37,12 @@ app.post("/verifyUser", (req, res, next) => {
 	let payload; // lets just send the payload back for now to see what it is 
 	
 	// ugly for the moment, just trying to see how the java POST is built...
-	let token = req.query.idToken;
+	// let token = req.query.idToken;
+	console.log(`Query: ${JSON.stringify(req.query)}`);
+	console.log(`Params: ${JSON.stringify(req.params)}`);
+	console.log(`Body: ${JSON.stringify(req.body)}`);
+
 	
-	console.log(`TOKEN : ${token}`)
 	
 	async function verify() {
 	const ticket = await client.verifyIdToken({
