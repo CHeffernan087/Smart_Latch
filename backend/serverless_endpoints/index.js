@@ -23,15 +23,13 @@ const smartLatchPost = (endpoint = "/", data = {}) => {
 		redirect: "follow", // manual, *follow, error
 		referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
 		body: JSON.stringify(data), // body data type must match "Content-Type" header
-	})
-		.then((res) => {
-			if (res.ok) {
-				return res.json();
-			} else {
-				throw new Error("HTTP status " + response.status);
-			}
-		})
-		.catch((err) => err);
+	}).then((res) => {
+		if (res.ok) {
+			return res.json();
+		} else {
+			throw new Error("HTTP status " + response.status);
+		}
+	});
 };
 
 const openDoor = ({ doorId, userId }) => {
@@ -55,6 +53,7 @@ exports.toggleLatch = (req, res) => {
 			})
 			.catch((err) => {
 				console.log(err);
+				res.status(400).send({ error: err });
 			});
 	} else {
 		// todo close connection on the board

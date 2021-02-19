@@ -38,10 +38,10 @@ app.post("/openDoor", (req, res) => {
 
 	if (doorId && openConnections[doorId]) {
 		const client = openConnections[doorId];
+		res.status(200).send({ message: "Door opening..." });
 		if (client.readyState === WebSocket.OPEN) {
 			client.send("Open up ya bollix");
 		}
-		res.status(200).send({ message: "Door opening..." });
 	}
 	res.status(404).send({ error: "This door is not online" });
 });
