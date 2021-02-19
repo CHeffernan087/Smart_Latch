@@ -32,7 +32,7 @@ app.get("/toggleLatch", (req, res) => {
 	res.send({ Authorization: "ok", newDoorState: desiredState });
 });
 
-app.post("/verifyUser", (req, res, next) => {
+app.get("/verifyUser", (req, res, next) => {
 	const client = new OAuth2Client(APP_GOOGLE_CLIENT_ID);
 	let payload; // lets just send the payload back for now to see what it is 
 	
@@ -41,8 +41,6 @@ app.post("/verifyUser", (req, res, next) => {
 	console.log(`Query: ${JSON.stringify(req.query)}`);
 	console.log(`Params: ${JSON.stringify(req.params)}`);
 	console.log(`Body: ${JSON.stringify(req.body)}`);
-
-	
 	
 	async function verify() {
 	const ticket = await client.verifyIdToken({
