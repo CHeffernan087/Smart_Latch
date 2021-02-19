@@ -39,7 +39,7 @@ public class LoginActivity extends AppCompatActivity {
 
     String responseString = "";
     JSONObject jObj = null;
-    String userIsVerified = "";
+    Boolean userIsVerified = false;
 
     HttpLoggingInterceptor logging = new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY);
     OkHttpClient client = new OkHttpClient.Builder()
@@ -94,11 +94,10 @@ public class LoginActivity extends AppCompatActivity {
                 String idToken = account.getIdToken();
                 String name = account.getGivenName();
 
-                System.out.println("Hi " + name);
-                System.out.println("HERE IS YOUR SENSITIVE ID TOKEN LOL: " + idToken);
+                Boolean verified = validateTokenOnServer(idToken);
 
-                // REGISTER REQUEST
-                validateTokenOnServer(idToken);
+                System.out.println("THE IMPORTANT BIT: " + verified.toString());
+
 
                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                 intent.putExtra("USER_NAME", name);
@@ -118,47 +117,43 @@ public class LoginActivity extends AppCompatActivity {
         startActivityForResult(intent, SIGN_IN);
     }
 
-    private void validateTokenOnServer(String idToken) {
+    private Boolean validateTokenOnServer(String idToken) {
         String hostUrl = getString(R.string.smart_latch_url);
-        String url = hostUrl + "/verifyUser" + "?idToken=" + idToken;
-
-        System.out.println("Start validation: " + url);
-
-//        RequestBody formBody = new FormBody.Builder()
-//                .add("idToken", idToken)
-//                .build();
+        String url = "http://10.0.2.2:3000" + "/verifyUser" + "?idToken=" + idToken;
 
         Request request = new Request.Builder()
                 .url(url)
-//                .post(formBody)
                 .build();
-
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                e.printStackTrace();
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
+        try {
+            Response response = client.newCall(request).execute();
+            if(response.isSuccessful()){
                 responseString = response.body().string();
                 try {
                     jObj = new JSONObject(responseString);
-                    userIsVerified = jObj.getString("success");
+                    userIsVerified = jObj.getBoolean("success");
                     System.out.println("IS USER VERIFiED? " + userIsVerified.toString());
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-
-
-//                getActivity().runOnUiThread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        mTextViewResult.setText(currentStatus + " " + doorStates[state]);
-//                    }
-//                });
-
+            } else {
+                System.out.println("NOT A SUCCESS");
             }
-        });
+        } catch (IOException e) {
+            System.out.println(e);
+        }
+
+//        client.newCall(request).enqueue(new Callback() {
+//            @Override
+//            public void onFailure(Call call, IOException e) {
+//                e.printStackTrace();
+//            }
+//
+//            @Override
+//            public void onResponse(Call call, Response response) throws IOException {
+//
+//            }
+//        });
+        System.out.println("RETURN NOW!");
+        return userIsVerified;
     }
 }
