@@ -61,6 +61,6 @@ exports.toggleLatch = (req, res) => {
 	}
 };
 
-exports.healthCheck = (req, res) => {
+exports.healthcheck = (req, res) => {
 	res.send({ message: "smart latch server is running" });
 };
