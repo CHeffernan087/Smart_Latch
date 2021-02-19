@@ -120,17 +120,17 @@ public class LoginActivity extends AppCompatActivity {
 
     private void validateTokenOnServer(String idToken) {
         String hostUrl = getString(R.string.smart_latch_url);
-        String url = hostUrl + "/verifyUser";
+        String url = hostUrl + "/verifyUser" + "?idToken=" + idToken;
 
         System.out.println("Start validation: " + url);
 
-        RequestBody formBody = new FormBody.Builder()
-                .add("idToken", idToken)
-                .build();
+//        RequestBody formBody = new FormBody.Builder()
+//                .add("idToken", idToken)
+//                .build();
 
         Request request = new Request.Builder()
                 .url(url)
-                .post(formBody)
+//                .post(formBody)
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
