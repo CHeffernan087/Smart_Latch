@@ -42,6 +42,7 @@ app.post("/openDoor", (req, res) => {
 		if (client.readyState === WebSocket.OPEN) {
 			client.send("Open up ya bollix");
 		}
+		return;
 	}
 	res.status(404).send({ error: "This door is not online" });
 });
