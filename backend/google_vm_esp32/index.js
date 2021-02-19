@@ -4,7 +4,7 @@ const WebSocket = require("ws");
 const http = require("http");
 const express = require("express");
 const port = process.env.PORT || 3000;
-
+const sampleDoorId = 31415;
 /*
 server definition and config
 */
@@ -19,7 +19,7 @@ const sampleDoorId = 31415;
 const sampleWebsocketConnection = 926535;
 
 const openConnections = {
-	sampleDoorId: sampleWebsocketConnection,
+	[sampleDoorId]: sampleWebsocketConnection,
 };
 
 app.get("/healthcheck", (req, res) => {
