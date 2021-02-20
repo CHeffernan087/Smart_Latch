@@ -23,7 +23,7 @@ const openConnections = {
 };
 
 app.get("/healthcheck", (req, res) => {
-	res.send({ message: "smart latch server is running" });
+	res.send({ message: "smart latch server is running ya bastard" });
 });
 
 app.get("/", (req, res, next) => {
