@@ -108,8 +108,8 @@ static void process_message(char *message, int message_len)
         }
         else if (!strncmp(message, BOARD_ID_REQ, message_len))
         {
-            char *MESSAGE_SEND = "message:greeting,doorId:31415";
-            // websocket client instance
+            // board should start a connection with server and give the server a way to uniquely identify the door
+            char *MESSAGE_SEND = "message:boardIdRes,doorId:31415";
             char data[64];
             int len = sprintf(data, MESSAGE_SEND);
             ESP_LOGI(W_TAG, "\nSending %s", data);
@@ -234,14 +234,7 @@ void app_main(void)
         if (buttonValue && lastUpdate + messageInterval < currentTime)
         {
             ESP_LOGI(W_TAG, "Connecting to %s...", websocket_cfg.uri);
-            // board should start a connection with server and give the server a way to uniquely identify the door
-            // char *MESSAGE_SEND = "message:greeting,doorId:31415";
-            // websocket client instance
             esp_websocket_client_start(client);
-            // char data[64];
-            // int len = sprintf(data, MESSAGE_SEND);
-            // ESP_LOGI(W_TAG, "\nSending %s", data);
-            // esp_websocket_client_send_text(client, data, len, portMAX_DELAY); // send toggle request message buffer
             lastUpdate = xTaskGetTickCount() * portTICK_RATE_MS; // update the lastUpdate value
         }
         vTaskDelay(10 / portTICK_RATE_MS); // required scheduler delay (10ms)

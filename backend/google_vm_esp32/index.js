@@ -61,7 +61,7 @@ const parseMessageFromBoard = (data) => {
 const handleMessageFromBoard = (messageObj, client) => {
 	const { message } = messageObj;
 	switch (message) {
-		case "greeting":
+		case "boardIdRes":
 			const { doorId } = messageObj;
 			openConnections[doorId] = client;
 			client.id = doorId;
