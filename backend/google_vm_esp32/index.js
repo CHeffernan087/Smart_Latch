@@ -59,6 +59,18 @@ app.post("/openDoor", (req, res) => {
 web socket stuff
 */
 
+const parseMessageFromBoard = (data) => {
+	const keyValues = data.split(",");
+	const resObj = keyValues.reduce((acc, el) => {
+		const [key, value] = el.split(":");
+		return {
+			[key]: value,
+			...acc,
+		};
+	}, {});
+	return resObj;
+};
+
 const webSocketServer = new WebSocket.Server({
 	server,
 });
@@ -67,7 +79,7 @@ webSocketServer.on("connection", (webSocket) => {
 	//todo. We need to add the users doorId in here
 	console.log("board trying to connect...");
 	webSocket.on("message", (data) => {
-		console.log("Here is hopefully the board Id from the board", data);
+		const resObj = parseMessageFromBoard(data);
 		webSocketServer.clients.forEach((client) => {
 			if (client === webSocket && client.readyState === WebSocket.OPEN) {
 				client.send("[SERVER MESSAGE]: You are connected to the server :)");
