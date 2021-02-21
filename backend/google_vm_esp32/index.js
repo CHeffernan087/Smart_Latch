@@ -35,7 +35,7 @@ app.post("/openDoor", (req, res) => {
 	const doorId = body && body.doorId;
 	console.log("doorId : ", doorId);
 	const userId = body && body.userId;
-
+	console.log(openConnections[doorId]);
 	if (doorId && openConnections[doorId]) {
 		const client = openConnections[doorId];
 		if (client.readyState === WebSocket.OPEN) {

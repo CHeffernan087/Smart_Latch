@@ -1,7 +1,7 @@
 const fetch = require("node-fetch");
 
 const SMART_LATCH_ESP_API = "https://smart-latchxyz.xyz";
-const sampleDoorId = 31415;
+const sampleDoorId = "31415";
 
 const smartLatchGet = (endpoint = "/healtcheck") => {
 	return fetch(`${SMART_LATCH_ESP_API}${endpoint}`)

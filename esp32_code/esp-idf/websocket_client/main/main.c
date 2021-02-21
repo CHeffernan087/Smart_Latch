@@ -104,7 +104,8 @@ static void process_message(char *message, int message_len)
         }
         else
         {
-            ESP_LOGI(L_TAG, "Response Message '%s' Not Recognised", message);
+            ESP_LOGI(L_TAG, "Response Message %s Not Recognised", message);
+            ESP_LOGW(W_TAG, "Response Message %.*s Not Recognised", message_len, message);
         }
     }
     else
@@ -198,16 +199,11 @@ void app_main(void)
     ESP_ERROR_CHECK(example_connect());               // configures Wi-Fi
     esp_websocket_client_config_t websocket_cfg = {}; // websocket config instance
     websocket_cfg.uri = CONFIG_WEBSOCKET_URI;         // set the endpoint using the sdkconfig file
-    ESP_LOGI(W_TAG, "Connecting to %s...", websocket_cfg.uri);
-
-    esp_websocket_client_handle_t client = esp_websocket_client_init(&websocket_cfg);                    // websocket client instance
+    esp_websocket_client_handle_t client = esp_websocket_client_init(&websocket_cfg);
     esp_websocket_register_events(client, WEBSOCKET_EVENT_ANY, websocket_event_handler, (void *)client); // set websocket event handler
-    esp_websocket_client_start(client);                                                                  // kick off websocket client
 
     // close the latch
-    close_latch();
-
-    char data[32];                                       // client request message buffer
+    close_latch();                                       // client request message buffer
     lastUpdate = xTaskGetTickCount() * portTICK_RATE_MS; // set lastUpdate to current time
 
     // embedded while 1
@@ -218,9 +214,14 @@ void app_main(void)
         currentTime = xTaskGetTickCount() * portTICK_RATE_MS; // set current time
 
         // if client is on network, button is pressed, and messageInterval is complete
-        if (esp_websocket_client_is_connected(client) && buttonValue && lastUpdate + messageInterval < currentTime)
+        if (buttonValue && lastUpdate + messageInterval < currentTime)
         {
-
+            ESP_LOGI(W_TAG, "Connecting to %s...", websocket_cfg.uri);
+            // board should start a connection with server and give the server a way to uniquely identify the door
+            char *MESSAGE_SEND = "message:greeting,doorId:31415";
+            // websocket client instance
+            esp_websocket_client_start(client);
+            char data[64];
             int len = sprintf(data, MESSAGE_SEND);
             ESP_LOGI(W_TAG, "\nSending %s", data);
             esp_websocket_client_send_text(client, data, len, portMAX_DELAY); // send toggle request message buffer
