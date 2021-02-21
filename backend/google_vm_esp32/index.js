@@ -15,13 +15,6 @@ const server = http.createServer(app);
 end points
 */
 
-const sampleDoorId = 31415;
-const sampleWebsocketConnection = 926535;
-
-const openConnections = {
-	[sampleDoorId]: sampleWebsocketConnection,
-};
-
 app.get("/healthcheck", (req, res) => {
 	res.send({ message: "smart latch server is running" });
 });
@@ -51,6 +44,8 @@ app.post("/openDoor", (req, res) => {
 web socket stuff
 */
 
+const openConnections = {};
+
 const parseMessageFromBoard = (data) => {
 	const keyValues = data.split(",");
 	const resObj = keyValues.reduce((acc, el) => {
@@ -69,6 +64,7 @@ const handleMessageFromBoard = (messageObj, client) => {
 		case "greeting":
 			const { doorId } = messageObj;
 			openConnections[doorId] = client;
+			client.id = doorId;
 			console.log(`added ${doorId} to the list of open web socket connections`);
 			break;
 		default:
@@ -84,9 +80,13 @@ const webSocketServer = new WebSocket.Server({
 webSocketServer.on("connection", (webSocket) => {
 	//todo. We need to add the users doorId in here
 	console.log("new board connected");
+	webSocket.send("boardIdReq");
 	webSocket.on("message", (data) => {
 		const messageObj = parseMessageFromBoard(data);
 		handleMessageFromBoard(messageObj, webSocket);
+	});
+	webSocket.on("close", () => {
+		delete openConnections[webSocket.id];
 	});
 });
 
