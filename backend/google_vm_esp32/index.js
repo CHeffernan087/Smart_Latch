@@ -27,7 +27,7 @@ app.post("/openDoor", (req, res) => {
 	const { body } = req;
 	const doorId = body && body.doorId;
 	const userId = body && body.userId;
-	if (doorId && openConnections[doorId]) {
+	if (doorId && openConnections[doorId] != undefined) {
 		const client = openConnections[doorId];
 		if (client.readyState === WebSocket.OPEN) {
 			client.send("ToggleLatch");

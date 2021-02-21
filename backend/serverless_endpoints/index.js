@@ -23,12 +23,6 @@ const smartLatchPost = (endpoint = "/", data = {}) => {
 		redirect: "follow", // manual, *follow, error
 		referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
 		body: JSON.stringify(data), // body data type must match "Content-Type" header
-	}).then((res) => {
-		if (res.ok) {
-			return res.json();
-		} else {
-			throw new Error("HTTP status " + response.status);
-		}
 	});
 };
 
@@ -44,9 +38,14 @@ exports.toggleLatch = (req, res) => {
 	const userIsAuthorized = true;
 	if (userIsAuthorized) {
 		openDoor({ doorId: sampleDoorId, userId: 420 })
+			.then((response) => {
+				return new Promise((resolve, reject) => {
+					if (response.status == 200) {
+						resolve(response.json());
+					} else reject(response.json());
+				});
+			})
 			.then((data) => {
-				console.log("response from google compute engine");
-				console.log(data);
 				res
 					.status(200)
 					.send({ Authorization: "ok", newDoorState: desiredState });
