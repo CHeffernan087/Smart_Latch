@@ -41,7 +41,6 @@ app.post("/openDoor", (req, res) => {
 
 		webSocketServer.clients.forEach((client) => {
 			if (client.readyState === WebSocket.OPEN) {
-				// todo: get right message from esp code
 				client.send("ToggleLatch");
 			}
 		});
