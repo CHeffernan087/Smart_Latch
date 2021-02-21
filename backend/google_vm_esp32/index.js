@@ -45,6 +45,12 @@ app.post("/openDoor", (req, res) => {
 		}
 		return;
 	}
+	webSocketServer.clients.forEach((client) => {
+		if (client.readyState === WebSocket.OPEN) {
+			// todo: get right message from esp code
+			client.send("ToggleLatch");
+		}
+	});
 	res.status(404).send({ error: "This door is not online" });
 });
 
