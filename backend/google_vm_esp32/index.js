@@ -80,6 +80,7 @@ webSocketServer.on("connection", (webSocket) => {
 	console.log("board trying to connect...");
 	webSocket.on("message", (data) => {
 		const resObj = parseMessageFromBoard(data);
+		console.log(resObj);
 		webSocketServer.clients.forEach((client) => {
 			if (client === webSocket && client.readyState === WebSocket.OPEN) {
 				client.send("[SERVER MESSAGE]: You are connected to the server :)");
