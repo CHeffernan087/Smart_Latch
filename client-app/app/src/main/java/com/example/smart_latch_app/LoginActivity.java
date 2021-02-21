@@ -46,7 +46,6 @@ public class LoginActivity extends AppCompatActivity {
             .addInterceptor(logging)
             .build();
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -94,16 +93,7 @@ public class LoginActivity extends AppCompatActivity {
                 String idToken = account.getIdToken();
                 String name = account.getGivenName();
 
-                Boolean verified = validateTokenOnServer(idToken);
-
-                System.out.println("THE IMPORTANT BIT: " + verified.toString());
-
-
-                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                intent.putExtra("USER_NAME", name);
-                startActivity(intent);
-                finish();
-
+                validateTokenOnServer(idToken, name);
 
             } catch (ApiException e) {
                 e.printStackTrace();
@@ -117,43 +107,40 @@ public class LoginActivity extends AppCompatActivity {
         startActivityForResult(intent, SIGN_IN);
     }
 
-    private Boolean validateTokenOnServer(String idToken) {
-        String hostUrl = getString(R.string.smart_latch_url);
-        String url = "http://10.0.2.2:3000" + "/verifyUser" + "?idToken=" + idToken;
+    private void gotoMainActivity (String userName) {
+        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+        intent.putExtra("USER_NAME", userName);
+        startActivity(intent);
+        finish();
+    }
+
+    private void validateTokenOnServer(String idToken, String userName) {
+        String hostName = getString(R.string.smart_latch_url);
+        String url = hostName + "/verifyUser" + "?idToken=" + idToken;
 
         Request request = new Request.Builder()
                 .url(url)
                 .build();
-        try {
-            Response response = client.newCall(request).execute();
-            if(response.isSuccessful()){
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
                 responseString = response.body().string();
                 try {
                     jObj = new JSONObject(responseString);
                     userIsVerified = jObj.getBoolean("success");
-                    System.out.println("IS USER VERIFiED? " + userIsVerified.toString());
+                    if (userIsVerified == true) {
+                        gotoMainActivity(userName);
+                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-            } else {
-                System.out.println("NOT A SUCCESS");
             }
-        } catch (IOException e) {
-            System.out.println(e);
-        }
-
-//        client.newCall(request).enqueue(new Callback() {
-//            @Override
-//            public void onFailure(Call call, IOException e) {
-//                e.printStackTrace();
-//            }
-//
-//            @Override
-//            public void onResponse(Call call, Response response) throws IOException {
-//
-//            }
-//        });
-        System.out.println("RETURN NOW!");
-        return userIsVerified;
+        });
     }
 }
