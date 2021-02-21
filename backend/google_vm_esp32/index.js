@@ -41,7 +41,7 @@ app.post("/openDoor", (req, res) => {
 		res.status(200).send({ message: "Door opening..." });
 		if (client.readyState === WebSocket.OPEN) {
 			// todo: get right message from esp code
-			client.send("Open up ya bollix");
+			client.send("ToggleLatch");
 		}
 		return;
 	}
