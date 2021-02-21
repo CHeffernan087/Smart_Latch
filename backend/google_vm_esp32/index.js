@@ -69,6 +69,7 @@ const handleMessageFromBoard = (messageObj, client) => {
 		case "greeting":
 			const { doorId } = messageObj;
 			openConnections[doorId] = client;
+			console.log(`added ${doorId} to the list of open web socket connections`);
 			break;
 		default:
 			return;
