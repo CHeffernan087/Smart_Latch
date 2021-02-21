@@ -125,7 +125,7 @@ CONFIG_PARTITION_TABLE_MD5=y
 #
 CONFIG_WEBSOCKET_URI_FROM_STRING=y
 # CONFIG_WEBSOCKET_URI_FROM_STDIN is not set
-CONFIG_WEBSOCKET_URI="ws://echo.websocket.org"
+CONFIG_WEBSOCKET_URI="wss://smart-latchxyz.xyz"
 # end of Example Configuration
 
 #
