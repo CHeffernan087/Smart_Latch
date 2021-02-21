@@ -89,149 +89,150 @@ static void process_message(char *message, int message_len)
     {
 
         // if message requests the latch to toggle
-        if (!strcmp(message, TOGGLE_LATCH))
+        if (!strncmp(message, TOGGLE_LATCH, message_len))
         {
-            ESP_LOGI(L_TAG, "Toggling Latch ...");
-            // if latch state is 1
-            if (latchState)
             {
-                open_latch(); // open the latch
+                ESP_LOGI(L_TAG, "Toggling Latch ...");
+                // if latch state is 1
+                if (latchState)
+                {
+                    open_latch(); // open the latch
+                }
+                else
+                {
+                    close_latch(); // close the latch
+                }
             }
             else
             {
-                close_latch(); // close the latch
+                ESP_LOGI(L_TAG, "Response Message %s Not Recognised", message);
+                ESP_LOGW(W_TAG, "Response Message %.*s Not Recognised", message_len, message);
             }
         }
         else
         {
-            ESP_LOGI(L_TAG, "Response Message %s Not Recognised", message);
-            ESP_LOGW(W_TAG, "Response Message %.*s Not Recognised", message_len, message);
+            ESP_LOGI(L_TAG, "Response Message Length = %d bytes", message_len);
         }
     }
-    else
-    {
-        ESP_LOGI(L_TAG, "Response Message Length = %d bytes", message_len);
-    }
-}
 
-// websocket event handler callback function
-static void websocket_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
-{
-
-    // init websocket recieved data block
-    esp_websocket_event_data_t *data = (esp_websocket_event_data_t *)event_data;
-
-    // switch case for different events
-    switch (event_id)
+    // websocket event handler callback function
+    static void websocket_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
     {
 
-    // connection event
-    case WEBSOCKET_EVENT_CONNECTED:
-        ESP_LOGI(W_TAG, "WEBSOCKET_EVENT_CONNECTED");
-        break;
+        // init websocket recieved data block
+        esp_websocket_event_data_t *data = (esp_websocket_event_data_t *)event_data;
 
-    // disconnection event
-    case WEBSOCKET_EVENT_DISCONNECTED:
-        ESP_LOGI(W_TAG, "WEBSOCKET_EVENT_DISCONNECTED");
-        break;
-
-    // payload response event
-    case WEBSOCKET_EVENT_DATA:
-        ESP_LOGI(W_TAG, "WEBSOCKET_EVENT_DATA");
-        ESP_LOGI(W_TAG, "Received opcode=%d", data->op_code);
-
-        ESP_LOGW(W_TAG, "Received=%.*s", data->data_len, (char *)data->data_ptr);
-        ESP_LOGW(W_TAG, "Total payload length=%d, data_len=%d, current payload offset=%d", data->payload_len, data->data_len, data->payload_offset);
-        // process and act on incoming message
-        process_message((char *)data->data_ptr, data->data_len);
-        break;
-
-    // error event
-    case WEBSOCKET_EVENT_ERROR:
-        ESP_LOGI(W_TAG, "WEBSOCKET_EVENT_ERROR");
-        break;
-    }
-}
-
-// main
-void app_main(void)
-{
-
-    // gpio peripherals settings
-    gpio_config_t io_conf;                     // gpio config object
-    io_conf.intr_type = GPIO_PIN_INTR_DISABLE; // disable interrupt
-    io_conf.mode = GPIO_MODE_OUTPUT;           // set output mode
-    io_conf.pin_bit_mask = OUTPUT_PIN_SEL;     // set output pins using mask
-    io_conf.pull_down_en = 0;                  // disable pin pull-down
-    io_conf.pull_up_en = 0;                    // disable pin pull-up
-    // configure output GPIO with the given settings
-    gpio_config(&io_conf);
-
-    io_conf.pin_bit_mask = INPUT_PIN_SEL; // set output pins using mask
-    io_conf.mode = GPIO_MODE_INPUT;       // set input mode
-    io_conf.pull_down_en = 0;             // disable pin pull-down
-    io_conf.pull_up_en = 0;               // disable pin pull-up
-    // configure output GPIO with the given settings
-    gpio_config(&io_conf);
-
-    //servo mcpwm gpio initialization
-    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, SERVO_PIN); //Set GPIO 18 as PWM0A, to which servo is connected
-    mcpwm_config_t pwm_config;
-    pwm_config.frequency = 50; //frequency = 50Hz, i.e. for every servo motor time period should be 20ms
-    pwm_config.cmpr_a = 0;     //duty cycle of PWMxA = 0
-    pwm_config.cmpr_b = 0;     //duty cycle of PWMxb = 0
-    pwm_config.counter_mode = MCPWM_UP_COUNTER;
-    pwm_config.duty_mode = MCPWM_DUTY_MODE_0;
-    mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &pwm_config); //Configure PWM0A & PWM0B with above settings
-
-    // system initialisation
-    ESP_LOGI(W_TAG, "[APP] Startup..");
-    ESP_LOGI(W_TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
-    ESP_LOGI(W_TAG, "[APP] IDF version: %s", esp_get_idf_version());
-    esp_log_level_set("*", ESP_LOG_INFO);
-    esp_log_level_set("WEBSOCKET_CLIENT", ESP_LOG_DEBUG);
-    esp_log_level_set("TRANS_TCP", ESP_LOG_DEBUG);
-    ESP_ERROR_CHECK(nvs_flash_init());
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-
-    // configure websocket client
-    ESP_ERROR_CHECK(example_connect());               // configures Wi-Fi
-    esp_websocket_client_config_t websocket_cfg = {}; // websocket config instance
-    websocket_cfg.uri = CONFIG_WEBSOCKET_URI;         // set the endpoint using the sdkconfig file
-    esp_websocket_client_handle_t client = esp_websocket_client_init(&websocket_cfg);
-    esp_websocket_register_events(client, WEBSOCKET_EVENT_ANY, websocket_event_handler, (void *)client); // set websocket event handler
-
-    // close the latch
-    close_latch();                                       // client request message buffer
-    lastUpdate = xTaskGetTickCount() * portTICK_RATE_MS; // set lastUpdate to current time
-
-    // embedded while 1
-    while (1)
-    {
-
-        buttonValue = gpio_get_level(BTN_IN);                 // get current button value
-        currentTime = xTaskGetTickCount() * portTICK_RATE_MS; // set current time
-
-        // if client is on network, button is pressed, and messageInterval is complete
-        if (buttonValue && lastUpdate + messageInterval < currentTime)
+        // switch case for different events
+        switch (event_id)
         {
-            ESP_LOGI(W_TAG, "Connecting to %s...", websocket_cfg.uri);
-            // board should start a connection with server and give the server a way to uniquely identify the door
-            char *MESSAGE_SEND = "message:greeting,doorId:31415";
-            // websocket client instance
-            esp_websocket_client_start(client);
-            char data[64];
-            int len = sprintf(data, MESSAGE_SEND);
-            ESP_LOGI(W_TAG, "\nSending %s", data);
-            esp_websocket_client_send_text(client, data, len, portMAX_DELAY); // send toggle request message buffer
-            lastUpdate = xTaskGetTickCount() * portTICK_RATE_MS;              // update the lastUpdate value
+
+        // connection event
+        case WEBSOCKET_EVENT_CONNECTED:
+            ESP_LOGI(W_TAG, "WEBSOCKET_EVENT_CONNECTED");
+            break;
+
+        // disconnection event
+        case WEBSOCKET_EVENT_DISCONNECTED:
+            ESP_LOGI(W_TAG, "WEBSOCKET_EVENT_DISCONNECTED");
+            break;
+
+        // payload response event
+        case WEBSOCKET_EVENT_DATA:
+            ESP_LOGI(W_TAG, "WEBSOCKET_EVENT_DATA");
+            ESP_LOGI(W_TAG, "Received opcode=%d", data->op_code);
+
+            ESP_LOGW(W_TAG, "Received=%.*s", data->data_len, (char *)data->data_ptr);
+            ESP_LOGW(W_TAG, "Total payload length=%d, data_len=%d, current payload offset=%d", data->payload_len, data->data_len, data->payload_offset);
+            // process and act on incoming message
+            process_message((char *)data->data_ptr, data->data_len);
+            break;
+
+        // error event
+        case WEBSOCKET_EVENT_ERROR:
+            ESP_LOGI(W_TAG, "WEBSOCKET_EVENT_ERROR");
+            break;
         }
-        vTaskDelay(10 / portTICK_RATE_MS); // required scheduler delay (10ms)
     }
 
-    // kill client
-    esp_websocket_client_stop(client);
-    ESP_LOGI(W_TAG, "Websocket Stopped");
-    esp_websocket_client_destroy(client);
-}
+    // main
+    void app_main(void)
+    {
+
+        // gpio peripherals settings
+        gpio_config_t io_conf;                     // gpio config object
+        io_conf.intr_type = GPIO_PIN_INTR_DISABLE; // disable interrupt
+        io_conf.mode = GPIO_MODE_OUTPUT;           // set output mode
+        io_conf.pin_bit_mask = OUTPUT_PIN_SEL;     // set output pins using mask
+        io_conf.pull_down_en = 0;                  // disable pin pull-down
+        io_conf.pull_up_en = 0;                    // disable pin pull-up
+        // configure output GPIO with the given settings
+        gpio_config(&io_conf);
+
+        io_conf.pin_bit_mask = INPUT_PIN_SEL; // set output pins using mask
+        io_conf.mode = GPIO_MODE_INPUT;       // set input mode
+        io_conf.pull_down_en = 0;             // disable pin pull-down
+        io_conf.pull_up_en = 0;               // disable pin pull-up
+        // configure output GPIO with the given settings
+        gpio_config(&io_conf);
+
+        //servo mcpwm gpio initialization
+        mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, SERVO_PIN); //Set GPIO 18 as PWM0A, to which servo is connected
+        mcpwm_config_t pwm_config;
+        pwm_config.frequency = 50; //frequency = 50Hz, i.e. for every servo motor time period should be 20ms
+        pwm_config.cmpr_a = 0;     //duty cycle of PWMxA = 0
+        pwm_config.cmpr_b = 0;     //duty cycle of PWMxb = 0
+        pwm_config.counter_mode = MCPWM_UP_COUNTER;
+        pwm_config.duty_mode = MCPWM_DUTY_MODE_0;
+        mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &pwm_config); //Configure PWM0A & PWM0B with above settings
+
+        // system initialisation
+        ESP_LOGI(W_TAG, "[APP] Startup..");
+        ESP_LOGI(W_TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
+        ESP_LOGI(W_TAG, "[APP] IDF version: %s", esp_get_idf_version());
+        esp_log_level_set("*", ESP_LOG_INFO);
+        esp_log_level_set("WEBSOCKET_CLIENT", ESP_LOG_DEBUG);
+        esp_log_level_set("TRANS_TCP", ESP_LOG_DEBUG);
+        ESP_ERROR_CHECK(nvs_flash_init());
+        ESP_ERROR_CHECK(esp_netif_init());
+        ESP_ERROR_CHECK(esp_event_loop_create_default());
+
+        // configure websocket client
+        ESP_ERROR_CHECK(example_connect());               // configures Wi-Fi
+        esp_websocket_client_config_t websocket_cfg = {}; // websocket config instance
+        websocket_cfg.uri = CONFIG_WEBSOCKET_URI;         // set the endpoint using the sdkconfig file
+        esp_websocket_client_handle_t client = esp_websocket_client_init(&websocket_cfg);
+        esp_websocket_register_events(client, WEBSOCKET_EVENT_ANY, websocket_event_handler, (void *)client); // set websocket event handler
+
+        // close the latch
+        close_latch();                                       // client request message buffer
+        lastUpdate = xTaskGetTickCount() * portTICK_RATE_MS; // set lastUpdate to current time
+
+        // embedded while 1
+        while (1)
+        {
+
+            buttonValue = gpio_get_level(BTN_IN);                 // get current button value
+            currentTime = xTaskGetTickCount() * portTICK_RATE_MS; // set current time
+
+            // if client is on network, button is pressed, and messageInterval is complete
+            if (buttonValue && lastUpdate + messageInterval < currentTime)
+            {
+                ESP_LOGI(W_TAG, "Connecting to %s...", websocket_cfg.uri);
+                // board should start a connection with server and give the server a way to uniquely identify the door
+                char *MESSAGE_SEND = "message:greeting,doorId:31415";
+                // websocket client instance
+                esp_websocket_client_start(client);
+                char data[64];
+                int len = sprintf(data, MESSAGE_SEND);
+                ESP_LOGI(W_TAG, "\nSending %s", data);
+                esp_websocket_client_send_text(client, data, len, portMAX_DELAY); // send toggle request message buffer
+                lastUpdate = xTaskGetTickCount() * portTICK_RATE_MS;              // update the lastUpdate value
+            }
+            vTaskDelay(10 / portTICK_RATE_MS); // required scheduler delay (10ms)
+        }
+
+        // kill client
+        esp_websocket_client_stop(client);
+        ESP_LOGI(W_TAG, "Websocket Stopped");
+        esp_websocket_client_destroy(client);
+    }

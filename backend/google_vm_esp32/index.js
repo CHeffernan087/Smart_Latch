@@ -85,8 +85,8 @@ webSocketServer.on("connection", (webSocket) => {
 	//todo. We need to add the users doorId in here
 	console.log("new board connected");
 	webSocket.on("message", (data) => {
-		const messageObj = parseMessageFromBoard(data, webSocket);
-		handleMessageFromBoard(messageObj);
+		const messageObj = parseMessageFromBoard(data);
+		handleMessageFromBoard(messageObj, webSocket);
 	});
 });
 
