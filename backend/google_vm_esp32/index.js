@@ -38,20 +38,12 @@ app.post("/openDoor", (req, res) => {
 
 	if (doorId && openConnections[doorId]) {
 		const client = openConnections[doorId];
-
-		webSocketServer.clients.forEach((client) => {
-			if (client.readyState === WebSocket.OPEN) {
-				client.send("ToggleLatch");
-			}
-		});
+		if (client.readyState === WebSocket.OPEN) {
+			client.send("ToggleLatch");
+		}
 		res.status(200).send({ message: "Door opening..." });
-		// if (client.readyState === WebSocket.OPEN) {
-		// 	// todo: get right message from esp code
-		// 	client.send("ToggleLatch");
-		// }
 		return;
 	}
-
 	res.status(404).send({ error: "This door is not online" });
 });
 
@@ -71,21 +63,29 @@ const parseMessageFromBoard = (data) => {
 	return resObj;
 };
 
+const handleMessageFromBoard = (messageObj, client) => {
+	const { message } = messageObj;
+	switch (message) {
+		case "greeting":
+			const { doorId } = messageObj;
+			openConnections[doorId] = client;
+			break;
+		default:
+			return;
+			break;
+	}
+};
+
 const webSocketServer = new WebSocket.Server({
 	server,
 });
 
 webSocketServer.on("connection", (webSocket) => {
 	//todo. We need to add the users doorId in here
-	console.log("board trying to connect...");
+	console.log("new board connected");
 	webSocket.on("message", (data) => {
-		const resObj = parseMessageFromBoard(data);
-		console.log(resObj);
-		webSocketServer.clients.forEach((client) => {
-			if (client === webSocket && client.readyState === WebSocket.OPEN) {
-				client.send("[SERVER MESSAGE]: You are connected to the server :)");
-			}
-		});
+		const messageObj = parseMessageFromBoard(data, webSocket);
+		handleMessageFromBoard(messageObj);
 	});
 });
 
