@@ -32,7 +32,7 @@
 
 // Peripherals
 #define RED_LED_OUT 26                                                   // red led pin
-#define GREEN_LED_OUT 2                                                  // green led pin
+#define GREEN_LED_OUT 33                                                 // green led pin
 #define OUTPUT_PIN_SEL ((1ULL << RED_LED_OUT) | (1ULL << GREEN_LED_OUT)) // output gpio mask
 #define BTN_IN 32                                                        // input button pin
 #define INPUT_PIN_SEL (1ULL << BTN_IN)                                   // input gpio mask
