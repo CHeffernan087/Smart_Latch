@@ -67,6 +67,7 @@ webSocketServer.on("connection", (webSocket) => {
 	//todo. We need to add the users doorId in here
 	console.log("board trying to connect...");
 	webSocket.on("message", (data) => {
+		console.log("Here is hopefully the board Id from the board", data);
 		webSocketServer.clients.forEach((client) => {
 			if (client === webSocket && client.readyState === WebSocket.OPEN) {
 				client.send("[SERVER MESSAGE]: You are connected to the server :)");
