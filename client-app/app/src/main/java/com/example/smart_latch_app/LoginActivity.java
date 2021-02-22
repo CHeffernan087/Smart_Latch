@@ -114,7 +114,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private void validateTokenOnServer(String idToken, String userName) {
         String hostName = getString(R.string.smart_latch_url);
-        String url = hostName + "/verifyUser" + "?idToken=" + idToken;
+        String url = hostName + "/verifyUser?idToken=" + idToken;
 
         Request request = new Request.Builder()
                 .url(url)
