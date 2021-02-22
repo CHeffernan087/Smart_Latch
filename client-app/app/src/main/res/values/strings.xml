@@ -13,4 +13,11 @@
     <string name="door_state_locked">Locked</string>
     <string name="door_state_open">Open</string>
     <string name="server_client_id">203181786221-3uljiupllmu130gv7o6nei0c0vsuvb70.apps.googleusercontent.com</string>
+    <string name="app_greeting">Welcome to Smart Latch</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">Android Studio</string>
+    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_desc">Navigation header</string>
+
 </resources>
