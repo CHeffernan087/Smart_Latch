@@ -1,9 +1,14 @@
 const fetch = require("node-fetch");
-const Firestore = require('@google-cloud/firestore');
-const firestoreDb = new Firestore({
-	projectId: 'smart-latch',
-	keyFilename: 'smart-latch-db45150c5709.json',
-});
+const admin = require('firebase-admin');
+admin.initializeApp();
+
+const firestoreDb = admin.firestore();
+
+// const Firestore = require('@google-cloud/firestore');
+// const firestoreDb = new Firestore({
+// 	projectId: 'smart-latch',
+// 	keyFilename: '../../../smart-latch-db45150c5709.json',
+// });
 
 const SMART_LATCH_ESP_API = "https://smart-latchxyz.xyz";
 const sampleDoorId = "31415";
