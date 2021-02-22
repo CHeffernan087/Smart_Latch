@@ -63,3 +63,9 @@ exports.toggleLatch = (req, res) => {
 exports.healthcheck = (req, res) => {
 	res.send({ message: "smart latch server is running" });
 };
+
+
+exports.registerUser = (req, res) => {
+	res.send({ message: "Placeholder for regiserUser"})
+
+};
