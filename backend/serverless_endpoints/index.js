@@ -1,4 +1,5 @@
 const fetch = require("node-fetch");
+const Firestore = require('@google-cloud/firestore');
 
 const SMART_LATCH_ESP_API = "https://smart-latchxyz.xyz";
 const sampleDoorId = "31415";
@@ -66,6 +67,34 @@ exports.healthcheck = (req, res) => {
 
 
 exports.registerUser = (req, res) => {
-	res.send({ message: "Placeholder for regiserUser"})
+	if (req.method != "POST")
+	{
+		res.status(400).send({error : "Needs to be a post request"});
+	}
+	const keys = ["email", "firstname", "lastname"];
+	const hasAllKeys = keys.every(key => req.body.hasOwnProperty(key));
+	if(hasAllKeys === false)
+	{
+		res.status(400).send({error: "Missing values in post request"});
+	}
+	email = req.body.email;
+	firstname = req.body.firstname;
+	lastname = req.body.lastname;
 
+	const firestoreDb = new Firestore({
+		projectId: 'smart-latch',
+		keyFilename: 'smart-latch-db45150c5709.json',
+	});
+
+	const docRef = firestoreDb.collection('users').doc(email);
+
+	docRef.set({
+		firstname: firstname,
+		lastname: lastname,
+		email: email
+	}).then((data) => { 
+		res.status(200).send({ message: `Successfully added ${email}, ${firstname} ${lastname}`, data: data }) 
+	}).catch((err) => {
+		res.status(400).send({error: err})
+	 });
 };
