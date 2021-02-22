@@ -1,0 +1,37 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "backend service for the smart_latch project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "PORT=8080 node index.js &",
+    "start-ws": "PORT=8080 node websocket.js &",
+    "deploy": "gcloud compute ssh cheffernan087@smart-latch-embedded",
+    "node-ls": "ps -e|grep node",
+    "node-kill": "kill $(lsof -t -i:8080)"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CHeffernan087/Smart_Latch.git"
+  },
+  "keywords": [
+    "IoT",
+    "security",
+    "esp32"
+  ],
+  "author": "Conor Heffernan, Owen Burke, Ciaran Donnegan, Conor McNally, Tom Kelly",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CHeffernan087/Smart_Latch/issues"
+  },
+  "homepage": "https://github.com/CHeffernan087/Smart_Latch#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "google-auth-library": "^7.0.2",
+    "nodemon": "^2.0.7",
+    "socket.io": "^3.1.1",
+    "ws": "^7.4.3"
+  }
+}
