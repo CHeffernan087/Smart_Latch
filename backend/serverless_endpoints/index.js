@@ -47,18 +47,24 @@ exports.toggleLatch = (req, res) => {
 	// todo : add some validation here if the user is allowed to open the door
 	const userIsAuthorized = true;
 	if (userIsAuthorized) {
-		openDoor({ doorId: sampleDoorId, userId: 420 })
+		return openDoor({ doorId: sampleDoorId, userId: 420 })
 			.then((response) => {
-				return new Promise((resolve, reject) => {
-					if (response.status == 200) {
-						resolve(response.json());
-					} else reject(response.json());
-				});
+				console.log("Here is the status :", response.status);
+				if (response.status === 200) {
+					return {
+						status: 200,
+						response: { Authorization: "ok", newDoorState: desiredState },
+					};
+				} else {
+					return {
+						status: 400,
+						response: "Door not online",
+						// message: response.json(),
+					};
+				}
 			})
-			.then((data) => {
-				res
-					.status(200)
-					.send({ Authorization: "ok", newDoorState: desiredState });
+			.then(({ status, response }) => {
+				res.status(status).send({ response: response });
 			})
 			.catch((err) => {
 				console.log(err);
