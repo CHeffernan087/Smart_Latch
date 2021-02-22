@@ -1,5 +1,9 @@
 const fetch = require("node-fetch");
 const Firestore = require('@google-cloud/firestore');
+const firestoreDb = new Firestore({
+	projectId: 'smart-latch',
+	keyFilename: 'smart-latch-db45150c5709.json',
+});
 
 const SMART_LATCH_ESP_API = "https://smart-latchxyz.xyz";
 const sampleDoorId = "31415";
@@ -65,26 +69,19 @@ exports.healthcheck = (req, res) => {
 	res.send({ message: "smart latch server is running" });
 };
 
-
+//curl -d "email=joeblogs@gmail.com&firstname=joe&lastname=blogs" -X POST http://localhost:8080/ 
 exports.registerUser = (req, res) => {
-	if (req.method != "POST")
-	{
-		res.status(400).send({error : "Needs to be a post request"});
+	if (req.method != "POST") {
+		res.status(400).send({ error: "Needs to be a POST request" });
 	}
 	const keys = ["email", "firstname", "lastname"];
 	const hasAllKeys = keys.every(key => req.body.hasOwnProperty(key));
-	if(hasAllKeys === false)
-	{
-		res.status(400).send({error: "Missing values in post request"});
+	if (hasAllKeys === false) {
+		res.status(400).send({ error: "Missing values in POST request" });
 	}
 	email = req.body.email;
 	firstname = req.body.firstname;
 	lastname = req.body.lastname;
-
-	const firestoreDb = new Firestore({
-		projectId: 'smart-latch',
-		keyFilename: 'smart-latch-db45150c5709.json',
-	});
 
 	const docRef = firestoreDb.collection('users').doc(email);
 
@@ -92,9 +89,26 @@ exports.registerUser = (req, res) => {
 		firstname: firstname,
 		lastname: lastname,
 		email: email
-	}).then((data) => { 
-		res.status(200).send({ message: `Successfully added ${email}, ${firstname} ${lastname}`, data: data }) 
+	}).then((data) => {
+		res.status(200).send({ message: `Successfully added ${email}, ${firstname} ${lastname}`, data: data })
+	}).catch((err) => {
+		res.status(400).send({ error: err })
+	});
+};
+
+//curl -d "email=joeblogs@gmail.com" -X DELETE http://localhost:8080/
+exports.deleteUser = (req, res) => {
+	if (req.method != "DELETE") {
+		res.status(400).send({ error: "Needs to be a DELETE request" });
+	}
+	if (req.body.hasOwnProperty("email") === false)
+	{
+		res.status(400).send({ error : "Need to specify email in DELETE"});
+	}
+	email = req.body.email;
+	firestoreDb.collection('users').doc(email).delete().then((data) => {
+		res.status(200).send({message: `Successfully deleted ${email} from DB`, data: data})
 	}).catch((err) => {
 		res.status(400).send({error: err})
-	 });
-};
+	});
+}
