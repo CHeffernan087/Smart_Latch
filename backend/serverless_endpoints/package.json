@@ -27,6 +27,7 @@
     "dependencies": {
         "@google-cloud/functions-framework": "^1.7.1",
         "express": "^4.17.1",
+        "google-auth-library": "^7.0.2",
         "node-fetch": "^2.6.1",
         "nodemon": "^2.0.7",
         "ws": "^7.4.3"
