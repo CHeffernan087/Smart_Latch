@@ -70,7 +70,7 @@ exports.toggleLatch = (req, res) => {
 	}
 };
 
-exports.verifyUserAccount = async (req, res) => {
+exports.verifyUser = async (req, res) => {
 	const client = new OAuth2Client(APP_GOOGLE_CLIENT_ID);
 	const token = req.query.idToken;
 	let payload;
