@@ -80,6 +80,21 @@ exports.healthcheck = (req, res) => {
 	res.send({ message: "smart latch server is running" });
 };
 
+
+function register(email, firstname, lastname, res) {
+	const docRef = firestoreDb.collection('users').doc(email);
+
+	docRef.set({
+		firstname: firstname,
+		lastname: lastname,
+		email: email
+	}).then((data) => {
+		res.status(200).send({ message: `Successfully added ${email}, ${firstname} ${lastname}`, data: data })
+	}).catch((err) => {
+		res.status(400).send({ error: err })
+	});
+}
+
 //curl -d "email=joeblogs@gmail.com&firstname=joe&lastname=blogs" -X POST http://localhost:8080/ 
 //curl -d "email=joeblogs@gmail.com&firstname=joe&lastname=blogs" -X POST https://europe-west2-smart-latch.cloudfunctions.net/registerUser --ssl-no-revoke
 exports.registerUser = (req, res) => {
@@ -94,19 +109,20 @@ exports.registerUser = (req, res) => {
 	email = req.body.email;
 	firstname = req.body.firstname;
 	lastname = req.body.lastname;
+	const userIsAuthorized = false;
+	if (userIsAuthorized) {
+		register(email, firstname, lastname, res)
+	}
+};
 
-	const docRef = firestoreDb.collection('users').doc(email);
-
-	docRef.set({
-		firstname: firstname,
-		lastname: lastname,
-		email: email
-	}).then((data) => {
-		res.status(200).send({ message: `Successfully added ${email}, ${firstname} ${lastname}`, data: data })
+function deleteUserFromDB(email, res) {
+	firestoreDb.collection('users').doc(email).delete().then((data) => {
+		res.status(200).send({ message: `Successfully deleted ${email} from DB`, data: data })
 	}).catch((err) => {
 		res.status(400).send({ error: err })
 	});
-};
+}
+
 
 //curl -d "email=joeblogs@gmail.com" -X DELETE http://localhost:8080/
 //curl -d "email=joeblogs@gmail.com" -X DELETE https://europe-west2-smart-latch.cloudfunctions.net/deleteUser --ssl-no-revoke
@@ -114,14 +130,12 @@ exports.deleteUser = (req, res) => {
 	if (req.method != "DELETE") {
 		res.status(400).send({ error: "Needs to be a DELETE request" });
 	}
-	if (req.body.hasOwnProperty("email") === false)
-	{
-		res.status(400).send({ error : "Need to specify email in DELETE"});
+	if (req.body.hasOwnProperty("email") === false) {
+		res.status(400).send({ error: "Need to specify email in DELETE" });
 	}
 	email = req.body.email;
-	firestoreDb.collection('users').doc(email).delete().then((data) => {
-		res.status(200).send({message: `Successfully deleted ${email} from DB`, data: data})
-	}).catch((err) => {
-		res.status(400).send({error: err})
-	});
+	const userIsAuthorized = false;
+	if (userIsAuthorized) {
+		deleteUserFromDB(email, res)
+	}
 }
