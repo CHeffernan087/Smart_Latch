@@ -1,0 +1,34 @@
+{
+    "name": "backend",
+    "version": "1.0.0",
+    "description": "backend service for the smart_latch project",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "node index.js",
+        "deploy": "gcloud functions deploy $npm_config_endpoint --runtime nodejs10 --trigger-http --entry-point=$npm_config_endpoint",
+        "test":"FUNCTION_TARGET=$npm_config_endpoint PORT=3000 npx @google-cloud/functions-framework"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/CHeffernan087/Smart_Latch.git"
+    },
+    "keywords": [
+        "IoT",
+        "security",
+        "esp32"
+    ],
+    "author": "Conor Heffernan, Owen Burke, Ciaran Donnegan, Conor McNally, Tom Kelly",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/CHeffernan087/Smart_Latch/issues"
+    },
+    "homepage": "https://github.com/CHeffernan087/Smart_Latch#readme",
+    "dependencies": {
+        "@google-cloud/functions-framework": "^1.7.1",
+        "express": "^4.17.1",
+        "node-fetch": "^2.6.1",
+        "nodemon": "^2.0.7",
+        "ws": "^7.4.3"
+    }
+}
