@@ -70,7 +70,7 @@ exports.toggleLatch = (req, res) => {
 	}
 };
 
-exports.verifyUser = async((req, res, next) => {
+exports.verifyUserAccount = async (req, res) => {
 	const client = new OAuth2Client(APP_GOOGLE_CLIENT_ID);
 	const token = req.query.idToken;
 	let payload;
@@ -94,7 +94,7 @@ exports.verifyUser = async((req, res, next) => {
 		console.log(e);
 		res.send({ success: false });
 	}
-});
+};
 
 exports.healthcheck = (req, res) => {
 	res.send({ message: "smart latch server is running" });
