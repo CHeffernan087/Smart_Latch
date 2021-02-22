@@ -4,10 +4,9 @@
     "description": "backend service for the smart_latch project",
     "main": "index.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
+        "test": "FUNCTION_TARGET=$npm_config_endpoint PORT=3000 npx @google-cloud/functions-framework",
         "start": "node index.js",
-        "deploy": "gcloud functions deploy $npm_config_endpoint --runtime nodejs10 --trigger-http --entry-point=$npm_config_endpoint",
-        "test":"FUNCTION_TARGET=$npm_config_endpoint PORT=3000 npx @google-cloud/functions-framework"
+        "deploy": "gcloud functions deploy $npm_config_endpoint --runtime nodejs10 --trigger-http --entry-point=$npm_config_endpoint"
     },
     "repository": {
         "type": "git",
@@ -27,6 +26,7 @@
     "dependencies": {
         "@google-cloud/functions-framework": "^1.7.1",
         "express": "^4.17.1",
+        "google-auth-library": "^7.0.2",
         "node-fetch": "^2.6.1",
         "nodemon": "^2.0.7",
         "ws": "^7.4.3"

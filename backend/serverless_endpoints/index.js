@@ -3,6 +3,10 @@ const fetch = require("node-fetch");
 const SMART_LATCH_ESP_API = "https://smart-latchxyz.xyz";
 const sampleDoorId = "31415";
 
+const { OAuth2Client } = require("google-auth-library");
+const APP_GOOGLE_CLIENT_ID =
+	"203181786221-3uljiupllmu130gv7o6nei0c0vsuvb70.apps.googleusercontent.com"; // TODO: move to JSON file?
+
 const smartLatchGet = (endpoint = "/healtcheck") => {
 	return fetch(`${SMART_LATCH_ESP_API}${endpoint}`)
 		.then((res) => res.json())
@@ -63,6 +67,32 @@ exports.toggleLatch = (req, res) => {
 	} else {
 		// todo close connection on the board
 		res.status(400).send({ error: "You are not authorised to open this door" });
+	}
+};
+
+exports.verifyUser = async (req, res) => {
+	const client = new OAuth2Client(APP_GOOGLE_CLIENT_ID);
+	const token = req.query.idToken;
+	let payload;
+
+	async function verify() {
+		const ticket = await client.verifyIdToken({
+			idToken: token,
+			audience: APP_GOOGLE_CLIENT_ID,
+		});
+
+		payload = ticket.getPayload();
+		const userid = payload["sub"];
+		// TODO: Check if userid is in DB, if not register them.
+		// another key from 'payload' we might need is 'email', after that the rest isn't too important
+	}
+
+	try {
+		verify();
+		res.send({ success: true });
+	} catch (e) {
+		console.log(e);
+		res.send({ success: false });
 	}
 };
 
