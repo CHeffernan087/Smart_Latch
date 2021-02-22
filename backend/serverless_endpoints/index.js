@@ -75,6 +75,7 @@ exports.healthcheck = (req, res) => {
 };
 
 //curl -d "email=joeblogs@gmail.com&firstname=joe&lastname=blogs" -X POST http://localhost:8080/ 
+//curl -d "email=joeblogs@gmail.com&firstname=joe&lastname=blogs" -X POST https://europe-west2-smart-latch.cloudfunctions.net/registerUser --ssl-no-revoke
 exports.registerUser = (req, res) => {
 	if (req.method != "POST") {
 		res.status(400).send({ error: "Needs to be a POST request" });
@@ -102,6 +103,7 @@ exports.registerUser = (req, res) => {
 };
 
 //curl -d "email=joeblogs@gmail.com" -X DELETE http://localhost:8080/
+//curl -d "email=joeblogs@gmail.com" -X DELETE https://europe-west2-smart-latch.cloudfunctions.net/deleteUser --ssl-no-revoke
 exports.deleteUser = (req, res) => {
 	if (req.method != "DELETE") {
 		res.status(400).send({ error: "Needs to be a DELETE request" });
