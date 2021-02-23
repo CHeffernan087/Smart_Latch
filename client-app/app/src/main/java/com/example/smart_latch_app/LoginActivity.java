@@ -5,46 +5,79 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.auth.api.signin.GoogleSignInResult;
-import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
-import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.logging.HttpLoggingInterceptor;
 
 
-public class LoginActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener {
+public class LoginActivity extends AppCompatActivity {
     SignInButton signinButton;
-    private GoogleApiClient googleApiClient;
+
+    private GoogleSignInClient mGoogleSignInClient;
     private static final int SIGN_IN = 1;
+
+    String responseString = "";
+    JSONObject jObj = null;
+    Boolean userIsVerified = false;
+
+    HttpLoggingInterceptor logging = new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY);
+    OkHttpClient client = new OkHttpClient.Builder()
+            .addInterceptor(logging)
+            .build();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestEmail().build();
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.server_client_id))
+                .requestProfile()
+                .requestEmail().build();
 
-        googleApiClient = new GoogleApiClient.Builder(this).enableAutoManage(this, this).addApi(Auth.GOOGLE_SIGN_IN_API, gso).build();
+        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
         signinButton = findViewById(R.id.sign_in_btn);
+        signinButton.setVisibility(View.GONE);
         signinButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
+                Intent intent = mGoogleSignInClient.getSignInIntent();
                 startActivityForResult(intent, SIGN_IN);
             }
         });
-
     }
 
     @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
+    protected void onStart() {
+        super.onStart();
+        GoogleSignInAccount account = GoogleSignIn
+                .getLastSignedInAccount(this);
+        if (account != null) {
+            startSignInIntent();
+            Toast.makeText(this, "Signing in...", Toast.LENGTH_SHORT).show();
+        } else {
+            signinButton.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
@@ -52,16 +85,60 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == SIGN_IN) {
-            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            try {
+                GoogleSignInAccount account = task.getResult(ApiException.class);
+                String idToken = account.getIdToken();
+                String name = account.getGivenName();
 
-            if (result.isSuccess()) {
-                // GET(/POST) /user/register (if unregistered, register them in the DB - if they are already there, grand!)
-                // GET /user/permissions?user={user-id} (check what door permissions they have)
-                startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                finish();
-            } else {
+                validateTokenOnServer(idToken, name);
+
+            } catch (ApiException e) {
+                e.printStackTrace();
                 Toast.makeText(this, "Login failed", Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    private void startSignInIntent () {
+        Intent intent = mGoogleSignInClient.getSignInIntent();
+        startActivityForResult(intent, SIGN_IN);
+    }
+
+    private void gotoMainActivity (String userName) {
+        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+        intent.putExtra("USER_NAME", userName);
+        startActivity(intent);
+        finish();
+    }
+
+    private void validateTokenOnServer(String idToken, String userName) {
+        String hostName = getString(R.string.smart_latch_url);
+        String url = hostName + "/verifyUser?idToken=" + idToken;
+
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                responseString = response.body().string();
+                try {
+                    jObj = new JSONObject(responseString);
+                    userIsVerified = jObj.getBoolean("success");
+                    if (userIsVerified == true) {
+                        gotoMainActivity(userName);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 }

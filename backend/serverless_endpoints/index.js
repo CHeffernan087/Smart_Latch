@@ -3,6 +3,11 @@ const fetch = require("node-fetch");
 const SMART_LATCH_ESP_API = "https://smart-latchxyz.xyz";
 const sampleDoorId = "31415";
 
+const { OAuth2Client } = require("google-auth-library");
+const e = require("express");
+const APP_GOOGLE_CLIENT_ID =
+	"639400548732-9ga9sg95ao0drj5sdtd3v561adjqptbr.apps.googleusercontent.com";
+
 const smartLatchGet = (endpoint = "/healtcheck") => {
 	return fetch(`${SMART_LATCH_ESP_API}${endpoint}`)
 		.then((res) => res.json())
@@ -64,6 +69,36 @@ exports.toggleLatch = (req, res) => {
 		// todo close connection on the board
 		res.status(400).send({ error: "You are not authorised to open this door" });
 	}
+};
+
+exports.verifyUser = async (req, res) => {
+	const client = new OAuth2Client(APP_GOOGLE_CLIENT_ID);
+	const token = req.query && req.query.idToken;
+
+	let payload = null;
+
+	if (!token) {
+		res.send({ error: "No 'idToken' parameter provided." });
+		return;
+	}
+
+	async function verify() {
+		const ticket = await client.verifyIdToken({
+			idToken: token,
+			audience: APP_GOOGLE_CLIENT_ID,
+		});
+
+		payload = ticket.getPayload();
+		const userid = payload["sub"]; // Todo: can use this as a unique id for the DB if necessary?
+	}
+	verify()
+		.then(() => {
+			res.send({ success: true });
+		})
+		.catch((e) => {
+			console.log(e);
+			res.send({ success: false, error: "Token failed verification." });
+		});
 };
 
 exports.healthcheck = (req, res) => {

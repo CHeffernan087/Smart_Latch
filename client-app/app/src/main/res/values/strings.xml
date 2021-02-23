@@ -6,17 +6,18 @@
     <string name="open">Open</string>
     <string name="close">Close</string>
     <string name="sign_out">Sign Out</string>
-    <string name="smart_latch_url">https://smart-latch.herokuapp.com</string>
+    <string name="smart_latch_url">https://europe-west2-smart-latch.cloudfunctions.net</string>
     <string name="title_activity_login">LoginActivity</string>
-    <string name="sign_in_with_google">Sign in with Google:</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
     <string name="current_door_status_hint">Door status - </string>
     <string name="door_state_locked">Locked</string>
     <string name="door_state_open">Open</string>
+    <string name="server_client_id">639400548732-9ga9sg95ao0drj5sdtd3v561adjqptbr.apps.googleusercontent.com</string>
     <string name="app_greeting">Welcome to Smart Latch</string>
-
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="nav_header_title">Android Studio</string>
     <string name="nav_header_subtitle">android.studio@android.com</string>
     <string name="nav_header_desc">Navigation header</string>
+
 </resources>

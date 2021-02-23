@@ -1,3 +1,4 @@
+backend/node_modules
 backend/google_vm_esp32/node_modules
 backend/serverless_endpoints/node_modules
 esp32_code/esp-idf/websocket_client/build
