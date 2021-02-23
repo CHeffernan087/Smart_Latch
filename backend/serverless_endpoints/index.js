@@ -6,7 +6,7 @@ const sampleDoorId = "31415";
 const { OAuth2Client } = require("google-auth-library");
 const e = require("express");
 const APP_GOOGLE_CLIENT_ID =
-	"203181786221-3uljiupllmu130gv7o6nei0c0vsuvb70.apps.googleusercontent.com"; 
+	"639400548732-9ga9sg95ao0drj5sdtd3v561adjqptbr.apps.googleusercontent.com";
 
 const smartLatchGet = (endpoint = "/healtcheck") => {
 	return fetch(`${SMART_LATCH_ESP_API}${endpoint}`)
@@ -74,11 +74,11 @@ exports.toggleLatch = (req, res) => {
 exports.verifyUser = async (req, res) => {
 	const client = new OAuth2Client(APP_GOOGLE_CLIENT_ID);
 	const token = req.query && req.query.idToken;
-	
+
 	let payload = null;
-	
+
 	if (!token) {
-		res.send({ error: "No 'idToken' parameter provided."});
+		res.send({ error: "No 'idToken' parameter provided." });
 		return;
 	}
 
@@ -91,14 +91,13 @@ exports.verifyUser = async (req, res) => {
 		payload = ticket.getPayload();
 		const userid = payload["sub"]; // Todo: can use this as a unique id for the DB if necessary?
 	}
-
 	verify()
 		.then(() => {
 			res.send({ success: true });
 		})
 		.catch((e) => {
 			console.log(e);
-			res.send({success: false, error: "Token failed verification."})
+			res.send({ success: false, error: "Token failed verification." });
 		});
 };
 
