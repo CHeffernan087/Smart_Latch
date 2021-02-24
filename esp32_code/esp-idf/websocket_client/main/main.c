@@ -48,9 +48,11 @@ static const char *TOGGLE_LATCH = "ToggleLatch"; // response message to toggle t
 static const char *BOARD_ID_REQ = "boardIdReq";  // message recieved upon connection
 
 // Timing
-unsigned long lastUpdate = 0;        // stores time(ms) at last latch update
-unsigned long currentTime = 0;       // stores current time(ms)
-unsigned long messageInterval = 500; // minimum interval between messages
+int           websocketStatus    = 0;       // bool value is TRUE if websocket is established
+unsigned long lastUpdate         = 0;       // stores time(ms) at last latch update
+unsigned long currentTime        = 0;       // stores current time(ms)
+unsigned long messageInterval    = 500;     // minimum interval between messages
+unsigned long connectionInterval = 10000;   // websocket connection timeout
 
 // Latch
 int latchState = 0;  // boolean latch state
@@ -95,7 +97,7 @@ static void process_message(char *message, int message_len)
         // if message requests the latch to toggle
         if (!strncmp(message, TOGGLE_LATCH, message_len))
         {
-            ESP_LOGI(L_TAG, "Toggling Latch ...");
+            ESP_LOGI(L_TAG, "Toggling Latch ...\n");
             // if latch state is 1
             if (latchState)
             {
@@ -112,18 +114,18 @@ static void process_message(char *message, int message_len)
             char *MESSAGE_SEND = "message:boardIdRes,doorId:31415";
             char data[64];
             int len = sprintf(data, MESSAGE_SEND);
-            ESP_LOGI(W_TAG, "\nSending %s", data);
+            ESP_LOGI(W_TAG, "Sending %s\n", data);
             esp_websocket_client_send_text(client, data, len, portMAX_DELAY); // send toggle request message buffer
             lastUpdate = xTaskGetTickCount() * portTICK_RATE_MS;              // update the lastUpdate value
         }
         else
         {
-            ESP_LOGI(L_TAG, "Response Message '%s' Not Recognised", message);
+            ESP_LOGI(L_TAG, "Response Message '%s' Not Recognised\n", message);
         }
     }
     else
     {
-        ESP_LOGI(L_TAG, "Response Message Length = %d bytes", message_len);
+        ESP_LOGI(L_TAG, "Response Message Length = %d bytes\n", message_len);
     }
 }
 
@@ -226,17 +228,29 @@ void app_main(void)
     // embedded while 1
     while (1)
     {
-
         buttonValue = gpio_get_level(BTN_IN);                 // get current button value
         currentTime = xTaskGetTickCount() * portTICK_RATE_MS; // set current time
 
         // if client is on network, button is pressed, and messageInterval is complete
-        if (buttonValue && lastUpdate + messageInterval < currentTime)
+        if (buttonValue && (currentTime - lastUpdate > messageInterval))
         {
-            ESP_LOGI(W_TAG, "Connecting to %s...", websocket_cfg.uri);
-            esp_websocket_client_start(client);
+            // only establishes a connection if it is already closed
+            if (!websocketStatus){
+                ESP_LOGI(W_TAG, "Connecting to %s...", websocket_cfg.uri);
+                esp_websocket_client_start(client);
+            }
             lastUpdate = xTaskGetTickCount() * portTICK_RATE_MS; // update the lastUpdate value
+            websocketStatus = 1;
         }
+
+        // if websocket connection has been established for more than specifed interval terminate it
+        if (websocketStatus && (currentTime - lastUpdate >= connectionInterval))
+        {
+            ESP_LOGI(W_TAG, "Closing WebSocket Connection...\n");
+            esp_websocket_client_stop(client);
+            websocketStatus = 0;
+        }
+
         vTaskDelay(10 / portTICK_RATE_MS); // required scheduler delay (10ms)
     }
 
