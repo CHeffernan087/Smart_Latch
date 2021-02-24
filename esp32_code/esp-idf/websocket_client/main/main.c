@@ -31,12 +31,21 @@
 #include "soc/mcpwm_periph.h"
 
 // Peripherals
-#define RED_LED_OUT 26                                                   // red led pin
-#define GREEN_LED_OUT 33                                                 // green led pin
-#define OUTPUT_PIN_SEL ((1ULL << RED_LED_OUT) | (1ULL << GREEN_LED_OUT)) // output gpio mask
-#define BTN_IN 32                                                        // input button pin
-#define INPUT_PIN_SEL (1ULL << BTN_IN)                                   // input gpio mask
-#define SERVO_PIN 18
+#define RED_LED_OUT 26      // red led pin
+#define GREEN_LED_OUT 33    // green led pin
+#define WHITE_LED_OUT 14    // white led pin
+#define BTN_IN 32           // input button pin
+#define SERVO_PIN 18        // output PWM servo pin
+#define INPUT_PIN_SEL (1ULL << BTN_IN)  // input gpio mask
+#define OUTPUT_PIN_SEL ((1ULL << RED_LED_OUT) | (1ULL << GREEN_LED_OUT) | (1ULL << WHITE_LED_OUT))  // output gpio mask
+
+// LED output macros
+#define RED_ON()    gpio_set_level(RED_LED_OUT, 1);   // turn on red LED
+#define RED_OFF()   gpio_set_level(RED_LED_OUT, 0);   // turn off red LED
+#define GREEN_ON()  gpio_set_level(GREEN_LED_OUT, 1); // turn on green LED
+#define GREEN_OFF() gpio_set_level(GREEN_LED_OUT, 0); // turn off green LED
+#define WHITE_ON()  gpio_set_level(WHITE_LED_OUT, 1); // turn on white LED
+#define WHITE_OFF() gpio_set_level(WHITE_LED_OUT, 0); // turn off white LED
 
 // Tags
 static const char *W_TAG = "WEBSOCKET";   // tag for websocket logs
@@ -48,9 +57,11 @@ static const char *TOGGLE_LATCH = "ToggleLatch"; // response message to toggle t
 static const char *BOARD_ID_REQ = "boardIdReq";  // message recieved upon connection
 
 // Timing
-unsigned long lastUpdate = 0;        // stores time(ms) at last latch update
-unsigned long currentTime = 0;       // stores current time(ms)
-unsigned long messageInterval = 500; // minimum interval between messages
+int           websocketStatus    = 0;       // bool value is TRUE if websocket is established
+unsigned long lastUpdate         = 0;       // stores time(ms) at last latch update
+unsigned long currentTime        = 0;       // stores current time(ms)
+unsigned long messageInterval    = 500;     // minimum interval between messages
+unsigned long connectionInterval = 15000;   // websocket connection timeout (15sec)
 
 // Latch
 int latchState = 0;  // boolean latch state
@@ -64,9 +75,9 @@ static void
 close_latch()
 {
     ESP_LOGI(L_TAG, "Locking the door !!!\n");
-    gpio_set_level(RED_LED_OUT, 1);   // turn on red LED
-    gpio_set_level(GREEN_LED_OUT, 0); // turn off green LED
-    latchState = 1;                   // toggle latch state
+    RED_ON();
+    GREEN_OFF();
+    latchState = 1; // toggle latch state
     // set pwm signal to activate servo and open latch
     int duty_cycle = 500;
     mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, duty_cycle);
@@ -76,9 +87,9 @@ close_latch()
 static void open_latch()
 {
     ESP_LOGI(L_TAG, "Opening the door !!!\n");
-    gpio_set_level(RED_LED_OUT, 0);   // turn off red LED
-    gpio_set_level(GREEN_LED_OUT, 1); // turn on green LED
-    latchState = 0;                   // toggle latch state
+    RED_OFF();
+    GREEN_ON();    
+    latchState = 0; // toggle latch state
     // set pwm signal to activate servo and open latch
     int duty_cycle = 2250;
     mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, duty_cycle);
@@ -95,7 +106,7 @@ static void process_message(char *message, int message_len)
         // if message requests the latch to toggle
         if (!strncmp(message, TOGGLE_LATCH, message_len))
         {
-            ESP_LOGI(L_TAG, "Toggling Latch ...");
+            ESP_LOGI(L_TAG, "Toggling Latch ...\n");
             // if latch state is 1
             if (latchState)
             {
@@ -112,18 +123,18 @@ static void process_message(char *message, int message_len)
             char *MESSAGE_SEND = "message:boardIdRes,doorId:31415";
             char data[64];
             int len = sprintf(data, MESSAGE_SEND);
-            ESP_LOGI(W_TAG, "\nSending %s", data);
+            ESP_LOGI(W_TAG, "Sending %s\n", data);
             esp_websocket_client_send_text(client, data, len, portMAX_DELAY); // send toggle request message buffer
             lastUpdate = xTaskGetTickCount() * portTICK_RATE_MS;              // update the lastUpdate value
         }
         else
         {
-            ESP_LOGI(L_TAG, "Response Message '%s' Not Recognised", message);
+            ESP_LOGI(L_TAG, "Response Message '%s' Not Recognised\n", message);
         }
     }
     else
     {
-        ESP_LOGI(L_TAG, "Response Message Length = %d bytes", message_len);
+        ESP_LOGI(L_TAG, "Response Message Length = %d bytes\n", message_len);
     }
 }
 
@@ -145,6 +156,8 @@ static void websocket_event_handler(void *handler_args, esp_event_base_t base, i
     // connection event
     case WEBSOCKET_EVENT_CONNECTED:
         ESP_LOGI(W_TAG, "WEBSOCKET_EVENT_CONNECTED");
+        WHITE_ON();          // enable connection status LED
+        websocketStatus = 1; // set websocket connection status to TRUE
         break;
 
     // disconnection event
@@ -191,6 +204,11 @@ void app_main(void)
     // configure output GPIO with the given settings
     gpio_config(&io_conf);
 
+    // set all outputs low
+    RED_OFF();
+    GREEN_OFF();
+    WHITE_OFF();
+
     //servo mcpwm gpio initialization
     mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, SERVO_PIN); //Set GPIO 18 as PWM0A, to which servo is connected
     mcpwm_config_t pwm_config;
@@ -226,17 +244,29 @@ void app_main(void)
     // embedded while 1
     while (1)
     {
-
         buttonValue = gpio_get_level(BTN_IN);                 // get current button value
         currentTime = xTaskGetTickCount() * portTICK_RATE_MS; // set current time
 
         // if client is on network, button is pressed, and messageInterval is complete
-        if (buttonValue && lastUpdate + messageInterval < currentTime)
+        if (buttonValue && (currentTime - lastUpdate > messageInterval))
         {
-            ESP_LOGI(W_TAG, "Connecting to %s...", websocket_cfg.uri);
-            esp_websocket_client_start(client);
+            // only establishes a connection if it is already closed
+            if (!websocketStatus){
+                ESP_LOGI(W_TAG, "Connecting to %s...", websocket_cfg.uri);
+                esp_websocket_client_start(client);
+            }
             lastUpdate = xTaskGetTickCount() * portTICK_RATE_MS; // update the lastUpdate value
         }
+
+        // if websocket connection has been established for more than specifed interval terminate it
+        if (websocketStatus && (currentTime - lastUpdate >= connectionInterval))
+        {
+            ESP_LOGI(W_TAG, "Closing WebSocket Connection...\n");
+            esp_websocket_client_stop(client);  // close websocket connection
+            WHITE_OFF();                        // disable connection status LED
+            websocketStatus = 0;
+        }
+
         vTaskDelay(10 / portTICK_RATE_MS); // required scheduler delay (10ms)
     }
 
