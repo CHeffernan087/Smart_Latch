@@ -24,10 +24,35 @@ import com.google.android.gms.tasks.Task;
 
 import com.google.android.material.navigation.NavigationView;
 
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.app.PendingIntent;
+import android.content.Intent;
+import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
+import android.nfc.NfcAdapter;
+import android.nfc.Tag;
+import android.nfc.tech.MifareClassic;
+import android.nfc.tech.MifareUltralight;
+import android.os.Bundle;
+import android.util.Log;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import org.w3c.dom.Text;
+
+import java.io.IOException;
+import java.nio.charset.Charset;
+
+
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private GoogleSignInClient mGoogleSignInClient;
     private String welcomeText;
 
+    private NfcAdapter nfcAdapter;
+    private PendingIntent pendingIntent;
+
+    final static String TAG = "NFC";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +89,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fragmentTransaction.add(R.id.fragmentContainer,mainFragment);
         fragmentTransaction.commit(); // add the home fragment
 
+
+        //Initialise NfcAdapter
+        nfcAdapter = NfcAdapter.getDefaultAdapter(this);
+        //If no NfcAdapter, display that the device has no NFC
+        if (nfcAdapter == null) {
+            Toast.makeText(this, "NO NFC Capabilities",
+                    Toast.LENGTH_SHORT).show();
+            finish();
+        }
+        //Create a PendingIntent object so the Android system can
+        //populate it with the details of the tag when it is scanned.
+        pendingIntent = PendingIntent.getActivity(this, 0, new Intent(this, this.getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
     }
 
     @Override
@@ -163,5 +200,62 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.fragmentContainer,firstFragment);
         fragmentTransaction.commit();// replace the fragment
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        assert nfcAdapter != null;
+        nfcAdapter.enableForegroundDispatch(this, pendingIntent, null, null);
+    }
+
+    protected void onPause() {
+        super.onPause();
+        //Onpause stop listening
+        if (nfcAdapter != null) {
+            nfcAdapter.disableForegroundDispatch(this);
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        resolveIntent(intent);
+    }
+
+    private void resolveIntent(Intent intent) {
+        String action = intent.getAction();
+        if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(action)
+                || NfcAdapter.ACTION_TECH_DISCOVERED.equals(action)
+                || NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
+            Tag tag = (Tag) intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+            assert tag != null;
+            byte[] payload = detectTagData(tag).getBytes();
+        }
+    }
+
+    //For NFC detection handling
+    private String detectTagData(Tag tag) {
+        StringBuilder sb = new StringBuilder();
+        byte[] id = tag.getId();
+        sb.append("ID (hex): ").append(toHex(id)).append('\n');
+        Log.v(TAG,sb.toString());
+        return sb.toString();
+    }
+
+    private String toHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = bytes.length - 1; i >= 0; --i) {
+            int b = bytes[i] & 0xff;
+            if (b < 0x10)
+                sb.append('0');
+            sb.append(Integer.toHexString(b));
+            if (i > 0) {
+                sb.append(" ");
+            }
+        }
+        return sb.toString();
     }
 }
