@@ -61,7 +61,7 @@ int           websocketStatus    = 0;       // bool value is TRUE if websocket i
 unsigned long lastUpdate         = 0;       // stores time(ms) at last latch update
 unsigned long currentTime        = 0;       // stores current time(ms)
 unsigned long messageInterval    = 500;     // minimum interval between messages
-unsigned long connectionInterval = 10000;   // websocket connection timeout
+unsigned long connectionInterval = 15000;   // websocket connection timeout (15sec)
 
 // Latch
 int latchState = 0;  // boolean latch state
@@ -156,7 +156,8 @@ static void websocket_event_handler(void *handler_args, esp_event_base_t base, i
     // connection event
     case WEBSOCKET_EVENT_CONNECTED:
         ESP_LOGI(W_TAG, "WEBSOCKET_EVENT_CONNECTED");
-        WHITE_ON(); // enable connection status LED
+        WHITE_ON();          // enable connection status LED
+        websocketStatus = 1; // set websocket connection status to TRUE
         break;
 
     // disconnection event
@@ -255,7 +256,6 @@ void app_main(void)
                 esp_websocket_client_start(client);
             }
             lastUpdate = xTaskGetTickCount() * portTICK_RATE_MS; // update the lastUpdate value
-            websocketStatus = 1;
         }
 
         // if websocket connection has been established for more than specifed interval terminate it
