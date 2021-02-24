@@ -31,12 +31,21 @@
 #include "soc/mcpwm_periph.h"
 
 // Peripherals
-#define RED_LED_OUT 26                                                   // red led pin
-#define GREEN_LED_OUT 33                                                 // green led pin
-#define OUTPUT_PIN_SEL ((1ULL << RED_LED_OUT) | (1ULL << GREEN_LED_OUT)) // output gpio mask
-#define BTN_IN 32                                                        // input button pin
-#define INPUT_PIN_SEL (1ULL << BTN_IN)                                   // input gpio mask
-#define SERVO_PIN 18
+#define RED_LED_OUT 26      // red led pin
+#define GREEN_LED_OUT 33    // green led pin
+#define WHITE_LED_OUT 14    // white led pin
+#define BTN_IN 32           // input button pin
+#define SERVO_PIN 18        // output PWM servo pin
+#define INPUT_PIN_SEL (1ULL << BTN_IN)  // input gpio mask
+#define OUTPUT_PIN_SEL ((1ULL << RED_LED_OUT) | (1ULL << GREEN_LED_OUT) | (1ULL << WHITE_LED_OUT))  // output gpio mask
+
+// LED output macros
+#define RED_ON()    gpio_set_level(RED_LED_OUT, 1);   // turn on red LED
+#define RED_OFF()   gpio_set_level(RED_LED_OUT, 0);   // turn off red LED
+#define GREEN_ON()  gpio_set_level(GREEN_LED_OUT, 1); // turn on green LED
+#define GREEN_OFF() gpio_set_level(GREEN_LED_OUT, 0); // turn off green LED
+#define WHITE_ON()  gpio_set_level(WHITE_LED_OUT, 1); // turn on white LED
+#define WHITE_OFF() gpio_set_level(WHITE_LED_OUT, 0); // turn off white LED
 
 // Tags
 static const char *W_TAG = "WEBSOCKET";   // tag for websocket logs
@@ -66,9 +75,9 @@ static void
 close_latch()
 {
     ESP_LOGI(L_TAG, "Locking the door !!!\n");
-    gpio_set_level(RED_LED_OUT, 1);   // turn on red LED
-    gpio_set_level(GREEN_LED_OUT, 0); // turn off green LED
-    latchState = 1;                   // toggle latch state
+    RED_ON();
+    GREEN_OFF();
+    latchState = 1; // toggle latch state
     // set pwm signal to activate servo and open latch
     int duty_cycle = 500;
     mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, duty_cycle);
@@ -78,9 +87,9 @@ close_latch()
 static void open_latch()
 {
     ESP_LOGI(L_TAG, "Opening the door !!!\n");
-    gpio_set_level(RED_LED_OUT, 0);   // turn off red LED
-    gpio_set_level(GREEN_LED_OUT, 1); // turn on green LED
-    latchState = 0;                   // toggle latch state
+    RED_OFF();
+    GREEN_ON();    
+    latchState = 0; // toggle latch state
     // set pwm signal to activate servo and open latch
     int duty_cycle = 2250;
     mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, duty_cycle);
@@ -147,6 +156,7 @@ static void websocket_event_handler(void *handler_args, esp_event_base_t base, i
     // connection event
     case WEBSOCKET_EVENT_CONNECTED:
         ESP_LOGI(W_TAG, "WEBSOCKET_EVENT_CONNECTED");
+        WHITE_ON(); // enable connection status LED
         break;
 
     // disconnection event
@@ -192,6 +202,11 @@ void app_main(void)
     io_conf.pull_up_en = 0;               // disable pin pull-up
     // configure output GPIO with the given settings
     gpio_config(&io_conf);
+
+    // set all outputs low
+    RED_OFF();
+    GREEN_OFF();
+    WHITE_OFF();
 
     //servo mcpwm gpio initialization
     mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, SERVO_PIN); //Set GPIO 18 as PWM0A, to which servo is connected
@@ -247,7 +262,8 @@ void app_main(void)
         if (websocketStatus && (currentTime - lastUpdate >= connectionInterval))
         {
             ESP_LOGI(W_TAG, "Closing WebSocket Connection...\n");
-            esp_websocket_client_stop(client);
+            esp_websocket_client_stop(client);  // close websocket connection
+            WHITE_OFF();                        // disable connection status LED
             websocketStatus = 0;
         }
 
