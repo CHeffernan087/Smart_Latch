@@ -26,6 +26,7 @@ import com.google.android.material.navigation.NavigationView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.view.View;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.nfc.NdefMessage;
@@ -39,10 +40,18 @@ import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -51,6 +60,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private NfcAdapter nfcAdapter;
     private PendingIntent pendingIntent;
+    String responseString = "";
+    JSONObject jObj = null;
 
     final static String TAG = "NFC";
 
@@ -222,27 +233,46 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
-        resolveIntent(intent);
-    }
-
-    private void resolveIntent(Intent intent) {
         String action = intent.getAction();
         if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(action)
                 || NfcAdapter.ACTION_TECH_DISCOVERED.equals(action)
                 || NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             Tag tag = (Tag) intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
             assert tag != null;
-            byte[] payload = detectTagData(tag).getBytes();
+            detectTagData(tag);
         }
     }
 
     //For NFC detection handling
-    private String detectTagData(Tag tag) {
+    private void detectTagData(Tag tag) {
+        OkHttpClient client = new OkHttpClient();
+        String hostUrl = getString(R.string.smart_latch_url);
         StringBuilder sb = new StringBuilder();
         byte[] id = tag.getId();
-        sb.append("ID (hex): ").append(toHex(id)).append('\n');
+        sb.append(toHex(id));
+
+        String url = hostUrl + "/toggleLatch?state=1";
+        Request request = new Request.Builder().url(url).build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                responseString = response.body().string();
+                try {
+                    jObj = new JSONObject(responseString);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
         Log.v(TAG,sb.toString());
-        return sb.toString();
+        Toast.makeText(this, "NFC ID: 0x " + sb.toString(), Toast.LENGTH_SHORT).show();
     }
 
     private String toHex(byte[] bytes) {
@@ -252,9 +282,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (b < 0x10)
                 sb.append('0');
             sb.append(Integer.toHexString(b));
-            if (i > 0) {
-                sb.append(" ");
-            }
         }
         return sb.toString();
     }
