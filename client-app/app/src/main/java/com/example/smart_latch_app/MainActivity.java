@@ -251,9 +251,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         byte[] id = tag.getId();
         sb.append(toHex(id));
 
-        String url = hostUrl + "/toggleLatch?state=1";
+        String url = hostUrl + "/toggleLatch?state=1?doorId=" + sb.toString();
         Request request = new Request.Builder().url(url).build();
 
+        // sending request to open for scan NFC ID
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -272,7 +273,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
         Log.v(TAG,sb.toString());
-        Toast.makeText(this, "NFC ID: 0x " + sb.toString(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "NFC ID: 0x" + sb.toString(), Toast.LENGTH_SHORT).show();
     }
 
     private String toHex(byte[] bytes) {
