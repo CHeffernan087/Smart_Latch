@@ -19,5 +19,7 @@
     <string name="nav_header_title">Android Studio</string>
     <string name="nav_header_subtitle">android.studio@android.com</string>
     <string name="nav_header_desc">Navigation header</string>
+    <string name="test_door_id">Test Door</string>
+    <string name="test_door_desc">Door for testing.</string>
 
 </resources>

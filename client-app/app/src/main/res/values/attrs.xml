@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="DoorDisplayBox">
+        <attr name="doorId" format="string" />
+        <attr name="doorDesc" format="string" />
+        <attr name="controlDoorButton" format="string" />
+        <attr name="doorImage" format="string" />
+    </declare-styleable>
+</resources>
