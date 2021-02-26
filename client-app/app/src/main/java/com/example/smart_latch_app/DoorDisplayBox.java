@@ -45,25 +45,12 @@ public class DoorDisplayBox extends LinearLayout {
 
         setDoorID(id);
         setDoorDesc(description);
-        setButton(controlButton);
-
-        controlDoorButton = findViewById(R.id.controlButton);
-
-        controlDoorButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                System.out.println("CLICKED TEST DOOR!");
-            }
-        });
 
     }
 
     private void initComponents() {
         doorID = (TextView) findViewById(R.id.doorIdTextView);
-
-        doorDesc = (TextView) findViewById(R.id.doorDescTextView);
-
-        controlDoorButton = (Button) findViewById(R.id.controlButton);
+        doorDesc = (TextView) findViewById(R.id.doorDescView);
     }
 
     public CharSequence getDoorID() {

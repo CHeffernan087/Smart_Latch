@@ -17,24 +17,21 @@
         android:text="My Doors"
         android:textSize="24sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/testDoorDisplayBox"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-
-    <com.example.smart_latch_app.DoorDisplayBox
-        android:id="@+id/testDoorDisplayBox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:doorId="@string/test_door_id"
-        app:doorDesc="@string/test_door_desc"
-        app:controlDoorButton=""
-        app:layout_constraintBottom_toBottomOf="parent"
+    <ListView
+        android:layout_width="fill_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="70dp"
+        android:drawSelectorOnTop="false"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/myDoorsTitle"/>
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/myDoorsTitle"
+        android:id="@android:id/list"/>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/addDoorButton"
@@ -46,5 +43,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/ic_add_symbol" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

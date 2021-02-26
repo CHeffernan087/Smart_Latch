@@ -11,9 +11,8 @@
         android:id="@+id/doorIdTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@id/doorDescTextView"
         android:layout_marginStart="0dp"
-        android:layout_marginBottom="15dp"
+        android:layout_marginTop="16dp"
         android:layout_toEndOf="@id/doorImage"
         android:textAppearance="?android:textAppearanceLarge"
         android:textColor="@color/black"
@@ -22,22 +21,25 @@
         tools:text="Door ID" />
 
     <TextView
-        android:id="@+id/doorDescTextView"
+        android:id="@+id/doorDescView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/doorIdTextView"
+        android:layout_marginLeft="26dp"
+        android:layout_toEndOf="@id/doorIdTextView"
+        android:text="@string/test_door_desc"
+        android:textStyle="italic" />
+
+    <TextView
+        android:id="@+id/doorRoleDesc"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignBottom="@id/doorImage"
-        android:layout_toEndOf="@id/doorImage"
-        android:textColor="@color/black"
-        android:textSize="18sp"
-        android:textStyle="italic"
-        tools:text="Door description" />
-
-    <Button
-        android:id="@+id/controlButton"
-        android:layout_width="match_parent"
-        android:layout_height="fill_parent"
-        android:layout_alignBottom="@id/doorImage"
-        android:background="@android:color/transparent" />
+        android:layout_marginLeft="26dp"
+        android:layout_marginBottom="16dp"
+        android:layout_toEndOf="@id/doorIdTextView"
+        android:text="Role: admin"
+        android:textStyle="italic" />
 
     <ImageView
         android:id="@+id/doorImage"
@@ -46,5 +48,4 @@
         android:contentDescription="@string/nav_header_desc"
         android:paddingTop="@dimen/nav_header_vertical_spacing"
         app:srcCompat="@drawable/ic_door" />
-
 </RelativeLayout>
