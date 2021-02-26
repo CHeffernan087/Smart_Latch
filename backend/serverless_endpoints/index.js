@@ -14,8 +14,12 @@ const smartLatchGet = (endpoint = "/healtcheck") => {
 		.catch((err) => err);
 };
 
+const getRequestType = (req) => req.method;
+
+const isRequestAllowed = (req, intendedReqType) =>
+	getRequestType(req) === intendedReqType;
+
 const smartLatchPost = (endpoint = "/", data = {}) => {
-	console.log("Heres is the data I am going to send out", data);
 	return fetch(`${SMART_LATCH_ESP_API}${endpoint}`, {
 		method: "POST", // *GET, POST, PUT, DELETE, etc.
 		mode: "cors", // no-cors, *cors, same-origin
@@ -99,6 +103,29 @@ exports.verifyUser = async (req, res) => {
 			console.log(e);
 			res.send({ success: false, error: "Token failed verification." });
 		});
+};
+
+exports.registerDoor2 = (req, res) => {
+	if (!isRequestAllowed(req, "POST")) {
+		return res.status(401).send({
+			error: "No such endpoint. Did you specify the wrong request type?",
+		});
+	}
+	const { doorId, userId } = req.body;
+	if (doorId && userId) {
+		return res.status(200).send({ message: "Success! New door added" });
+	} else {
+		const missingFields = [];
+		if (!doorId) {
+			missingFields.unshift("doorId");
+		}
+		if (!userId) {
+			missingFields.unshift("userId");
+		}
+		return res
+			.status(400)
+			.send({ error: `Missing field(s) ${missingFields.toString()}` });
+	}
 };
 
 exports.healthcheck = (req, res) => {
