@@ -105,7 +105,7 @@ exports.verifyUser = async (req, res) => {
 		});
 };
 
-exports.registerDoor2 = (req, res) => {
+exports.registerDoor = (req, res) => {
 	if (!isRequestAllowed(req, "POST")) {
 		return res.status(401).send({
 			error: "No such endpoint. Did you specify the wrong request type?",
