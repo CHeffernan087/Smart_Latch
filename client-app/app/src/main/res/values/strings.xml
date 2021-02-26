@@ -7,6 +7,7 @@
     <string name="close">Close</string>
     <string name="sign_out">Sign Out</string>
     <string name="smart_latch_url">https://europe-west2-smart-latch.cloudfunctions.net</string>
+    <string name="test_url">http://localhost:3000/</string>
     <string name="title_activity_login">LoginActivity</string>
     <string name="sign_in_with_google">Sign in with Google</string>
     <string name="current_door_status_hint">Door status - </string>
@@ -20,4 +21,11 @@
     <string name="nav_header_subtitle">android.studio@android.com</string>
     <string name="nav_header_desc">Navigation header</string>
 
+    <string name="message_write_error">Error Writing Message !</string>
+    <string name="message_write_success">Successfully written to Tag !</string>
+    <string name="message_write_progress">Writing to Tag..</string>
+    <string name="message_tag_detected">NFC Tag Detected !</string>
+    <string name="message_read_tag">Scan NFC Tag</string>
+    <string name="message_tap_tag">Tap the NFC Tag to your device !</string>
+    <string name="hint_message">Message</string>
 </resources>

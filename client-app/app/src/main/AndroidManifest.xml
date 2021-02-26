@@ -23,6 +23,11 @@
             android:theme="@style/Theme.Smartlatchapp.NoActionBar">
         </activity>
         <activity
+            android:name=".MyDoorsActivity"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Smartlatchapp.NoActionBar">
+        </activity>
+        <activity
             android:name=".LoginActivity"
             android:label="@string/app_name"
             android:theme="@style/Theme.Smartlatchapp.NoActionBar">
