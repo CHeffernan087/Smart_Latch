@@ -27,6 +27,11 @@ import com.google.android.material.navigation.NavigationView;
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private GoogleSignInClient mGoogleSignInClient;
     private String welcomeText;
+    private MainFragment mainFragment = new MainFragment();
+    private FirstFragment firstFragment = new FirstFragment();
+    private FragmentManager fragmentManager = getSupportFragmentManager();
+    private FragmentTransaction fragmentTransaction;
+    private MyDoorsFragment myDoorsFragment = new MyDoorsFragment();
 
 
     @Override
@@ -55,11 +60,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        MainFragment mainFragment;
-        FragmentManager fragmentManager;
-        FragmentTransaction fragmentTransaction;
-        mainFragment = new MainFragment();
-        fragmentManager = getSupportFragmentManager();
         fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.add(R.id.fragmentContainer,mainFragment);
         fragmentTransaction.commit(); // add the home fragment
@@ -109,7 +109,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             gotoMainFragment();
             Toast.makeText(MainActivity.this, "Home", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_doors) {
-            gotoMainFragment();
+            gotoMyDoorsFragment();
             Toast.makeText(MainActivity.this, "View available doors", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_add) {
             gotoMainFragment();
@@ -144,24 +144,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void gotoMainFragment() {
-        MainFragment mainFragment;
-        FragmentManager fragmentManager;
-        FragmentTransaction fragmentTransaction;
-        mainFragment = new MainFragment();
-        fragmentManager = getSupportFragmentManager();
         fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.fragmentContainer,mainFragment);
         fragmentTransaction.commit();// replace the fragment
     }
 
     private void gotoFirstFragment() {
-        FirstFragment firstFragment;
-        FragmentManager fragmentManager;
-        FragmentTransaction fragmentTransaction;
-        firstFragment = new FirstFragment();
-        fragmentManager = getSupportFragmentManager();
         fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.fragmentContainer,firstFragment);
+        fragmentTransaction.commit();// replace the fragment
+    }
+
+    private void gotoMyDoorsFragment () {
+        fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.fragmentContainer,myDoorsFragment);
         fragmentTransaction.commit();// replace the fragment
     }
 }
