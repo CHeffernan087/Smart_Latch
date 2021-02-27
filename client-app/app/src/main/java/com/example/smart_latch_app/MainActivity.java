@@ -24,6 +24,7 @@ import com.google.android.gms.tasks.Task;
 
 import com.google.android.material.navigation.NavigationView;
 
+
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private GoogleSignInClient mGoogleSignInClient;
     private String welcomeText;
@@ -55,16 +56,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        MainFragment mainFragment;
-        FragmentManager fragmentManager;
-        FragmentTransaction fragmentTransaction;
-        mainFragment = new MainFragment();
-        fragmentManager = getSupportFragmentManager();
-        fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.add(R.id.fragmentContainer,mainFragment);
-        fragmentTransaction.commit(); // add the home fragment
-
+        MainFragment mainFragment = new MainFragment();
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.add(R.id.fragmentContainer,mainFragment).commit(); // add the home fragment
     }
+
 
     @Override
     public void onBackPressed() {
@@ -105,15 +102,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_home) {
-            gotoMainFragment();
-            Toast.makeText(MainActivity.this, "Home", Toast.LENGTH_SHORT).show();
-        } else if (id == R.id.nav_doors) {
-            gotoMainFragment();
+        if (id == R.id.nav_doors) {
+            gotoMyDoorsActivity();
             Toast.makeText(MainActivity.this, "View available doors", Toast.LENGTH_SHORT).show();
-        } else if (id == R.id.nav_add) {
-            gotoMainFragment();
-            Toast.makeText(MainActivity.this, "Add a door", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_manual) {
             gotoFirstFragment();
             Toast.makeText(MainActivity.this, "We can add buttons here to operate without NFC", Toast.LENGTH_SHORT).show();
@@ -132,6 +123,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         finish();
     }
 
+    private void gotoMyDoorsActivity() {
+        startActivity(new Intent(MainActivity.this, MyDoorsActivity.class));
+        finish();
+    }
+
     private void signOut () {
         mGoogleSignInClient.signOut()
                 .addOnCompleteListener(this, new OnCompleteListener<Void>() {
@@ -144,24 +140,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void gotoMainFragment() {
-        MainFragment mainFragment;
-        FragmentManager fragmentManager;
-        FragmentTransaction fragmentTransaction;
-        mainFragment = new MainFragment();
-        fragmentManager = getSupportFragmentManager();
-        fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.fragmentContainer,mainFragment);
-        fragmentTransaction.commit();// replace the fragment
+        MainFragment mainFragment = new MainFragment();
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.fragmentContainer,mainFragment).commit();// replace the fragment
     }
 
     private void gotoFirstFragment() {
-        FirstFragment firstFragment;
-        FragmentManager fragmentManager;
-        FragmentTransaction fragmentTransaction;
-        firstFragment = new FirstFragment();
-        fragmentManager = getSupportFragmentManager();
-        fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.fragmentContainer,firstFragment);
-        fragmentTransaction.commit();// replace the fragment
+        FirstFragment firstFragment = new FirstFragment();
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.fragmentContainer,firstFragment).commit(); // replace the fragment
     }
 }
