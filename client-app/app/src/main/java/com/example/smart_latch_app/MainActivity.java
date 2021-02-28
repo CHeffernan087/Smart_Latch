@@ -14,23 +14,21 @@ import androidx.fragment.app.FragmentTransaction;
 
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Button;
 import android.widget.Toast;
 
-import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.auth.api.signin.GoogleSignInResult;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.Result;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
-import com.google.android.gms.common.internal.GoogleApiAvailabilityCache;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+
 import com.google.android.material.navigation.NavigationView;
 
-public class MainActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener, NavigationView.OnNavigationItemSelectedListener {
-    private GoogleApiClient googleApiClient;
+
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+    private GoogleSignInClient mGoogleSignInClient;
+    private String welcomeText;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +36,17 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        // Setup Google stuff for signing out
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.server_client_id))
+                .requestProfile()
+                .requestEmail().build();
+
+        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+
+        welcomeText = "Welcome, " + getIntent().getStringExtra("USER_NAME");
+        Toast.makeText(this, welcomeText, Toast.LENGTH_SHORT).show();
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -47,19 +56,12 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        MainFragment mainFragment;
-        FragmentManager fragmentManager;
-        FragmentTransaction fragmentTransaction;
-        mainFragment = new MainFragment();
-        fragmentManager = getSupportFragmentManager();
-        fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.add(R.id.fragmentContainer,mainFragment);
-        fragmentTransaction.commit(); // add the home fragment
-
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestEmail().build();
-        googleApiClient = new GoogleApiClient.Builder(this).enableAutoManage(this, this).addApi(Auth.GOOGLE_SIGN_IN_API, gso).build();
-        Toast.makeText(this, "Successfully logged in!", Toast.LENGTH_SHORT).show();
+        MainFragment mainFragment = new MainFragment();
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.add(R.id.fragmentContainer,mainFragment).commit(); // add the home fragment
     }
+
 
     @Override
     public void onBackPressed() {
@@ -80,26 +82,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
         switch (id) {
             case R.id.sign_out:
-                Auth.GoogleSignInApi.signOut(googleApiClient).setResultCallback(new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(@NonNull Status status) {
-                        if (status.isSuccess()) {
-                            gotoLoginActivity();
-                        } else {
-                            Toast.makeText(MainActivity.this, "Log out failed...", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
+                signOut();
 
             case R.id.action_settings:
-                Toast.makeText(MainActivity.this, "Add more settings!", Toast.LENGTH_SHORT).show();
+
             default:
 
         }
@@ -112,15 +102,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_home) {
-            gotoMainFragment();
-            Toast.makeText(MainActivity.this, "Home", Toast.LENGTH_SHORT).show();
-        } else if (id == R.id.nav_doors) {
-            gotoMainFragment();
+        if (id == R.id.nav_doors) {
+            gotoMyDoorsActivity();
             Toast.makeText(MainActivity.this, "View available doors", Toast.LENGTH_SHORT).show();
-        } else if (id == R.id.nav_add) {
-            gotoMainFragment();
-            Toast.makeText(MainActivity.this, "Add a door", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_manual) {
             gotoFirstFragment();
             Toast.makeText(MainActivity.this, "We can add buttons here to operate without NFC", Toast.LENGTH_SHORT).show();
@@ -135,35 +119,37 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     }
 
     private void gotoLoginActivity() {
-        System.out.println("> Starting LOGIN activity");
         startActivity(new Intent(MainActivity.this, LoginActivity.class));
         finish();
     }
 
+    private void gotoMyDoorsActivity() {
+        startActivity(new Intent(MainActivity.this, MyDoorsActivity.class));
+        finish();
+    }
+
+    private void signOut () {
+        mGoogleSignInClient.signOut()
+                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        Toast.makeText(MainActivity.this, "Signed out.", Toast.LENGTH_SHORT).show();
+                        gotoLoginActivity();
+                    }
+                });
+    }
+
     private void gotoMainFragment() {
-        MainFragment mainFragment;
-        FragmentManager fragmentManager;
-        FragmentTransaction fragmentTransaction;
-        mainFragment = new MainFragment();
-        fragmentManager = getSupportFragmentManager();
-        fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.fragmentContainer,mainFragment);
-        fragmentTransaction.commit();// replace the fragment
+        MainFragment mainFragment = new MainFragment();
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.fragmentContainer,mainFragment).commit();// replace the fragment
     }
 
     private void gotoFirstFragment() {
-        FirstFragment firstFragment;
-        FragmentManager fragmentManager;
-        FragmentTransaction fragmentTransaction;
-        firstFragment = new FirstFragment();
-        fragmentManager = getSupportFragmentManager();
-        fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.fragmentContainer,firstFragment);
-        fragmentTransaction.commit();// replace the fragment
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
+        FirstFragment firstFragment = new FirstFragment();
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.fragmentContainer,firstFragment).commit(); // replace the fragment
     }
 }

@@ -9,7 +9,7 @@
     "start-ws": "PORT=8080 node websocket.js &",
     "deploy": "gcloud compute ssh cheffernan087@smart-latch-embedded",
     "node-ls": "ps -e|grep node",
-    "node-kill":"kill $(lsof -t -i:8080)"
+    "node-kill": "kill $(lsof -t -i:8080)"
   },
   "repository": {
     "type": "git",

@@ -13,14 +13,23 @@ const firestoreDb = admin.firestore();
 const SMART_LATCH_ESP_API = "https://smart-latchxyz.xyz";
 const sampleDoorId = "31415";
 
+const { OAuth2Client } = require("google-auth-library");
+const e = require("express");
+const APP_GOOGLE_CLIENT_ID =
+	"639400548732-9ga9sg95ao0drj5sdtd3v561adjqptbr.apps.googleusercontent.com";
+
 const smartLatchGet = (endpoint = "/healtcheck") => {
 	return fetch(`${SMART_LATCH_ESP_API}${endpoint}`)
 		.then((res) => res.json())
 		.catch((err) => err);
 };
 
+const getRequestType = (req) => req.method;
+
+const isRequestAllowed = (req, intendedReqType) =>
+	getRequestType(req) === intendedReqType;
+
 const smartLatchPost = (endpoint = "/", data = {}) => {
-	console.log("Heres is the data I am going to send out", data);
 	return fetch(`${SMART_LATCH_ESP_API}${endpoint}`, {
 		method: "POST", // *GET, POST, PUT, DELETE, etc.
 		mode: "cors", // no-cors, *cors, same-origin
@@ -73,6 +82,59 @@ exports.toggleLatch = (req, res) => {
 	} else {
 		// todo close connection on the board
 		res.status(400).send({ error: "You are not authorised to open this door" });
+	}
+};
+
+exports.verifyUser = async (req, res) => {
+	const client = new OAuth2Client(APP_GOOGLE_CLIENT_ID);
+	const token = req.query && req.query.idToken;
+
+	let payload = null;
+
+	if (!token) {
+		res.send({ error: "No 'idToken' parameter provided." });
+		return;
+	}
+
+	async function verify() {
+		const ticket = await client.verifyIdToken({
+			idToken: token,
+			audience: APP_GOOGLE_CLIENT_ID,
+		});
+
+		payload = ticket.getPayload();
+		const userid = payload["sub"]; // Todo: can use this as a unique id for the DB if necessary?
+	}
+	verify()
+		.then(() => {
+			res.send({ success: true });
+		})
+		.catch((e) => {
+			console.log(e);
+			res.send({ success: false, error: "Token failed verification." });
+		});
+};
+
+exports.registerDoor = (req, res) => {
+	if (!isRequestAllowed(req, "POST")) {
+		return res.status(401).send({
+			error: "No such endpoint. Did you specify the wrong request type?",
+		});
+	}
+	const { doorId, userId } = req.body;
+	if (doorId && userId) {
+		return res.status(200).send({ message: "Success! New door added" });
+	} else {
+		const missingFields = [];
+		if (!doorId) {
+			missingFields.unshift("doorId");
+		}
+		if (!userId) {
+			missingFields.unshift("userId");
+		}
+		return res
+			.status(400)
+			.send({ error: `Missing field(s) ${missingFields.toString()}` });
 	}
 };
 
