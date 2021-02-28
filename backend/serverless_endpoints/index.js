@@ -3,7 +3,7 @@ const admin = require('firebase-admin');
 admin.initializeApp();
 
 const firestoreDb = admin.firestore();
-
+//TODO comment out
 // const Firestore = require('@google-cloud/firestore');
 // const firestoreDb = new Firestore({
 // 	projectId: 'smart-latch',
@@ -80,19 +80,52 @@ exports.healthcheck = (req, res) => {
 	res.send({ message: "smart latch server is running" });
 };
 
+async function isDoorActive(doorId) {
+	return (await firestoreDb.collection('Doors').doc(doorId).get()).get('IsActive');
+}
 
-function register(email, firstname, lastname, res) {
-	const docRef = firestoreDb.collection('users').doc(email);
+async function isAuthorised(email, doorId) {
+	userDoc = firestoreDb.collection('Users').doc(email);
+	doors = firestoreDb.collection('Doors');
+	const doorsAuthorisedForUser = (await doors.where('Authorised', 'array-contains', userDoc).get()).docs;
+	for (let index = 0; index < doorsAuthorisedForUser.length; index++) {
+		const doorDocument = doorsAuthorisedForUser[index];
+		console.log(doorDocument.id);
+		if (doorDocument.id == doorId) {
+			return true;
+		}
+	}
+	return false;
+}
 
-	docRef.set({
+function setDoorAdmin(email, doorId) {
+	doorDocument = firestoreDb.collection('Doors').doc(doorId)
+	userDoc = firestoreDb.collection('Users').doc(email);
+	setDoorAsActive(doorId);
+	addAsAuthorised(email, doorId); 
+	return doorDocument.update({ Admin: userDoc })
+}
+
+function setDoorAsActive(doorId) {
+	doorDocument = firestoreDb.collection('Doors').doc(doorId)
+	doorDocument.update({ IsActive: true })
+}
+
+function addAsAuthorised(email, doorId) {
+	doorDocument = firestoreDb.collection('Doors').doc(doorId)
+	userDoc = firestoreDb.collection('Users').doc(email)
+	doorDocument.update({
+		Authorised: admin.firestore.FieldValue.arrayUnion(userDoc)
+	});
+}
+
+function registerAsUser(email, firstname, lastname) {
+	const docRef = firestoreDb.collection('Users').doc(email);
+	return docRef.set({
 		firstname: firstname,
 		lastname: lastname,
 		email: email
-	}).then((data) => {
-		res.status(200).send({ message: `Successfully added ${email}, ${firstname} ${lastname}`, data: data })
-	}).catch((err) => {
-		res.status(400).send({ error: err })
-	});
+	})
 }
 
 //curl -d "email=joeblogs@gmail.com&firstname=joe&lastname=blogs" -X POST http://localhost:8080/ 
@@ -111,16 +144,16 @@ exports.registerUser = (req, res) => {
 	lastname = req.body.lastname;
 	const userIsAuthorized = false;
 	if (userIsAuthorized) {
-		register(email, firstname, lastname, res)
+		registerAsUser(email, firstname, lastname).then((data) => {
+			res.status(200).send({ message: `Successfully added ${email}, ${firstname} ${lastname}`, data: data })
+		}).catch((err) => {
+			res.status(400).send({ error: err })
+		});
 	}
 };
 
-function deleteUserFromDB(email, res) {
-	firestoreDb.collection('users').doc(email).delete().then((data) => {
-		res.status(200).send({ message: `Successfully deleted ${email} from DB`, data: data })
-	}).catch((err) => {
-		res.status(400).send({ error: err })
-	});
+function deleteUserFromDB(email) {
+	return firestoreDb.collection('Users').doc(email).delete();
 }
 
 
@@ -136,6 +169,35 @@ exports.deleteUser = (req, res) => {
 	email = req.body.email;
 	const userIsAuthorized = false;
 	if (userIsAuthorized) {
-		deleteUserFromDB(email, res)
+		deleteUserFromDB(email).then((data) => {
+			res.status(200).send({ message: `Successfully deleted ${email} from DB`, data: data })
+		}).catch((err) => {
+			res.status(400).send({ error: err })
+		});
 	}
 }
+
+// //TODO remove
+// exports.isDoorActive = (req, res) => {
+// 	temp = isDoorActive(req.body.doorId);
+// 	int = 0;
+// }
+
+// //TODO remove
+// exports.isAuthorised = (req, res) => {
+// 	temp = isAuthorised(req.body.email, req.body.doorId);
+// 	int = 0;
+// }
+
+// //TODO remove
+// exports.setDoorAdmin = (req, res) => {
+// 	temp = setDoorAdmin(req.body.email, req.body.doorId);
+// 	int = 0;
+// }
+
+
+// //TODO remove
+// exports.addAsAuthorised = (req, res) => {
+// 	temp = addAsAuthorised(req.body.email, req.body.doorId);
+// 	int = 0;
+// }
