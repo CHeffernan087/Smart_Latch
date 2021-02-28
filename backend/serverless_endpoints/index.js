@@ -98,23 +98,23 @@ async function isAuthorised(email, doorId) {
 	return false;
 }
 
-function setDoorAdmin(email, doorId) {
+async function setDoorAdmin(email, doorId) {
 	doorDocument = firestoreDb.collection('Doors').doc(doorId)
 	userDoc = firestoreDb.collection('Users').doc(email);
-	setDoorAsActive(doorId);
-	addAsAuthorised(email, doorId); 
+	await setDoorAsActive(doorId);
+	await addAsAuthorised(email, doorId);
 	return doorDocument.update({ Admin: userDoc })
 }
 
 function setDoorAsActive(doorId) {
 	doorDocument = firestoreDb.collection('Doors').doc(doorId)
-	doorDocument.update({ IsActive: true })
+	return doorDocument.update({ IsActive: true })
 }
 
 function addAsAuthorised(email, doorId) {
 	doorDocument = firestoreDb.collection('Doors').doc(doorId)
 	userDoc = firestoreDb.collection('Users').doc(email)
-	doorDocument.update({
+	return doorDocument.update({
 		Authorised: admin.firestore.FieldValue.arrayUnion(userDoc)
 	});
 }
@@ -176,28 +176,3 @@ exports.deleteUser = (req, res) => {
 		});
 	}
 }
-
-// //TODO remove
-// exports.isDoorActive = (req, res) => {
-// 	temp = isDoorActive(req.body.doorId);
-// 	int = 0;
-// }
-
-// //TODO remove
-// exports.isAuthorised = (req, res) => {
-// 	temp = isAuthorised(req.body.email, req.body.doorId);
-// 	int = 0;
-// }
-
-// //TODO remove
-// exports.setDoorAdmin = (req, res) => {
-// 	temp = setDoorAdmin(req.body.email, req.body.doorId);
-// 	int = 0;
-// }
-
-
-// //TODO remove
-// exports.addAsAuthorised = (req, res) => {
-// 	temp = addAsAuthorised(req.body.email, req.body.doorId);
-// 	int = 0;
-// }
