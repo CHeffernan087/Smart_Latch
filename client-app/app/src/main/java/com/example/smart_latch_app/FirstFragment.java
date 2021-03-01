@@ -21,8 +21,11 @@ import okhttp3.Response;
 public class FirstFragment extends Fragment {
 
     private TextView mTextViewResult;
+    private TextView doorIdTitle;
 
     String responseString = "";
+
+    String doorID;
 
     JSONObject jObj = null;
     Integer state = 0;
@@ -42,12 +45,18 @@ public class FirstFragment extends Fragment {
         String hostUrl = getString(R.string.smart_latch_url);
         String[] doorStates = {getString(R.string.door_state_locked), getString(R.string.door_state_open)};
         mTextViewResult = view.findViewById(R.id.textview_result);
+        doorIdTitle = view.findViewById(R.id.textview_doorid);
+        if (getArguments() != null) {
+            doorID = getArguments().getString("doorID");
+            System.out.println("Set the title of the yoke: " + doorID);
+            doorIdTitle.setText(doorID);
+        }
 
         // === OPEN ===
-        view.findViewById(R.id.button1).setOnClickListener(new View.OnClickListener() {
+        view.findViewById(R.id.button2).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String url = hostUrl + "/toggleLatch?state=1";
+                String url = hostUrl + "/toggleLatch?state=1?doorId=" + doorID;
 
                 Request request = new Request.Builder().url(url).build();
 
@@ -84,10 +93,10 @@ public class FirstFragment extends Fragment {
         });
 
         // === CLOSE ===
-        view.findViewById(R.id.button2).setOnClickListener(new View.OnClickListener() {
+        view.findViewById(R.id.button1).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String url = hostUrl + "/toggleLatch?state=0";
+                String url = hostUrl + "/toggleLatch?state=0?doorId=" + doorID;
 
                 Request request2 = new Request.Builder().url(url).build();
 
@@ -100,6 +109,7 @@ public class FirstFragment extends Fragment {
                     @Override
                     public void onResponse(Call call, Response response) throws IOException {
                         responseString = response.body().string();
+
                         try {
                             jObj = new JSONObject(responseString);
                             state = jObj.getInt("newDoorState");

@@ -64,7 +64,9 @@ public class AddDoorFragment extends DialogFragment {
         Log.v(TAG,"NFC ID: " + doorId);
         Log.v(TAG,"Sending Request to add door.");
         sendAddDoorReq(doorId);
+        ((MyDoorsActivity) getActivity()).appendDoor(doorId);
     }
+
 
     private void sendAddDoorReq(String doorId) {
 
@@ -99,15 +101,7 @@ public class AddDoorFragment extends DialogFragment {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.v(TAG,"NFC ID: 0x" + doorId);
-                        doorIdText.setText("Door ID: 0x" + doorId);
-                        Toast.makeText(getActivity(), responseMessage, Toast.LENGTH_SHORT).show();
-                    }
-                });
+                Toast.makeText(getActivity(), responseMessage, Toast.LENGTH_SHORT).show();
             }
         });
     }

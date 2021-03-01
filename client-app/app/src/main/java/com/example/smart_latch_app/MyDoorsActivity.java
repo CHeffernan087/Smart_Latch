@@ -15,6 +15,7 @@ import androidx.fragment.app.FragmentTransaction;
 
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -22,18 +23,20 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.nio.BufferUnderflowException;
+import java.util.Arrays;
+
 public class MyDoorsActivity extends AppCompatActivity implements Listener{
 
     public static final String TAG = MainActivity.class.getSimpleName();
-
-    private EditText mEtMessage;
+    String[] doors = new String[] { "Test Door ID" };
     private Button mBtScan;
     private AddDoorFragment mAddDoorFragment;
     private boolean isDialogDisplayed = false;
     private NfcAdapter mNfcAdapter;
     private FirstFragment firstFragment = new FirstFragment();
-    private FragmentManager fragmentManager;
     private FragmentTransaction fragmentTransaction;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,26 +47,22 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
         initViews();
         initNFC();
 
-        String[] values = new String[] { "Test Door ID" };
+        Bundle b = getIntent().getExtras();
+        if (b != null) {
+            doors = b.getStringArray("DOORS");
+        }
+        System.out.println("NOW DOORS: " + Arrays.toString(doors));
+
         // use your custom layout
-        MySimpleArrayAdapter adapter = new MySimpleArrayAdapter(this, values);
+        MySimpleArrayAdapter adapter = new MySimpleArrayAdapter(this, doors);
         listView.setAdapter(adapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                System.out.println(values[position]);
-                // open the first fragment
-                // pass the ID in
-
-                System.out.print(position);
-                System.out.print("---");
-                System.out.print(id);
-                System.out.println("");
+                gotoFirstFragment(doors[position]);
             }
         });
-
-
 
         mToolbar.setNavigationIcon(R.drawable.ic_arrow_back);
         mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
@@ -73,8 +72,9 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
             }
         });
 
-    }
 
+
+    }
 
     private void gotoMainActivity() {
         startActivity(new Intent(MyDoorsActivity.this, MainActivity.class));
@@ -122,7 +122,6 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
                 this, 0, new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
         if(mNfcAdapter!= null)
             mNfcAdapter.enableForegroundDispatch(this, pendingIntent, nfcIntentFilter, null);
-
     }
 
     @Override
@@ -168,12 +167,31 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
     }
 
 
-
-    private void gotoFirstFragment() {
-        // need to pass in something here that identifies the door selected
-        fragmentTransaction = fragmentManager.beginTransaction();
+    private void gotoFirstFragment(String selectedDoor) {
+        Bundle bundle = new Bundle();
+        bundle.putString("doorID", selectedDoor );
+        firstFragment.setArguments(bundle);
+        fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.fragmentContainer,firstFragment);
         fragmentTransaction.commit();
     }
 
+    public void appendDoor(String doorId) {
+        if (Arrays.asList(doors).contains(doorId)) {
+            Toast.makeText(this, "This door has already been added.", Toast.LENGTH_SHORT).show();
+        } else {
+            // appends new doorId
+            doors = Arrays.copyOf(doors, doors.length + 1);
+            doors[doors.length - 1] = doorId; // Assign 40 to the last element
+
+            Toast.makeText(this, "Door " + doorId + " has been added.", Toast.LENGTH_SHORT).show();
+            finish(); // restart the activity with the new doors
+
+            Intent intent = getIntent();
+            Bundle b = new Bundle();
+            b.putStringArray("DOORS", doors);
+            intent.putExtras(b);
+            startActivity(intent);
+        }
+    }
 }
