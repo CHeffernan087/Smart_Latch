@@ -13,10 +13,6 @@
             android:icon="@drawable/ic_door"
             android:title="My Doors" />
         <item
-            android:id="@+id/nav_add"
-            android:icon="@drawable/ic_add_symbol"
-            android:title="Add Door" />
-        <item
             android:id="@+id/nav_manual"
             android:icon="@drawable/ic_manual"
             android:title="Manual" />

@@ -24,6 +24,7 @@ import com.google.android.gms.tasks.Task;
 
 import com.google.android.material.navigation.NavigationView;
 
+
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private GoogleSignInClient mGoogleSignInClient;
     private String welcomeText;
@@ -31,7 +32,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private FirstFragment firstFragment = new FirstFragment();
     private FragmentManager fragmentManager = getSupportFragmentManager();
     private FragmentTransaction fragmentTransaction;
-    private MyDoorsFragment myDoorsFragment = new MyDoorsFragment();
 
 
     @Override
@@ -65,6 +65,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fragmentTransaction.commit(); // add the home fragment
 
     }
+
 
     @Override
     public void onBackPressed() {
@@ -110,11 +111,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             gotoMainFragment();
             Toast.makeText(MainActivity.this, "Home", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_doors) {
-            gotoMyDoorsFragment();
+            // gotoMyDoorsFragment();
+            gotoMyDoorsActivity();
             Toast.makeText(MainActivity.this, "View available doors", Toast.LENGTH_SHORT).show();
-        } else if (id == R.id.nav_add) {
-            gotoMainFragment();
-            Toast.makeText(MainActivity.this, "Add a door", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_manual) {
             gotoFirstFragment();
             Toast.makeText(MainActivity.this, "We can add buttons here to operate without NFC", Toast.LENGTH_SHORT).show();
@@ -130,6 +129,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void gotoLoginActivity() {
         startActivity(new Intent(MainActivity.this, LoginActivity.class));
+        finish();
+    }
+
+    private void gotoMyDoorsActivity() {
+        startActivity(new Intent(MainActivity.this, MyDoorsActivity.class));
         finish();
     }
 
@@ -156,9 +160,4 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fragmentTransaction.commit();// replace the fragment
     }
 
-    private void gotoMyDoorsFragment () {
-        fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.fragmentContainer,myDoorsFragment);
-        fragmentTransaction.commit();// replace the fragment
-    }
 }
