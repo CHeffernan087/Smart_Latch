@@ -9,7 +9,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -101,7 +100,16 @@ public class AddDoorFragment extends DialogFragment {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                Toast.makeText(getActivity(), responseMessage, Toast.LENGTH_SHORT).show();
+                // --- COMMENTING THIS BIT OUT FOR NOW BECAUSE IT CAUSES A CRASH
+                // TODO: Do we really need to do anything with the response here? Maybe a toast would be nice...
+//                getActivity().runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        Log.v(TAG,"NFC ID: 0x" + doorId);
+//                        doorIdText.setText("Door ID: 0x" + doorId);
+//
+//                    }
+//                });
             }
         });
     }

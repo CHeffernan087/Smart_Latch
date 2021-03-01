@@ -24,6 +24,20 @@ import com.google.android.gms.tasks.Task;
 
 import com.google.android.material.navigation.NavigationView;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private GoogleSignInClient mGoogleSignInClient;
@@ -32,6 +46,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private FirstFragment firstFragment = new FirstFragment();
     private FragmentManager fragmentManager = getSupportFragmentManager();
     private FragmentTransaction fragmentTransaction;
+    String responseString = "";
+    String responseMessage = "";
+    JSONObject jObj = null;
+    JSONArray responseDoors;
 
 
     @Override
@@ -111,8 +129,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             gotoMainFragment();
             Toast.makeText(MainActivity.this, "Home", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_doors) {
-            // gotoMyDoorsFragment();
-            gotoMyDoorsActivity();
+            // here we put in the doors retrieved from the endpoint /getUserDoors
+            getUserDoorsAndNavToMyDoors();
             Toast.makeText(MainActivity.this, "View available doors", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_manual) {
             gotoFirstFragment();
@@ -132,8 +150,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         finish();
     }
 
-    private void gotoMyDoorsActivity() {
-        startActivity(new Intent(MainActivity.this, MyDoorsActivity.class));
+    private void gotoMyDoorsActivity(String[] doors) {
+        Intent i = new Intent(MainActivity.this, MyDoorsActivity.class);
+        i.putExtra("DOORS", doors);
+        startActivity(i);
         finish();
     }
 
@@ -158,6 +178,55 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.fragmentContainer,firstFragment);
         fragmentTransaction.commit();// replace the fragment
+    }
+
+    private void getUserDoorsAndNavToMyDoors () {
+
+        String defaultTestUserId = "1234";
+        OkHttpClient client = new OkHttpClient();
+        String hostUrl = getString(R.string.smart_latch_url) + "/getUserDoors?userId=" + defaultTestUserId;
+
+        RequestBody formBody = new FormBody.Builder()
+                .build();
+        Request request = new Request.Builder()
+                .url(hostUrl)
+                .post(formBody)
+                .build();
+
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                responseString = response.body().string();
+
+                try {
+                    jObj = new JSONObject(responseString);
+                    responseMessage = jObj.getString("message");
+                    responseDoors = jObj.getJSONArray("doors");
+                    String[] userDoorsAsStringArray = toStringArray(responseDoors);
+                    gotoMyDoorsActivity(userDoorsAsStringArray);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+    }
+
+    public static String[] toStringArray(JSONArray array) {
+        if(array==null)
+            return null;
+
+        String[] arr=new String[array.length()];
+        for(int i=0; i<arr.length; i++) {
+            arr[i]=array.optString(i);
+        }
+        return arr;
     }
 
 }

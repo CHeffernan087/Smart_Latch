@@ -1,6 +1,5 @@
 package com.example.smart_latch_app;
 
-import android.app.ListActivity;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -9,27 +8,21 @@ import android.nfc.Tag;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import java.nio.BufferUnderflowException;
 import java.util.Arrays;
 
 public class MyDoorsActivity extends AppCompatActivity implements Listener{
 
     public static final String TAG = MainActivity.class.getSimpleName();
-    String[] doors = new String[] { "Test Door ID" };
+    String[] doors = new String[] {};
     private Button mBtScan;
     private AddDoorFragment mAddDoorFragment;
     private boolean isDialogDisplayed = false;
@@ -51,7 +44,6 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
         if (b != null) {
             doors = b.getStringArray("DOORS");
         }
-        System.out.println("NOW DOORS: " + Arrays.toString(doors));
 
         // use your custom layout
         MySimpleArrayAdapter adapter = new MySimpleArrayAdapter(this, doors);
@@ -71,9 +63,6 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
                 gotoMainActivity();
             }
         });
-
-
-
     }
 
     private void gotoMainActivity() {
