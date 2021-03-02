@@ -100,8 +100,7 @@ public class AddDoorFragment extends DialogFragment {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                // --- COMMENTING THIS BIT OUT FOR NOW BECAUSE IT CAUSES A CRASH
-                // TODO: Do we really need to do anything with the response here? Maybe a toast would be nice...
+                
 //                getActivity().runOnUiThread(new Runnable() {
 //                    @Override
 //                    public void run() {
