@@ -1,13 +1,13 @@
 const fetch = require("node-fetch");
-const admin = require('firebase-admin');
+const admin = require("firebase-admin");
 admin.initializeApp();
 
 const firestoreDb = admin.firestore();
 //TODO comment out
-// const Firestore = require('@google-cloud/firestore');
+const Firestore = require("@google-cloud/firestore");
 // const firestoreDb = new Firestore({
-// 	projectId: 'smart-latch',
-// 	keyFilename: '../../../smart-latch-db45150c5709.json',
+// 	projectId: "smart-latch",
+// 	keyFilename: "../../smart-latch-a0cbed3b46a2.json",
 // });
 
 const SMART_LATCH_ESP_API = "https://smart-latchxyz.xyz";
@@ -85,12 +85,23 @@ exports.toggleLatch = (req, res) => {
 	}
 };
 
+const queryUserInDB = (email) => {
+	return firestoreDb
+		.collection("Users")
+		.doc(email)
+		.get()
+		.then((user) => user.exists);
+};
+
+const checkShouldCreateAccount = (email) => {
+	return queryUserInDB(email).then((userExists) => !userExists);
+};
+
 exports.verifyUser = async (req, res) => {
 	const client = new OAuth2Client(APP_GOOGLE_CLIENT_ID);
 	const token = req.query && req.query.idToken;
 
 	let payload = null;
-
 	if (!token) {
 		res.send({ error: "No 'idToken' parameter provided." });
 		return;
@@ -103,11 +114,22 @@ exports.verifyUser = async (req, res) => {
 		});
 
 		payload = ticket.getPayload();
-		const userid = payload["sub"]; // Todo: can use this as a unique id for the DB if necessary?
+		return payload;
 	}
 	verify()
-		.then(() => {
-			res.send({ success: true });
+		.then(({ given_name, family_name, email, sub }) => {
+			checkShouldCreateAccount(email).then((newUser) => {
+				if (newUser) {
+					// create account
+					registerAsUser(email, given_name, family_name, sub).then(() => {
+						res.send({ success: true, newAccount: true });
+					});
+				} else {
+					//log in
+					// need to implement JWT generation and signing
+					res.send({ success: true, newAccount: false });
+				}
+			});
 		})
 		.catch((e) => {
 			console.log(e);
@@ -143,13 +165,17 @@ exports.healthcheck = (req, res) => {
 };
 
 async function isDoorActive(doorId) {
-	return (await firestoreDb.collection('Doors').doc(doorId).get()).get('IsActive');
+	return (await firestoreDb.collection("Doors").doc(doorId).get()).get(
+		"IsActive"
+	);
 }
 
 async function isAuthorised(email, doorId) {
-	userDoc = firestoreDb.collection('Users').doc(email);
-	doors = firestoreDb.collection('Doors');
-	const doorsAuthorisedForUser = (await doors.where('Authorised', 'array-contains', userDoc).get()).docs;
+	userDoc = firestoreDb.collection("Users").doc(email);
+	doors = firestoreDb.collection("Doors");
+	const doorsAuthorisedForUser = (
+		await doors.where("Authorised", "array-contains", userDoc).get()
+	).docs;
 	for (let index = 0; index < doorsAuthorisedForUser.length; index++) {
 		const doorDocument = doorsAuthorisedForUser[index];
 		console.log(doorDocument.id);
@@ -161,43 +187,44 @@ async function isAuthorised(email, doorId) {
 }
 
 async function setDoorAdmin(email, doorId) {
-	doorDocument = firestoreDb.collection('Doors').doc(doorId)
-	userDoc = firestoreDb.collection('Users').doc(email);
+	doorDocument = firestoreDb.collection("Doors").doc(doorId);
+	userDoc = firestoreDb.collection("Users").doc(email);
 	await setDoorAsActive(doorId);
 	await addAsAuthorised(email, doorId);
-	return doorDocument.update({ Admin: userDoc })
+	return doorDocument.update({ Admin: userDoc });
 }
 
 function setDoorAsActive(doorId) {
-	doorDocument = firestoreDb.collection('Doors').doc(doorId)
-	return doorDocument.update({ IsActive: true })
+	doorDocument = firestoreDb.collection("Doors").doc(doorId);
+	return doorDocument.update({ IsActive: true });
 }
 
 function addAsAuthorised(email, doorId) {
-	doorDocument = firestoreDb.collection('Doors').doc(doorId)
-	userDoc = firestoreDb.collection('Users').doc(email)
+	doorDocument = firestoreDb.collection("Doors").doc(doorId);
+	userDoc = firestoreDb.collection("Users").doc(email);
 	return doorDocument.update({
-		Authorised: admin.firestore.FieldValue.arrayUnion(userDoc)
+		Authorised: admin.firestore.FieldValue.arrayUnion(userDoc),
 	});
 }
 
-function registerAsUser(email, firstname, lastname) {
-	const docRef = firestoreDb.collection('Users').doc(email);
+function registerAsUser(email, firstname, lastname, userId) {
+	const docRef = firestoreDb.collection("Users").doc(email);
 	return docRef.set({
 		firstname: firstname,
 		lastname: lastname,
-		email: email
-	})
+		email: email,
+		userId,
+	});
 }
 
-//curl -d "email=joeblogs@gmail.com&firstname=joe&lastname=blogs" -X POST http://localhost:8080/ 
+//curl -d "email=joeblogs@gmail.com&firstname=joe&lastname=blogs" -X POST http://localhost:8080/
 //curl -d "email=joeblogs@gmail.com&firstname=joe&lastname=blogs" -X POST https://europe-west2-smart-latch.cloudfunctions.net/registerUser --ssl-no-revoke
 exports.registerUser = (req, res) => {
 	if (req.method != "POST") {
 		res.status(400).send({ error: "Needs to be a POST request" });
 	}
 	const keys = ["email", "firstname", "lastname"];
-	const hasAllKeys = keys.every(key => req.body.hasOwnProperty(key));
+	const hasAllKeys = keys.every((key) => req.body.hasOwnProperty(key));
 	if (hasAllKeys === false) {
 		res.status(400).send({ error: "Missing values in POST request" });
 	}
@@ -206,18 +233,22 @@ exports.registerUser = (req, res) => {
 	lastname = req.body.lastname;
 	const userIsAuthorized = false;
 	if (userIsAuthorized) {
-		registerAsUser(email, firstname, lastname).then((data) => {
-			res.status(200).send({ message: `Successfully added ${email}, ${firstname} ${lastname}`, data: data })
-		}).catch((err) => {
-			res.status(400).send({ error: err })
-		});
+		registerAsUser(email, firstname, lastname)
+			.then((data) => {
+				res.status(200).send({
+					message: `Successfully added ${email}, ${firstname} ${lastname}`,
+					data: data,
+				});
+			})
+			.catch((err) => {
+				res.status(400).send({ error: err });
+			});
 	}
 };
 
 function deleteUserFromDB(email) {
-	return firestoreDb.collection('Users').doc(email).delete();
+	return firestoreDb.collection("Users").doc(email).delete();
 }
-
 
 //curl -d "email=joeblogs@gmail.com" -X DELETE http://localhost:8080/
 //curl -d "email=joeblogs@gmail.com" -X DELETE https://europe-west2-smart-latch.cloudfunctions.net/deleteUser --ssl-no-revoke
@@ -231,10 +262,21 @@ exports.deleteUser = (req, res) => {
 	email = req.body.email;
 	const userIsAuthorized = false;
 	if (userIsAuthorized) {
-		deleteUserFromDB(email).then((data) => {
-			res.status(200).send({ message: `Successfully deleted ${email} from DB`, data: data })
-		}).catch((err) => {
-			res.status(400).send({ error: err })
-		});
+		deleteUserFromDB(email)
+			.then((data) => {
+				res.status(200).send({
+					message: `Successfully deleted ${email} from DB`,
+					data: data,
+				});
+			})
+			.catch((err) => {
+				res.status(400).send({ error: err });
+			});
 	}
-}
+};
+
+exports.userExists = (req, res) => {
+	userInDB().then((userExists) => {
+		res.send({ userExists });
+	});
+};
