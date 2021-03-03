@@ -182,7 +182,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void getUserDoorsAndNavToMyDoors () {
 
-        String defaultTestUserId = "1234";
+        String defaultTestUserId = "cheffernan087@gmail.com";
         OkHttpClient client = new OkHttpClient();
         String hostUrl = getString(R.string.smart_latch_url) + "/getUserDoors?userId=" + defaultTestUserId;
 

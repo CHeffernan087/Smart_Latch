@@ -70,12 +70,12 @@ public class AddDoorFragment extends DialogFragment {
     private void sendAddDoorReq(String doorId) {
 
         OkHttpClient client = new OkHttpClient();
-        String hostUrl = getString(R.string.smart_latch_url) + "/registerDoor2" ;
+        String hostUrl = getString(R.string.smart_latch_url) + "/registerDoor" ;
 
         Log.v(TAG,hostUrl);
         RequestBody formBody = new FormBody.Builder()
                 .add("doorId", doorId)
-                .add("userId", "1234")
+                .add("userId", "cheffernan087@gmail.com")
                 .build();
         Request request = new Request.Builder()
                 .url(hostUrl)

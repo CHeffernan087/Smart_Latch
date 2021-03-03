@@ -140,7 +140,8 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
         if (isDialogDisplayed) {
                 Toast.makeText(this, "NFC Tag Detected !", Toast.LENGTH_SHORT).show();
                 mAddDoorFragment = (AddDoorFragment) getSupportFragmentManager().findFragmentByTag(AddDoorFragment.TAG);
-                mAddDoorFragment.onNfcDetected(sb.toString());
+                System.out.println(sb.toString());
+                mAddDoorFragment.onNfcDetected("1004");
         }
     }
 
