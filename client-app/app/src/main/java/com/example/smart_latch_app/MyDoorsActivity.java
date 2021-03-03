@@ -141,7 +141,21 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
                 Toast.makeText(this, "NFC Tag Detected !", Toast.LENGTH_SHORT).show();
                 mAddDoorFragment = (AddDoorFragment) getSupportFragmentManager().findFragmentByTag(AddDoorFragment.TAG);
                 System.out.println(sb.toString());
-                mAddDoorFragment.onNfcDetected("1004");
+                // for testing. Update this to add yourself to a particular door
+                /*
+                * {
+                *   1003: cheffernan087@gmail.com
+                *   1004: cheffernan087@gmail.com
+                *   1005:
+                *   1006:
+                *   1007:
+                *   1008:
+                *   1009:
+                *   1010:
+                * }
+                *
+                * */
+                mAddDoorFragment.onNfcDetected("1003");
         }
     }
 

@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.content.Intent;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -71,11 +72,16 @@ public class AddDoorFragment extends DialogFragment {
 
         OkHttpClient client = new OkHttpClient();
         String hostUrl = getString(R.string.smart_latch_url) + "/registerDoor" ;
+        // todo grab the email of the user currently logged in
+        // to change the door you want to register update the email here and change the door
+        // id in detectTagData method. Add yourself to the doors in the comment so that
+        // other people can add themselves to available doors.
+        String email = "cheffernan087@gmail.com";
 
         Log.v(TAG,hostUrl);
         RequestBody formBody = new FormBody.Builder()
                 .add("doorId", doorId)
-                .add("userId", "cheffernan087@gmail.com")
+                .add("email",  email)
                 .build();
         Request request = new Request.Builder()
                 .url(hostUrl)

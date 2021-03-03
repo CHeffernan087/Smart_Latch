@@ -181,10 +181,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void getUserDoorsAndNavToMyDoors () {
-
+        // todo dynamically grab the logged in user email
         String defaultTestUserId = "cheffernan087@gmail.com";
         OkHttpClient client = new OkHttpClient();
-        String hostUrl = getString(R.string.smart_latch_url) + "/getUserDoors?userId=" + defaultTestUserId;
+        String hostUrl = getString(R.string.smart_latch_url) + "/getUserDoors?email=" + defaultTestUserId;
 
         RequestBody formBody = new FormBody.Builder()
                 .build();

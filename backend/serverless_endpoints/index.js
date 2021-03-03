@@ -143,17 +143,17 @@ exports.registerDoor = (req, res) => {
 			error: "No such endpoint. Did you specify the wrong request type?",
 		});
 	}
-	const { doorId, userId } = req.body;
-	if (doorId && userId) {
+	const { doorId, email } = req.body;
+	if (doorId && email) {
 		isDoorActive(doorId)
 			.then((doorActive) => {
 				if (doorActive) {
-					return setDoorAdmin(userId, doorId);
+					return setDoorAdmin(email, doorId);
 				} else {
 					throw "Door is not currently active";
 				}
 			})
-			.then(() => addDoorToUser(userId, doorId))
+			.then(() => addDoorToUser(email, doorId))
 			.then(() => res.status(200).send({ message: "Success! New door added" }))
 			.catch((err) => res.status(401).send({ err }));
 		// todo add, user to door here
@@ -162,8 +162,8 @@ exports.registerDoor = (req, res) => {
 		if (!doorId) {
 			missingFields.unshift("doorId");
 		}
-		if (!userId) {
-			missingFields.unshift("userId");
+		if (!email) {
+			missingFields.unshift("email");
 		}
 		return res
 			.status(400)
@@ -182,7 +182,7 @@ const addDoorToUser = (email, doorId) => {
 };
 
 exports.getUserDoors = (req, res) => {
-	const email = req.query && req.query.userId;
+	const email = req.query && req.query.email;
 
 	userDoc = firestoreDb
 		.collection("Users")
