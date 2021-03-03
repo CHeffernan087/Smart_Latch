@@ -145,7 +145,18 @@ exports.registerDoor = (req, res) => {
 	}
 	const { doorId, userId } = req.body;
 	if (doorId && userId) {
-		return res.status(200).send({ message: "Success! New door added" });
+		isDoorActive(doorId)
+			.then((doorActive) => {
+				if (doorActive) {
+					return setDoorAdmin(userId, doorId);
+				} else {
+					throw "Door is not currently active";
+				}
+			})
+			.then(() => addDoorToUser(userId, doorId))
+			.then(() => res.status(200).send({ message: "Success! New door added" }))
+			.catch((err) => res.status(401).send({ err }));
+		// todo add, user to door here
 	} else {
 		const missingFields = [];
 		if (!doorId) {
@@ -160,16 +171,32 @@ exports.registerDoor = (req, res) => {
 	}
 };
 
+const addDoorToUser = (email, doorId) => {
+	doorDocument = firestoreDb.collection("Doors").doc(doorId);
+	userDoc = firestoreDb
+		.collection("Users")
+		.doc(email)
+		.collection("Doors")
+		.doc(doorId);
+	return userDoc.set({ doorObj: doorDocument });
+};
+
 exports.getUserDoors = (req, res) => {
-	const userId  = req.query && req.query.userId; 
-	if (userId === "1234") { //testID
-		res.send({ message: "Test ID", doors: ["Test Door ID"]})
-	} else {
-		// TODO: ping the door database/table with the userID, ask for this user's doors.
-		// ---> send users door's back if they have any in an array ["door1", "door2"]
-		res.send({message: "Not implemented yet.", doors: []});
-	}
-}
+	const email = req.query && req.query.userId;
+
+	userDoc = firestoreDb
+		.collection("Users")
+		.doc(email)
+		.collection("Doors")
+		.get()
+		.then((doorCollection) => {
+			const doors = [];
+			doorCollection.forEach((doc) => {
+				doors.unshift(doc.id);
+			});
+			res.send({ message: "Not implemented yet.", doors });
+		});
+};
 
 exports.healthcheck = (req, res) => {
 	res.send({ message: "smart latch server is running" });
