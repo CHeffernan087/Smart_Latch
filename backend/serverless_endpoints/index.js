@@ -1,5 +1,22 @@
+// Import the Secret Manager client and instantiate it:
+const { SecretManagerServiceClient } = require("@google-cloud/secret-manager");
+const client = new SecretManagerServiceClient();
+let jwt_secret;
+async function readInJwtSecret() {
+	const [data] = await client.accessSecretVersion({
+		name: "projects/639400548732/secrets/SMART_LATCH_SECRET/versions/latest",
+	});
+	jwt_secret = data.payload.data.toString();
+}
+
+exports.getSecret = (req, res) => {
+	res.send({ secret });
+};
+const jwt = require("jsonwebtoken");
 const fetch = require("node-fetch");
 const admin = require("firebase-admin");
+var randtoken = require("rand-token");
+
 admin.initializeApp();
 
 const firestoreDb = admin.firestore();
@@ -119,15 +136,51 @@ exports.verifyUser = async (req, res) => {
 	verify()
 		.then(({ given_name, family_name, email, sub }) => {
 			checkShouldCreateAccount(email).then((newUser) => {
+				const refreshToken = randtoken.uid(256);
 				if (newUser) {
 					// create account
-					registerAsUser(email, given_name, family_name, sub).then(() => {
-						res.send({ success: true, newAccount: true });
+					readInJwtSecret().then(() => {
+						const token = jwt.sign(
+							{ email, firstName: given_name, lastName: family_name, id: sub },
+							jwt_secret
+						);
+						registerAsUser(email, given_name, family_name, sub, refreshToken)
+							.then(() => {
+								addRefreshToken(email, refreshToken);
+							})
+							.then(() => {
+								res.send({
+									success: true,
+									newAccount: false,
+									token,
+									refreshToken,
+								});
+							});
 					});
 				} else {
 					//log in
 					// need to implement JWT generation and signing
-					res.send({ success: true, newAccount: false });
+					readInJwtSecret()
+						.then(() => {
+							addRefreshToken(email, refreshToken);
+						})
+						.then(() => {
+							const token = jwt.sign(
+								{
+									email,
+									firstName: given_name,
+									lastName: family_name,
+									id: sub,
+								},
+								jwt_secret
+							);
+							res.send({
+								success: true,
+								newAccount: false,
+								token,
+								refreshToken,
+							});
+						});
 				}
 			});
 		})
@@ -135,6 +188,24 @@ exports.verifyUser = async (req, res) => {
 			console.log(e);
 			res.send({ success: false, error: "Token failed verification." });
 		});
+};
+
+const addRefreshToken = (email, refreshToken) => {
+	const docRef = firestoreDb
+		.collection("Users")
+		.doc(email)
+		.collection("RefreshToken")
+		.doc(refreshToken);
+
+	const tempDate = new Date(Date.now());
+	const issuedAt = new Date(Date.now());
+	const expiresAt = new Date(tempDate.setMonth(tempDate.getMonth() + 6));
+
+	return docRef.set({
+		issuedAt: issuedAt.valueOf(),
+		expiresAt: expiresAt.valueOf(),
+		refreshToken,
+	});
 };
 
 exports.registerDoor = (req, res) => {
