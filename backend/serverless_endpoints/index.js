@@ -215,9 +215,7 @@ exports.registerDoor = (req, res) => {
 		});
 	}
 	const { doorId, email } = req.body;
-	console.log("cheffernan087");
-	console.log(doorId);
-	console.log(email);
+
 	if (doorId && email) {
 		isDoorActive(doorId)
 			.then((doorActive) => {
