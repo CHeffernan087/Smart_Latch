@@ -9,9 +9,6 @@ async function readInJwtSecret() {
 	jwt_secret = data.payload.data.toString();
 }
 
-exports.getSecret = (req, res) => {
-	res.send({ secret });
-};
 const jwt = require("jsonwebtoken");
 const fetch = require("node-fetch");
 const admin = require("firebase-admin");
