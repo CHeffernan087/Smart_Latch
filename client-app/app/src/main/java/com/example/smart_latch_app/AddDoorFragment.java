@@ -11,6 +11,9 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.content.Intent;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.IOException;
@@ -75,9 +78,13 @@ public class AddDoorFragment extends DialogFragment {
         // todo grab the email of the user currently logged in
         // to change the door you want to register update the email here and change the door
         // id in detectTagData method. Add yourself to the doors in the comment so that
-        // other people can add themselves to available doors.
-        String email = "cheffernan087@gmail.com";
+        // other people can add themselves to available doors
 
+        String email ="";
+        GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(((MyDoorsActivity) getActivity()));
+        if (acct != null) {
+            email = acct.getEmail();
+        }
         Log.v(TAG,hostUrl);
         RequestBody formBody = new FormBody.Builder()
                 .add("doorId", doorId)

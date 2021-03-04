@@ -155,7 +155,7 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
                 * }
                 *
                 * */
-                mAddDoorFragment.onNfcDetected("1003");
+                mAddDoorFragment.onNfcDetected("1005");
         }
     }
 
