@@ -1,4 +1,7 @@
 const firestoreDb = admin.firestore();
+const admin = require("firebase-admin");
+admin.initializeApp();
+
 //TODO comment out
 const Firestore = require("@google-cloud/firestore");
 // const firestoreDb = new Firestore({
