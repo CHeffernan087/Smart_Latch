@@ -1,3 +1,5 @@
+const { SecretManagerServiceClient } = require("@google-cloud/secret-manager");
+const client = new SecretManagerServiceClient();
 const fetch = require("node-fetch");
 const SMART_LATCH_ESP_API = "https://smart-latchxyz.xyz";
 
@@ -5,6 +7,18 @@ const getRequestType = (req) => req.method;
 
 exports.isRequestAllowed = (req, intendedReqType) =>
 	getRequestType(req) === intendedReqType;
+
+exports.readInJwtSecret = async () => {
+	return readInSecret("SMART_LATCH_SECRET");
+};
+
+const readInSecret = async (secretName) => {
+	const [data] = await client.accessSecretVersion({
+		name: `projects/639400548732/secrets/${secretName}/versions/latest`,
+	});
+	const jwt_secret = data.payload.data.toString();
+	return jwt_secret;
+};
 
 exports.smartLatchGet = (endpoint = "/healtcheck") => {
 	return fetch(`${SMART_LATCH_ESP_API}${endpoint}`)
