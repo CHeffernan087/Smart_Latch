@@ -20,75 +20,68 @@ async function readInJwtSecret() {
 	jwt_secret = data.payload.data.toString();
 }
 
-exports.verifyUser = async (req, res) => {
+const logUserIn = ({ given_name, family_name, email, sub }, newUser) => {
+	const refreshToken = randtoken.uid(256);
+	return readInJwtSecret()
+		.then(() => {
+			if (newUser) {
+				return registerAsUser(
+					email,
+					given_name,
+					family_name,
+					sub,
+					refreshToken
+				);
+			} else {
+				return new Promise((res, rej) => res());
+			}
+		})
+		.then(() => {
+			return addRefreshToken(email, refreshToken);
+		})
+		.then(() => {
+			const token = jwt.sign(
+				{ email: email, firstName: given_name, lastName: family_name, id: sub },
+				jwt_secret
+			);
+			return {
+				success: true,
+				newAccount: false,
+				token,
+				refreshToken,
+			};
+		});
+};
+
+const verify = async (token) => {
 	const client = new OAuth2Client(APP_GOOGLE_CLIENT_ID);
+	const ticket = await client.verifyIdToken({
+		idToken: token,
+		audience: APP_GOOGLE_CLIENT_ID,
+	});
+
+	payload = ticket.getPayload();
+	return payload;
+};
+
+exports.verifyUser = async (req, res) => {
 	const token = req.query && req.query.idToken;
 
-	let payload = null;
 	if (!token) {
-		res.send({ error: "No 'idToken' parameter provided." });
-		return;
+		return res.send({ error: "No 'idToken' parameter provided." });
 	}
 
-	async function verify() {
-		const ticket = await client.verifyIdToken({
-			idToken: token,
-			audience: APP_GOOGLE_CLIENT_ID,
-		});
-
-		payload = ticket.getPayload();
-		return payload;
-	}
-	verify()
-		.then(({ given_name, family_name, email, sub }) => {
-			checkShouldCreateAccount(email).then((newUser) => {
-				const refreshToken = randtoken.uid(256);
-				if (newUser) {
-					// create account
-					readInJwtSecret().then(() => {
-						const token = jwt.sign(
-							{ email, firstName: given_name, lastName: family_name, id: sub },
-							jwt_secret
-						);
-						registerAsUser(email, given_name, family_name, sub, refreshToken)
-							.then(() => {
-								addRefreshToken(email, refreshToken);
-							})
-							.then(() => {
-								res.send({
-									success: true,
-									newAccount: false,
-									token,
-									refreshToken,
-								});
-							});
-					});
-				} else {
-					//log in
-					// need to implement JWT generation and signing
-					readInJwtSecret()
-						.then(() => {
-							addRefreshToken(email, refreshToken);
-						})
-						.then(() => {
-							const token = jwt.sign(
-								{
-									email,
-									firstName: given_name,
-									lastName: family_name,
-									id: sub,
-								},
-								jwt_secret
-							);
-							res.send({
-								success: true,
-								newAccount: false,
-								token,
-								refreshToken,
-							});
-						});
-				}
+	verify(token)
+		.then(({ email, ...userCredentials }) => {
+			return checkShouldCreateAccount(email).then((newUser) => {
+				return { newUser, ...userCredentials, email };
 			});
+		})
+		.then(({ newUser, ...userCredentials }) => {
+			return logUserIn({ ...userCredentials }, newUser);
+		})
+		.then((responsePayload) => {
+			return res.status(200).send(responsePayload);
 		})
 		.catch((e) => {
 			console.log(e);
