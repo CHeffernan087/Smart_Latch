@@ -44,6 +44,12 @@ const logUserIn = ({ given_name, family_name, email, sub }, newUser) => {
 		});
 };
 
+exports.testAuthMiddleware = (req, res) => {
+	res
+		.status(200)
+		.send({ message: "Your token has been succesfully verified!" });
+};
+
 const verifyToken = async (token) => {
 	const client = new OAuth2Client(APP_GOOGLE_CLIENT_ID);
 	const ticket = await client.verifyIdToken({
