@@ -107,7 +107,6 @@ exports.verifyUser = async (req, res) => {
 			return res.status(200).send(responsePayload);
 		})
 		.catch((e) => {
-			console.log(e);
 			res.send({ success: false, error: "Token failed verification." });
 		});
 };
