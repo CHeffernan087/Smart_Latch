@@ -9,6 +9,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.content.Intent;
+
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -70,12 +74,17 @@ public class AddDoorFragment extends DialogFragment {
     private void sendAddDoorReq(String doorId) {
 
         OkHttpClient client = new OkHttpClient();
-        String hostUrl = getString(R.string.smart_latch_url) + "/registerDoor2" ;
+        String hostUrl = getString(R.string.smart_latch_url) + "/registerDoor" ;
 
+        String email ="";
+        GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(((MyDoorsActivity) getActivity()));
+        if (acct != null) {
+            email = acct.getEmail();
+        }
         Log.v(TAG,hostUrl);
         RequestBody formBody = new FormBody.Builder()
                 .add("doorId", doorId)
-                .add("userId", "1234")
+                .add("email",  email)
                 .build();
         Request request = new Request.Builder()
                 .url(hostUrl)

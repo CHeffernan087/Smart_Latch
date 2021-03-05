@@ -1,6 +1,7 @@
 package com.example.smart_latch_app;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -17,6 +18,7 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -181,10 +183,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void getUserDoorsAndNavToMyDoors () {
+        String email ="";
+        GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
+        if (acct != null) {
+            email = acct.getEmail();
+        }
 
-        String defaultTestUserId = "1234";
         OkHttpClient client = new OkHttpClient();
-        String hostUrl = getString(R.string.smart_latch_url) + "/getUserDoors?userId=" + defaultTestUserId;
+        String hostUrl = getString(R.string.smart_latch_url) + "/getUserDoors?email=" + email;
 
         RequestBody formBody = new FormBody.Builder()
                 .build();

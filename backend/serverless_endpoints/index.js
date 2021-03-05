@@ -1,5 +1,19 @@
+// Import the Secret Manager client and instantiate it:
+const { SecretManagerServiceClient } = require("@google-cloud/secret-manager");
+const client = new SecretManagerServiceClient();
+let jwt_secret;
+async function readInJwtSecret() {
+	const [data] = await client.accessSecretVersion({
+		name: "projects/639400548732/secrets/SMART_LATCH_SECRET/versions/latest",
+	});
+	jwt_secret = data.payload.data.toString();
+}
+
+const jwt = require("jsonwebtoken");
 const fetch = require("node-fetch");
 const admin = require("firebase-admin");
+var randtoken = require("rand-token");
+
 admin.initializeApp();
 
 const firestoreDb = admin.firestore();
@@ -119,15 +133,51 @@ exports.verifyUser = async (req, res) => {
 	verify()
 		.then(({ given_name, family_name, email, sub }) => {
 			checkShouldCreateAccount(email).then((newUser) => {
+				const refreshToken = randtoken.uid(256);
 				if (newUser) {
 					// create account
-					registerAsUser(email, given_name, family_name, sub).then(() => {
-						res.send({ success: true, newAccount: true });
+					readInJwtSecret().then(() => {
+						const token = jwt.sign(
+							{ email, firstName: given_name, lastName: family_name, id: sub },
+							jwt_secret
+						);
+						registerAsUser(email, given_name, family_name, sub, refreshToken)
+							.then(() => {
+								addRefreshToken(email, refreshToken);
+							})
+							.then(() => {
+								res.send({
+									success: true,
+									newAccount: false,
+									token,
+									refreshToken,
+								});
+							});
 					});
 				} else {
 					//log in
 					// need to implement JWT generation and signing
-					res.send({ success: true, newAccount: false });
+					readInJwtSecret()
+						.then(() => {
+							addRefreshToken(email, refreshToken);
+						})
+						.then(() => {
+							const token = jwt.sign(
+								{
+									email,
+									firstName: given_name,
+									lastName: family_name,
+									id: sub,
+								},
+								jwt_secret
+							);
+							res.send({
+								success: true,
+								newAccount: false,
+								token,
+								refreshToken,
+							});
+						});
 				}
 			});
 		})
@@ -137,22 +187,52 @@ exports.verifyUser = async (req, res) => {
 		});
 };
 
+const addRefreshToken = (email, refreshToken) => {
+	const docRef = firestoreDb
+		.collection("Users")
+		.doc(email)
+		.collection("RefreshToken")
+		.doc(refreshToken);
+
+	const tempDate = new Date(Date.now());
+	const issuedAt = new Date(Date.now());
+	const expiresAt = new Date(tempDate.setMonth(tempDate.getMonth() + 6));
+
+	return docRef.set({
+		issuedAt: issuedAt.valueOf(),
+		expiresAt: expiresAt.valueOf(),
+		refreshToken,
+	});
+};
+
 exports.registerDoor = (req, res) => {
 	if (!isRequestAllowed(req, "POST")) {
 		return res.status(401).send({
 			error: "No such endpoint. Did you specify the wrong request type?",
 		});
 	}
-	const { doorId, userId } = req.body;
-	if (doorId && userId) {
-		return res.status(200).send({ message: "Success! New door added" });
+	const { doorId, email } = req.body;
+
+	if (doorId && email) {
+		isDoorActive(doorId)
+			.then((doorActive) => {
+				if (doorActive) {
+					return setDoorAdmin(email, doorId);
+				} else {
+					throw "Door is not currently active";
+				}
+			})
+			.then(() => addDoorToUser(email, doorId))
+			.then(() => res.status(200).send({ message: "Success! New door added" }))
+			.catch((err) => res.status(401).send({ err }));
+		// todo add, user to door here
 	} else {
 		const missingFields = [];
 		if (!doorId) {
 			missingFields.unshift("doorId");
 		}
-		if (!userId) {
-			missingFields.unshift("userId");
+		if (!email) {
+			missingFields.unshift("email");
 		}
 		return res
 			.status(400)
@@ -160,16 +240,32 @@ exports.registerDoor = (req, res) => {
 	}
 };
 
+const addDoorToUser = (email, doorId) => {
+	doorDocument = firestoreDb.collection("Doors").doc(doorId);
+	userDoc = firestoreDb
+		.collection("Users")
+		.doc(email)
+		.collection("Doors")
+		.doc(doorId);
+	return userDoc.set({ doorObj: doorDocument });
+};
+
 exports.getUserDoors = (req, res) => {
-	const userId  = req.query && req.query.userId; 
-	if (userId === "1234") { //testID
-		res.send({ message: "Test ID", doors: ["Test Door ID"]})
-	} else {
-		// TODO: ping the door database/table with the userID, ask for this user's doors.
-		// ---> send users door's back if they have any in an array ["door1", "door2"]
-		res.send({message: "Not implemented yet.", doors: []});
-	}
-}
+	const email = req.query && req.query.email;
+
+	userDoc = firestoreDb
+		.collection("Users")
+		.doc(email)
+		.collection("Doors")
+		.get()
+		.then((doorCollection) => {
+			const doors = [];
+			doorCollection.forEach((doc) => {
+				doors.unshift(doc.id);
+			});
+			res.send({ message: "Not implemented yet.", doors });
+		});
+};
 
 exports.healthcheck = (req, res) => {
 	res.send({ message: "smart latch server is running" });
