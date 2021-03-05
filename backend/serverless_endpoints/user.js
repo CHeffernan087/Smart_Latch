@@ -1,4 +1,8 @@
-import { deleteUserFromDB, queryUserInDB, registerAsUser } from "./databaseApi";
+const {
+	deleteUserFromDB,
+	queryUserInDB,
+	registerAsUser,
+} = require("./databaseApi");
 
 //curl -d "email=joeblogs@gmail.com" -X DELETE http://localhost:8080/
 //curl -d "email=joeblogs@gmail.com" -X DELETE https://europe-west2-smart-latch.cloudfunctions.net/deleteUser --ssl-no-revoke
