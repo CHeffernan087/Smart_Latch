@@ -34,7 +34,8 @@ const logUserIn = ({ given_name, family_name, email, sub }, newUser) => {
 		.then((jwt_secret) => {
 			const token = jwt.sign(
 				{ email: email, firstName: given_name, lastName: family_name, id: sub },
-				jwt_secret
+				jwt_secret,
+				{ expiresIn: "12h" }
 			);
 			return {
 				success: true,
