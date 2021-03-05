@@ -5,6 +5,11 @@ const SMART_LATCH_ESP_API = "https://smart-latchxyz.xyz";
 
 const getRequestType = (req) => req.method;
 
+exports.getUser = (req) => {
+	const { email, firstName, lastName, id } = req.user;
+	return { email, firstName, lastName, id };
+};
+
 exports.isRequestAllowed = (req, intendedReqType) =>
 	getRequestType(req) === intendedReqType;
 

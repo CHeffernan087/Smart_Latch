@@ -1,10 +1,11 @@
 const { OAuth2Client } = require("google-auth-library");
 const {
+	addRefreshToken,
 	checkShouldCreateAccount,
 	registerAsUser,
-	addRefreshToken,
+	revokeToken,
 } = require("./databaseApi");
-const { readInJwtSecret } = require("./utils");
+const { getUser, isRequestAllowed, readInJwtSecret } = require("./utils");
 let randtoken = require("rand-token");
 const jwt = require("jsonwebtoken");
 
@@ -42,6 +43,25 @@ const logUserIn = ({ given_name, family_name, email, sub }, newUser) => {
 				refreshToken,
 			};
 		});
+};
+
+exports.logout = (req, res) => {
+	if (!isRequestAllowed(req, "POST")) {
+		return res.status(400).send({ error: "Expected request type POST" });
+	}
+	const { email } = getUser();
+	const { refreshToken } = req.body;
+	if (!refreshToken) {
+		return res.status(400).send({
+			error:
+				"Error. Cannot logout. Attach the refresh token you would like to revoke in the body of the request",
+		});
+	}
+	revokeToken(email, refreshToken)
+		.then(() => {
+			res.status(200).send({ message: "User logged out" });
+		})
+		.catch(() => {});
 };
 
 exports.testAuthMiddleware = (req, res) => {
