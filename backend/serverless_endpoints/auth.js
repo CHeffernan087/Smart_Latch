@@ -49,7 +49,7 @@ exports.logout = (req, res) => {
 	if (!isRequestAllowed(req, "POST")) {
 		return res.status(400).send({ error: "Expected request type POST" });
 	}
-	const { email } = getUser();
+	const { email } = getUser(req);
 	const { refreshToken } = req.body;
 	if (!refreshToken) {
 		return res.status(400).send({
@@ -59,9 +59,14 @@ exports.logout = (req, res) => {
 	}
 	revokeToken(email, refreshToken)
 		.then(() => {
-			res.status(200).send({ message: "User logged out" });
+			return res.status(200).send({ message: "User logged out" });
 		})
-		.catch(() => {});
+		.catch(() => {
+			return res.status(400).send({
+				error:
+					"Error. Cannot logout. Attach the refresh token you would like to revoke in the body of the request",
+			});
+		});
 };
 
 exports.testAuthMiddleware = (req, res) => {

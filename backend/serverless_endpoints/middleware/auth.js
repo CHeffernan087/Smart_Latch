@@ -11,10 +11,12 @@ const authEndpoint = (req, res, next) => {
 		.then((jwtSecret) => {
 			const payload = jwt.verify(token, jwtSecret);
 			req.user = payload;
-			next(req, res);
 		})
 		.catch((err) => {
-			res.status(400).send({ error: "Invalid token." });
+			res.status(400).send({ error: "Invalid token.", err });
+		})
+		.finally(() => {
+			next(req, res);
 		});
 };
 
