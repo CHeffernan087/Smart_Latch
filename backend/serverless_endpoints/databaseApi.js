@@ -46,7 +46,7 @@ exports.addRefreshToken = (email, refreshToken) => {
 };
 
 exports.checkShouldCreateAccount = (email) => {
-	return queryUserInDB(email).then((userExists) => !userExists);
+	return exports.queryUserInDB(email).then((userExists) => !userExists);
 };
 
 exports.deleteUserFromDB = (email) => {
