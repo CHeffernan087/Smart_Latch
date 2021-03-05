@@ -53,7 +53,7 @@ const logUserIn = ({ given_name, family_name, email, sub }, newUser) => {
 		});
 };
 
-const verify = async (token) => {
+const verifyToken = async (token) => {
 	const client = new OAuth2Client(APP_GOOGLE_CLIENT_ID);
 	const ticket = await client.verifyIdToken({
 		idToken: token,
@@ -71,7 +71,7 @@ exports.verifyUser = async (req, res) => {
 		return res.send({ error: "No 'idToken' parameter provided." });
 	}
 
-	verify(token)
+	verifyToken(token)
 		.then(({ email, ...userCredentials }) => {
 			return checkShouldCreateAccount(email).then((newUser) => {
 				return { newUser, ...userCredentials, email };
