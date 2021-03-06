@@ -88,3 +88,36 @@ exports.verifyUser = async (req, res) => {
 			res.send({ success: false, error: "Token failed verification." });
 		});
 };
+
+exports.refreshToken = async (req, res) => {
+	console.log(`Refresh token endpoint`);
+	const refreshToken  = req.query && req.query.refreshToken; 
+	const email = req.query && req.query.email;
+	console.log(`Refresh Token: ${refreshToken}`);
+	console.log(`Email: ${email}`);
+	// 1. verify the refresh token 
+	const decodedToken = jwt.verify(refreshToken, jwt_secret);
+	console.log(`DECODED TOKEN: ${JSON.stringify(decodedToken)}`);
+
+	// 2. pull this stuff from DB email: email, firstName: given_name, lastName: family_name, id: sub
+	const now = new Date().getTime()/1000;
+	const exp = new Date().setHours(now.getHours()+24);
+	
+	console.log(`Now: ${now} and Exp: ${exp}`);
+	// getUserDetails(email)
+	// 	.then((details) => {
+	// 		console.log(`DETAILS: ${JSON.stringify(details)}`)
+	// 	.then((details) => {
+	// 		// 3. use data to sign a new token with timestamps 
+	// 		const token = jwt.sign(
+	// 			{ email: email, firstName: details.given_name, lastName: details.family_name, id: details.sub, iss: now, exp: exp},
+	// 			jwt_secret
+	// 		);
+	// 		res.send({newToken: token}).status(200);
+	// 	});
+	// 	}).catch((e) => {
+	// 		console.log(e);
+	// 		res.send({newToken: null}).status(400);
+	// 	});
+	
+};

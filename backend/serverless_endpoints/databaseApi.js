@@ -90,6 +90,7 @@ exports.getUserDoors = (email) => {
 		});
 };
 
+
 exports.queryUserInDB = (email) => {
 	return firestoreDb
 		.collection("Users")

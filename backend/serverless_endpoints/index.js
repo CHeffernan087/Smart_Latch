@@ -9,3 +9,4 @@ exports.registerUser = user.registerUser;
 exports.toggleLatch = doors.toggleLatch;
 exports.userExists = user.userExists;
 exports.verifyUser = auth.verifyUser;
+exports.refreshToken = auth.refreshToken;
