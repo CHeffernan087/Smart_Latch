@@ -108,6 +108,15 @@ exports.registerAsUser = (email, firstname, lastname, userId) => {
 	});
 };
 
+exports.revokeToken = (email, refreshToken) => {
+	return firestoreDb
+		.collection("Users")
+		.doc(email)
+		.collection("RefreshToken")
+		.doc(refreshToken)
+		.delete();
+};
+
 exports.setDoorAdmin = async (email, doorId) => {
 	doorDocument = firestoreDb.collection("Doors").doc(doorId);
 	userDoc = firestoreDb.collection("Users").doc(email);

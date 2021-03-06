@@ -5,6 +5,7 @@ const { authed } = require("./middleware/auth");
 
 exports.deleteUser = user.deleteUser;
 exports.getUserDoors = doors.getUserDoors;
+exports.logout = authed(auth.logout);
 exports.registerDoor = doors.registerDoor;
 exports.registerUser = user.registerUser;
 exports.testAuthMiddleware = authed(auth.testAuthMiddleware);
