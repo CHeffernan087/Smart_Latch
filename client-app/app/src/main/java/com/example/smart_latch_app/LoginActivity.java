@@ -1,7 +1,11 @@
 package com.example.smart_latch_app;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -36,6 +40,9 @@ public class LoginActivity extends AppCompatActivity {
     private static final int SIGN_IN = 1;
 
     String responseString = "";
+    String token = "";
+    String refreshToken = "";
+
     JSONObject jObj = null;
     Boolean userIsVerified = false;
 
@@ -44,10 +51,15 @@ public class LoginActivity extends AppCompatActivity {
             .addInterceptor(logging)
             .build();
 
+    SharedPreferences sharedPreferences;
+    SharedPreferences.Editor editor;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        editor = sharedPreferences.edit();
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.server_client_id))
@@ -107,7 +119,6 @@ public class LoginActivity extends AppCompatActivity {
     private void gotoMainActivity (String userName) {
         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
         intent.putExtra("USER_NAME", userName);
-
         startActivity(intent);
         finish();
     }
@@ -115,7 +126,7 @@ public class LoginActivity extends AppCompatActivity {
     private void validateTokenOnServer(String idToken, String userName) {
         String hostName = getString(R.string.smart_latch_url);
         String url = hostName + "/verifyUser?idToken=" + idToken;
-
+        System.out.println("ID TOKEN: " + idToken);
         Request request = new Request.Builder()
                 .url(url)
                 .build();
@@ -123,15 +134,24 @@ public class LoginActivity extends AppCompatActivity {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
+                signinButton.setVisibility(View.VISIBLE);
                 e.printStackTrace();
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 responseString = response.body().string();
+                System.out.println("RESPONSE LOGIN: " + responseString);
                 try {
                     jObj = new JSONObject(responseString);
                     userIsVerified = jObj.getBoolean("success");
+                    token = jObj.getString("token");
+                    refreshToken = jObj.getString("refreshToken");
+                    // store tokens
+                    System.out.println("PUT TOKEN INTO PREFS: " + token);
+                    editor.putString("token", token);
+                    editor.putString("resfreshToken", refreshToken);
+                    editor.apply();
                     if (userIsVerified == true) {
                         gotoMainActivity(userName);
                     }

@@ -1,5 +1,6 @@
 package com.example.smart_latch_app;
 
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -53,6 +54,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     JSONObject jObj = null;
     JSONArray responseDoors;
 
+    public static Context contextOfApplication;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +63,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        contextOfApplication = getApplicationContext();
+
 
         // Setup Google stuff for signing out
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -189,8 +194,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             email = acct.getEmail();
         }
 
-        OkHttpClient client = new OkHttpClient();
-        String hostUrl = getString(R.string.smart_latch_url) + "/getUserDoors?email=" + email;
+        OkHttpClient client = new OkHttpClient().newBuilder()
+            .addInterceptor(new AuthenticationInterceptor()).build();
+        System.out.println("SETUP CLIENT AS INTENDED");
+//        String hostUrl = getString(R.string.smart_latch_url) + "/getUserDoors?email=" + email
+        String hostUrl = getString(R.string.smart_latch_url) + "/testAuthMiddleware";
+        System.out.println("Hitting: " + hostUrl);
 
         RequestBody formBody = new FormBody.Builder()
                 .build();
@@ -199,7 +208,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .post(formBody)
                 .build();
 
-
+        System.out.println("REQUEST BODY: "+ request.body().toString());
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -209,7 +218,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 responseString = response.body().string();
-
+                System.out.println("RESPONSE: " + responseString);
                 try {
                     jObj = new JSONObject(responseString);
                     responseMessage = jObj.getString("message");
@@ -233,6 +242,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             arr[i]=array.optString(i);
         }
         return arr;
+    }
+
+    public static Context getContextOfApplication(){
+        return contextOfApplication;
     }
 
 }

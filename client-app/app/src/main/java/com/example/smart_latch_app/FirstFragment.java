@@ -40,15 +40,13 @@ public class FirstFragment extends Fragment {
             LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState
     ) {
-
-
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_first, container, false);
     }
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        OkHttpClient client = new OkHttpClient();
+        OkHttpClient client = (OkHttpClient) new OkHttpClient();
         String hostUrl = getString(R.string.smart_latch_url);
         String[] doorStates = {getString(R.string.door_state_locked), getString(R.string.door_state_open)};
         mTextViewResult = view.findViewById(R.id.textview_result);
@@ -60,9 +58,6 @@ public class FirstFragment extends Fragment {
             System.out.println("Set the title of the yoke: " + doorID);
             doorIdTitle.setText(doorID);
         }
-
-
-//        Toolbar toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar2);
 
         backBtn.setOnClickListener(new View.OnClickListener(){
             public void onClick(View view) {
