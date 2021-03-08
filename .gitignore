@@ -7,3 +7,4 @@ esp32_code/esp-idf/websocket_client/build
 sdkconfig*
 .idea
 .env
+*smart-latch-3f77**

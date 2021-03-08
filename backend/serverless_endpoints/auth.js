@@ -4,6 +4,8 @@ const {
 	checkShouldCreateAccount,
 	registerAsUser,
 	addRefreshToken,
+	getUserDetails,
+	getUserRefreshToken,
 } = require("./databaseApi");
 let randtoken = require("rand-token");
 const jwt = require("jsonwebtoken");
@@ -14,10 +16,14 @@ const client = new SecretManagerServiceClient();
 let jwt_secret;
 
 async function readInJwtSecret() {
-	const [data] = await client.accessSecretVersion({
-		name: "projects/639400548732/secrets/SMART_LATCH_SECRET/versions/latest",
-	});
-	jwt_secret = data.payload.data.toString();
+	try {
+		const [data] = await client.accessSecretVersion({
+			name: "projects/639400548732/secrets/SMART_LATCH_SECRET/versions/latest",
+		});
+		jwt_secret = data.payload.data.toString();
+	} catch (e) {
+		jwt_secret = "default";
+	}
 }
 
 const logUserIn = ({ given_name, family_name, email, sub }, newUser) => {
@@ -93,31 +99,45 @@ exports.refreshToken = async (req, res) => {
 	console.log(`Refresh token endpoint`);
 	const refreshToken  = req.query && req.query.refreshToken; 
 	const email = req.query && req.query.email;
-	console.log(`Refresh Token: ${refreshToken}`);
-	console.log(`Email: ${email}`);
+	if (!refreshToken) {
+		res.send({ message: "Must include refreshToken parameter."}).status(400);
+	} else if (!email) {
+		res.send({ message: "Must include email parameter."}).status(400);
+	}
 	// 1. verify the refresh token 
-	const decodedToken = jwt.verify(refreshToken, jwt_secret);
-	console.log(`DECODED TOKEN: ${JSON.stringify(decodedToken)}`);
-
-	// 2. pull this stuff from DB email: email, firstName: given_name, lastName: family_name, id: sub
-	const now = new Date().getTime()/1000;
-	const exp = new Date().setHours(now.getHours()+24);
-	
-	console.log(`Now: ${now} and Exp: ${exp}`);
-	// getUserDetails(email)
-	// 	.then((details) => {
-	// 		console.log(`DETAILS: ${JSON.stringify(details)}`)
-	// 	.then((details) => {
-	// 		// 3. use data to sign a new token with timestamps 
-	// 		const token = jwt.sign(
-	// 			{ email: email, firstName: details.given_name, lastName: details.family_name, id: details.sub, iss: now, exp: exp},
-	// 			jwt_secret
-	// 		);
-	// 		res.send({newToken: token}).status(200);
-	// 	});
-	// 	}).catch((e) => {
-	// 		console.log(e);
-	// 		res.send({newToken: null}).status(400);
-	// 	});
-	
+	// const decodedToken = jwt.verify(refreshToken, jwt_secret);
+	// console.log(`DECODED TOKEN: ${JSON.stringify(decodedToken)}`);
+	getUserRefreshToken(email, refreshToken)
+		.then((verifyRefreshToken) => {
+			console.log(`Refresh token is: ${verifyRefreshToken}`);
+			if (!verifyRefreshToken) {
+				res.send({
+					verifiedRefreshToken: verifyRefreshToken, 
+					message: "Refresh token failed verification."
+				}).status(401);
+				return; 
+			}
+		})
+		.then(() => {
+			const issuedAt = new Date(Date.now());
+			readInJwtSecret()
+				.then(() => {
+					getUserDetails(email)
+						.then((details) => {
+							const firstName = details._fieldsProto.firstname.stringValue;
+							const lastName = details._fieldsProto.lastname.stringValue;
+							const userId = details._fieldsProto.userId.stringValue;
+				
+							const token = jwt.sign(
+								{ email: email, firstName: firstName, lastName: lastName, id: userId, iss: issuedAt, exp: 3600},
+								jwt_secret
+							);
+		
+							res.send({token: token}).status(200);
+						}).catch((e) => {
+							console.log(e);
+							res.send({error: "Error accessing user details."}).status(400);
+						});
+				}).catch((e) => console.log(e));
+		});	
 };

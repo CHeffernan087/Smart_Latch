@@ -102,6 +102,9 @@ public class LoginActivity extends AppCompatActivity {
                 GoogleSignInAccount account = task.getResult(ApiException.class);
                 String idToken = account.getIdToken();
                 String name = account.getGivenName();
+                String email = account.getEmail();
+
+                editor.putString("email", email);
                 validateTokenOnServer(idToken, name);
 
             } catch (ApiException e) {
@@ -148,7 +151,7 @@ public class LoginActivity extends AppCompatActivity {
                     token = jObj.getString("token");
                     refreshToken = jObj.getString("refreshToken");
                     // store tokens
-                    System.out.println("PUT TOKEN INTO PREFS: " + token);
+                    System.out.println("REFRESH TOKEN: " + refreshToken);
                     editor.putString("token", token);
                     editor.putString("resfreshToken", refreshToken);
                     editor.apply();

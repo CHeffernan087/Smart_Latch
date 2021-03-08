@@ -51,7 +51,8 @@ public class AuthenticationInterceptor implements Interceptor {
 
                 if(currentToken != null && currentToken.equals(token)) { //compare current token with token that was stored before, if it was not updated - do update
                     String refreshToken = prefs.getString("refreshToken", defaultToken);
-                    int code = refreshToken(refreshToken) / 100; //refresh token
+                    String email = prefs.getString("email", "email");
+                    int code = refreshToken(refreshToken, email) / 100; //refresh token
                     System.out.println("CODE: " + code);
                     if(code != 2) { //if refresh token failed for some reason
                         if(code == 4) //only if response is 400, 500 might mean that token was not updated
@@ -76,13 +77,13 @@ public class AuthenticationInterceptor implements Interceptor {
             builder.header("Authorization", String.format("Bearer %s", token));
     }
 
-    private int refreshToken(String refreshToken) {
+    private int refreshToken(String refreshToken, String email) {
         //Refresh token, synchronously, save it, and return result code
         //you might use retrofit here
         OkHttpClient client = new OkHttpClient();
 
-        String hostName = this.applicationContext.getString(R.string.smart_latch_url);
-        String url = hostName + "/refreshToken?refreshToken=" + refreshToken;
+        String hostName = this.applicationContext.getString(R.string.test_url);
+        String url = hostName + "/refreshToken?refreshToken=" + refreshToken + "&email=" + email;
 
         Request request = new Request.Builder()
                 .url(url)

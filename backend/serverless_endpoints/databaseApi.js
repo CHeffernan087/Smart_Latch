@@ -1,13 +1,13 @@
 const admin = require("firebase-admin");
 admin.initializeApp();
-const firestoreDb = admin.firestore();
+// const firestoreDb = admin.firestore();
 
 //TODO comment out
 const Firestore = require("@google-cloud/firestore");
-// const firestoreDb = new Firestore({
-// 	projectId: "smart-latch",
-// 	keyFilename: "../../smart-latch-a0cbed3b46a2.json",
-// });
+const firestoreDb = new Firestore({
+	projectId: "smart-latch",
+	keyFilename: "../../smart-latch-3f77ccdb8958.json",
+});
 
 function addAsAuthorised(email, doorId) {
 	doorDocument = firestoreDb.collection("Doors").doc(doorId);
@@ -90,6 +90,27 @@ exports.getUserDoors = (email) => {
 		});
 };
 
+exports.getUserRefreshToken = (email, refreshToken) => {
+	return firestoreDb
+		.collection("Users")
+		.doc(email)
+		.collection("RefreshToken")
+		.doc(refreshToken)
+		.get()
+		.then((refreshObj) => {
+			return refreshObj._fieldsProto.refreshToken.stringValue === refreshToken;
+		});
+};
+
+exports.getUserDetails = (email) => {
+	return firestoreDb
+		.collection("Users")
+		.doc(email)
+		.get()
+		.then((details) => {
+			return details;
+		});
+};
 
 exports.queryUserInDB = (email) => {
 	return firestoreDb
