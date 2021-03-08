@@ -1,54 +1,44 @@
-const { SecretManagerServiceClient } = require("@google-cloud/secret-manager");
 const { OAuth2Client } = require("google-auth-library");
 const {
+	addRefreshToken,
 	checkShouldCreateAccount,
 	registerAsUser,
-	addRefreshToken,
 	getUserDetails,
 	getUserRefreshToken,
+	revokeToken,
 } = require("./databaseApi");
+const { getUser, isRequestAllowed, readInJwtSecret } = require("./utils");
 let randtoken = require("rand-token");
 const jwt = require("jsonwebtoken");
+const { firestore } = require("firebase-admin");
 
 const APP_GOOGLE_CLIENT_ID =
 	"639400548732-9ga9sg95ao0drj5sdtd3v561adjqptbr.apps.googleusercontent.com";
-const client = new SecretManagerServiceClient();
-let jwt_secret;
-
-async function readInJwtSecret() {
-	try {
-		const [data] = await client.accessSecretVersion({
-			name: "projects/639400548732/secrets/SMART_LATCH_SECRET/versions/latest",
-		});
-		jwt_secret = data.payload.data.toString();
-	} catch (e) {
-		jwt_secret = "default";
-	}
-}
 
 const logUserIn = ({ given_name, family_name, email, sub }, newUser) => {
 	const refreshToken = randtoken.uid(256);
-	return readInJwtSecret()
-		.then(() => {
-			if (newUser) {
-				return registerAsUser(
-					email,
-					given_name,
-					family_name,
-					sub,
-					refreshToken
-				);
-			} else {
-				return new Promise((res, rej) => res());
-			}
-		})
+	return new Promise((resolve) => {
+		if (newUser) {
+			registerAsUser(
+				email,
+				given_name,
+				family_name,
+				sub,
+				refreshToken
+			).then(() => resolve());
+		} else {
+			resolve();
+		}
+	})
 		.then(() => {
 			return addRefreshToken(email, refreshToken);
 		})
-		.then(() => {
+		.then(readInJwtSecret)
+		.then((jwt_secret) => {
 			const token = jwt.sign(
 				{ email: email, firstName: given_name, lastName: family_name, id: sub },
-				jwt_secret
+				jwt_secret,
+				{ expiresIn: "12h" }
 			);
 			return {
 				success: true,
@@ -57,6 +47,36 @@ const logUserIn = ({ given_name, family_name, email, sub }, newUser) => {
 				refreshToken,
 			};
 		});
+};
+
+exports.logout = (req, res) => {
+	if (!isRequestAllowed(req, "POST")) {
+		return res.status(400).send({ error: "Expected request type POST" });
+	}
+	const { email } = getUser(req);
+	const { refreshToken } = req.body;
+	if (!refreshToken) {
+		return res.status(400).send({
+			error:
+				"Error. Cannot logout. Attach the refresh token you would like to revoke in the body of the request",
+		});
+	}
+	revokeToken(email, refreshToken)
+		.then(() => {
+			return res.status(200).send({ message: "User logged out" });
+		})
+		.catch(() => {
+			return res.status(400).send({
+				error:
+					"Error. Cannot logout. Attach the refresh token you would like to revoke in the body of the request",
+			});
+		});
+};
+
+exports.testAuthMiddleware = (req, res) => {
+	res
+		.status(200)
+		.send({ message: "Your token has been succesfully verified!" });
 };
 
 const verifyToken = async (token) => {
@@ -90,10 +110,40 @@ exports.verifyUser = async (req, res) => {
 			return res.status(200).send(responsePayload);
 		})
 		.catch((e) => {
-			console.log(e);
 			res.send({ success: false, error: "Token failed verification." });
 		});
 };
+
+exports.getOldToken = async (req, res) => {
+	console.log(`get old token`);
+	const email = req.query && req.query.email;
+	const issuedAt = new Date();
+	issuedAt.setDate(issuedAt.getDate() - 2)
+	Math.floor(Date.now() / 1000)
+	const oldTS = Math.floor(issuedAt / 1000)
+	console.log(`ISSUED AT: ${issuedAt}`);
+	console.log(`ISSUED AT: ${oldTS}`);
+	readInJwtSecret()
+				.then((jwt_secret) => {
+					getUserDetails(email)
+						.then((details) => {
+							const firstName = details._fieldsProto.firstname.stringValue;
+							const lastName = details._fieldsProto.lastname.stringValue;
+							const userId = details._fieldsProto.userId.stringValue;
+				
+							const token = jwt.sign(
+								{ email: email, firstName: firstName, lastName: lastName, id: userId, iat: oldTS, exp: oldTS+3600},
+								jwt_secret
+							);
+		
+							res.send({token: token}).status(200);
+						}).catch((e) => {
+							console.log(e);
+							res.send({error: "Error accessing user details."}).status(400);
+						});
+				}).catch((e) => console.log(e));
+
+}
 
 exports.refreshToken = async (req, res) => {
 	console.log(`Refresh token endpoint`);
@@ -119,25 +169,31 @@ exports.refreshToken = async (req, res) => {
 			}
 		})
 		.then(() => {
-			const issuedAt = new Date(Date.now());
+			const issuedAt = Math.floor(Date.now() / 1000)
+			console.log(`ISSUED AT: ${issuedAt}`);
 			readInJwtSecret()
-				.then(() => {
+				.then((jwt_secret) => {
 					getUserDetails(email)
 						.then((details) => {
 							const firstName = details._fieldsProto.firstname.stringValue;
 							const lastName = details._fieldsProto.lastname.stringValue;
 							const userId = details._fieldsProto.userId.stringValue;
+
+							console.log(`First name, etc.: ${firstName} - ${lastName} - ${userId}`);
 				
 							const token = jwt.sign(
-								{ email: email, firstName: firstName, lastName: lastName, id: userId, iss: issuedAt, exp: 3600},
+								{ email: email, firstName: firstName, lastName: lastName, id: userId, iat: issuedAt, exp: issuedAt + 86400}, // persist for 1 day
 								jwt_secret
 							);
 		
 							res.send({token: token}).status(200);
 						}).catch((e) => {
-							console.log(e);
-							res.send({error: "Error accessing user details."}).status(400);
+							console.log(`Error in getUserDetails: ${e}`);
+							res.send({error: "Error accessing user details."}).status(401);
 						});
-				}).catch((e) => console.log(e));
+				}).catch((e) => {
+					console.log(`Error accessing JWT secret: ${e}`);
+					console.log(e)
+				});
 		});	
 };

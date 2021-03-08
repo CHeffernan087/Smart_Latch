@@ -153,7 +153,7 @@ public class LoginActivity extends AppCompatActivity {
                     // store tokens
                     System.out.println("REFRESH TOKEN: " + refreshToken);
                     editor.putString("token", token);
-                    editor.putString("resfreshToken", refreshToken);
+                    editor.putString("refreshToken", refreshToken);
                     editor.apply();
                     if (userIsVerified == true) {
                         gotoMainActivity(userName);
