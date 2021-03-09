@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="800dp"
+    android:layout_height="wrap_content"
+    android:background="@drawable/background_border"
+    android:orientation="horizontal">
+
+    <TextView
+        android:id="@+id/doorIdTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="16dp"
+        android:layout_toEndOf="@id/doorImage"
+        android:textAppearance="?android:textAppearanceLarge"
+        android:textColor="@color/black"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        tools:text="Door ID" />
+
+    <TextView
+        android:id="@+id/doorDescView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/doorIdTextView"
+        android:layout_marginLeft="26dp"
+        android:layout_toEndOf="@id/doorIdTextView"
+        android:text="@string/test_door_desc"
+        android:textStyle="italic" />
+
+    <TextView
+        android:id="@+id/doorRoleDesc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/doorImage"
+        android:layout_marginLeft="26dp"
+        android:layout_marginBottom="16dp"
+        android:layout_toEndOf="@id/doorIdTextView"
+        android:text="Role: admin"
+        android:textStyle="italic" />
+
+    <ImageView
+        android:id="@+id/doorImage"
+        android:layout_width="67dp"
+        android:layout_height="86dp"
+        android:contentDescription="@string/nav_header_desc"
+        android:paddingTop="@dimen/nav_header_vertical_spacing"
+        app:srcCompat="@drawable/ic_door" />
+</RelativeLayout>

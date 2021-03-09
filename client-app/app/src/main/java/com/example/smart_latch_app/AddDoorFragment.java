@@ -9,7 +9,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
+import android.content.Intent;
+
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -64,17 +67,24 @@ public class AddDoorFragment extends DialogFragment {
         Log.v(TAG,"NFC ID: " + doorId);
         Log.v(TAG,"Sending Request to add door.");
         sendAddDoorReq(doorId);
+        ((MyDoorsActivity) getActivity()).appendDoor(doorId);
     }
+
 
     private void sendAddDoorReq(String doorId) {
 
         OkHttpClient client = new OkHttpClient();
-        String hostUrl = getString(R.string.smart_latch_url) + "/registerDoor2" ;
+        String hostUrl = getString(R.string.smart_latch_url) + "/registerDoor" ;
 
+        String email ="";
+        GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(((MyDoorsActivity) getActivity()));
+        if (acct != null) {
+            email = acct.getEmail();
+        }
         Log.v(TAG,hostUrl);
         RequestBody formBody = new FormBody.Builder()
                 .add("doorId", doorId)
-                .add("userId", "1234")
+                .add("email",  email)
                 .build();
         Request request = new Request.Builder()
                 .url(hostUrl)
@@ -99,13 +109,11 @@ public class AddDoorFragment extends DialogFragment {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-
+                
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         Log.v(TAG,"NFC ID: 0x" + doorId);
-                        doorIdText.setText("Door ID: 0x" + doorId);
-                        Toast.makeText(getActivity(), responseMessage, Toast.LENGTH_SHORT).show();
                     }
                 });
             }

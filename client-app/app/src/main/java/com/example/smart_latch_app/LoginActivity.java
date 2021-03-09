@@ -90,7 +90,6 @@ public class LoginActivity extends AppCompatActivity {
                 GoogleSignInAccount account = task.getResult(ApiException.class);
                 String idToken = account.getIdToken();
                 String name = account.getGivenName();
-
                 validateTokenOnServer(idToken, name);
 
             } catch (ApiException e) {
@@ -108,6 +107,7 @@ public class LoginActivity extends AppCompatActivity {
     private void gotoMainActivity (String userName) {
         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
         intent.putExtra("USER_NAME", userName);
+
         startActivity(intent);
         finish();
     }

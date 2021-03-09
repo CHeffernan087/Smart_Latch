@@ -5,3 +5,5 @@ esp32_code/esp-idf/websocket_client/build
 .DS_Store
 .vscode
 sdkconfig*
+.idea
+.env
