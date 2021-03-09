@@ -1,13 +1,13 @@
 const admin = require("firebase-admin");
 admin.initializeApp();
-// const firestoreDb = admin.firestore();
+const firestoreDb = admin.firestore();
 
 //TODO comment out
 const Firestore = require("@google-cloud/firestore");
-const firestoreDb = new Firestore({
-	projectId: "smart-latch",
-	keyFilename: "../../smart-latch-3f77ccdb8958.json",
-});
+// const firestoreDb = new Firestore({
+// 	projectId: "smart-latch",
+// 	keyFilename: "../../smart-latch-3f77ccdb8958.json",
+// });
 
 function addAsAuthorised(email, doorId) {
 	doorDocument = firestoreDb.collection("Doors").doc(doorId);
@@ -91,14 +91,17 @@ exports.getUserDoors = (email) => {
 };
 
 exports.getUserRefreshToken = (email, refreshToken) => {
+	console.log(`RefreshToken: ${refreshToken}`);
 	return firestoreDb
 		.collection("Users")
 		.doc(email)
 		.collection("RefreshToken")
 		.doc(refreshToken)
 		.get()
+		.then((rawJson) => rawJson.data())
 		.then((refreshObj) => {
-			return refreshObj._fieldsProto.refreshToken.stringValue === refreshToken;
+			console.log(`OBJ: ${JSON.stringify(refreshObj)}`);
+			return refreshObj.refreshToken === refreshToken;
 		});
 };
 

@@ -154,9 +154,7 @@ exports.refreshToken = async (req, res) => {
 	} else if (!email) {
 		res.send({ message: "Must include email parameter."}).status(400);
 	}
-	// 1. verify the refresh token 
-	// const decodedToken = jwt.verify(refreshToken, jwt_secret);
-	// console.log(`DECODED TOKEN: ${JSON.stringify(decodedToken)}`);
+	
 	getUserRefreshToken(email, refreshToken)
 		.then((verifyRefreshToken) => {
 			console.log(`Refresh token is: ${verifyRefreshToken}`);

@@ -18,15 +18,11 @@ exports.readInJwtSecret = async () => {
 };
 
 const readInSecret = async (secretName) => {
-	try {
-		const [data] = await client.accessSecretVersion({
-			name: `projects/639400548732/secrets/${secretName}/versions/latest`,
-		});
-		const jwt_secret = data.payload.data.toString();
-		return jwt_secret;
-	} catch (e) {
-		return "default";
-	}
+	const [data] = await client.accessSecretVersion({
+		name: `projects/639400548732/secrets/${secretName}/versions/latest`,
+	});
+	const jwt_secret = data.payload.data.toString();
+	return jwt_secret;
 };
 
 exports.smartLatchGet = (endpoint = "/healtcheck") => {

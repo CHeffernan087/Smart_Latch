@@ -69,7 +69,7 @@ public class LoginActivity extends AppCompatActivity {
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
         signinButton = findViewById(R.id.sign_in_btn);
-        signinButton.setVisibility(View.GONE);
+
         signinButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -87,8 +87,6 @@ public class LoginActivity extends AppCompatActivity {
         if (account != null) {
             startSignInIntent();
             Toast.makeText(this, "Signing in...", Toast.LENGTH_SHORT).show();
-        } else {
-            signinButton.setVisibility(View.VISIBLE);
         }
     }
 
@@ -137,14 +135,13 @@ public class LoginActivity extends AppCompatActivity {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                signinButton.setVisibility(View.VISIBLE);
                 e.printStackTrace();
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 responseString = response.body().string();
-                System.out.println("RESPONSE LOGIN: " + responseString);
+
                 try {
                     jObj = new JSONObject(responseString);
                     userIsVerified = jObj.getBoolean("success");
@@ -152,7 +149,8 @@ public class LoginActivity extends AppCompatActivity {
                     refreshToken = jObj.getString("refreshToken");
                     // store tokens
                     System.out.println("REFRESH TOKEN: " + refreshToken);
-                    editor.putString("token", token);
+                    String testToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRrZWxseTJAdGNkLmllIiwiZmlyc3ROYW1lIjoiVGhvbWFzIiwibGFzdE5hbWUiOiJLZWxseSIsImlkIjoiMTExNjUzMDM4ODU5Mjc5NTU2ODI1IiwiaWF0IjoxNjE1MDQwOTk3LCJleHAiOjE2MTUwNDQ1OTd9.dDTe87DQnf1tqF_vB8Mp-NPu1yFm-FwsVgk4X6EzigU";
+                    editor.putString("token", testToken);
                     editor.putString("refreshToken", refreshToken);
                     editor.apply();
                     if (userIsVerified == true) {

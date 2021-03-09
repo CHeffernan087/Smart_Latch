@@ -10,14 +10,16 @@ const authEndpoint = (req, res, next) => {
 	readInJwtSecret()
 		.then((jwtSecret) => {
 			const payload = jwt.verify(token, jwtSecret);
-			req.user = payload;
+			// req.user = payload;
+			next(req, res);
 		})
 		.catch((err) => {
-			res.status(401).send({ error: "Invalid token.", err }); // Unauthorized. 
+			return res.status(401).send({ error: "Invalid token.", err }); // Unauthorized. 
 		})
 		.finally(() => {
 			next(req, res);
 		});
+		
 };
 
 exports.authed = (endpointHandler) => {

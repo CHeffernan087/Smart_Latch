@@ -197,22 +197,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         OkHttpClient client = new OkHttpClient().newBuilder()
-            .addInterceptor(new AuthInt()).build();
-        System.out.println("SETUP CLIENT AS INTENDED");
-//        String hostUrl = getString(R.string.smart_latch_url) + "/getUserDoors?email=" + email
+            .addInterceptor(new AuthenticationInterceptor()).build();
+
         String hostUrl = getString(R.string.smart_latch_url) + "/testAuthMiddleware";
-        System.out.println("Hitting: " + hostUrl);
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         String token = prefs.getString("token", "defaultToken");
-        String testToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRrZWxseTJAdGNkLmllIiwiZmlyc3ROYW1lIjoiVGhvbWFzIiwibGFzdE5hbWUiOiJLZWxseSIsImlkIjoiMTExNjUzMDM4ODU5Mjc5NTU2ODI1IiwiaWF0IjoxNjE1MDQwOTk3LCJleHAiOjE2MTUwNDQ1OTd9.dDTe87DQnf1tqF_vB8Mp-NPu1yFm-FwsVgk4X6EzigU";
+
         RequestBody formBody = new FormBody.Builder()
                 .build();
         Request request = new Request.Builder()
                 .url(hostUrl)
-                .addHeader("x-auth-token", testToken)
                 .post(formBody)
                 .build();
-
+        System.out.println("1. MAKING THIS INITIAL REQUEST: " + request.toString());
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -222,8 +220,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 responseString = response.body().string();
-                System.out.println("RESPONSE: " + responseString);
-                System.out.println("STATUS: " + response.code());
+                System.out.println("1. RESPONSE ORIGINAL: " + responseString);
+                System.out.println("1. STATUS: " + response.code());
                 try {
                     jObj = new JSONObject(responseString);
                     responseMessage = jObj.getString("message");
