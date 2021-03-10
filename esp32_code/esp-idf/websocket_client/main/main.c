@@ -34,18 +34,19 @@
 #define RED_LED_OUT 26      // red led pin
 #define GREEN_LED_OUT 33    // green led pin
 #define WHITE_LED_OUT 14    // white led pin
-#define BTN_IN 32           // input button pin
+#define PIR_PIN 32          // input pir pin
 #define SERVO_PIN 18        // output PWM servo pin
-#define INPUT_PIN_SEL (1ULL << BTN_IN)  // input gpio mask
+#define INPUT_PIN_SEL (1ULL << PIR_PIN)  // input gpio mask
 #define OUTPUT_PIN_SEL ((1ULL << RED_LED_OUT) | (1ULL << GREEN_LED_OUT) | (1ULL << WHITE_LED_OUT))  // output gpio mask
 
-// LED output macros
+// I/O macros
 #define RED_ON()    gpio_set_level(RED_LED_OUT, 1);   // turn on red LED
 #define RED_OFF()   gpio_set_level(RED_LED_OUT, 0);   // turn off red LED
 #define GREEN_ON()  gpio_set_level(GREEN_LED_OUT, 1); // turn on green LED
 #define GREEN_OFF() gpio_set_level(GREEN_LED_OUT, 0); // turn off green LED
 #define WHITE_ON()  gpio_set_level(WHITE_LED_OUT, 1); // turn on white LED
 #define WHITE_OFF() gpio_set_level(WHITE_LED_OUT, 0); // turn off white LED
+#define PIR_VALUE() ({int pirval; pirval = gpio_get_level(PIR_PIN); pirval;}) // get current ir sensor value
 
 // Tags
 static const char *W_TAG = "WEBSOCKET";   // tag for websocket logs
@@ -60,12 +61,12 @@ static const char *BOARD_ID_REQ = "boardIdReq";  // message recieved upon connec
 int           websocketStatus    = 0;       // bool value is TRUE if websocket is established
 unsigned long lastUpdate         = 0;       // stores time(ms) at last latch update
 unsigned long currentTime        = 0;       // stores current time(ms)
-unsigned long messageInterval    = 500;     // minimum interval between messages
+unsigned long messageInterval    = 1500;     // minimum interval between messages
 unsigned long connectionInterval = 15000;   // websocket connection timeout (15sec)
 
 // Latch
 int latchState = 0;  // boolean latch state
-int buttonValue = 0; // boolean button state
+int pirValue = 0; // boolean ir sensor state
 
 // defined websocket client in a global scope
 esp_websocket_client_handle_t client;
@@ -79,7 +80,7 @@ close_latch()
     GREEN_OFF();
     latchState = 1; // toggle latch state
     // set pwm signal to activate servo and open latch
-    int duty_cycle = 500;
+    int duty_cycle = 2250;
     mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, duty_cycle);
 }
 
@@ -91,7 +92,7 @@ static void open_latch()
     GREEN_ON();    
     latchState = 0; // toggle latch state
     // set pwm signal to activate servo and open latch
-    int duty_cycle = 2250;
+    int duty_cycle = 500;
     mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, duty_cycle);
 }
 
@@ -197,10 +198,11 @@ void app_main(void)
     // configure output GPIO with the given settings
     gpio_config(&io_conf);
 
-    io_conf.pin_bit_mask = INPUT_PIN_SEL; // set output pins using mask
-    io_conf.mode = GPIO_MODE_INPUT;       // set input mode
-    io_conf.pull_down_en = 0;             // disable pin pull-down
-    io_conf.pull_up_en = 0;               // disable pin pull-up
+    io_conf.intr_type = GPIO_PIN_INTR_POSEDGE;  // set interrpt on posedge
+    io_conf.mode = GPIO_MODE_INPUT;             // set input mode
+    io_conf.pin_bit_mask = INPUT_PIN_SEL;       // set output pins using mask
+    io_conf.pull_down_en = 0;                   // disable pin pull-down
+    io_conf.pull_up_en = 0;                     // disable pin pull-up
     // configure output GPIO with the given settings
     gpio_config(&io_conf);
 
@@ -244,11 +246,11 @@ void app_main(void)
     // embedded while 1
     while (1)
     {
-        buttonValue = gpio_get_level(BTN_IN);                 // get current button value
+        pirValue = PIR_VALUE(); // get current ir sensor value
         currentTime = xTaskGetTickCount() * portTICK_RATE_MS; // set current time
 
         // if client is on network, button is pressed, and messageInterval is complete
-        if (buttonValue && (currentTime - lastUpdate > messageInterval))
+        if (pirValue && (currentTime - lastUpdate > messageInterval))
         {
             // only establishes a connection if it is already closed
             if (!websocketStatus){
