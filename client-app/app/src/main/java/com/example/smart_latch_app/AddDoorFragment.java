@@ -73,7 +73,11 @@ public class AddDoorFragment extends DialogFragment {
 
     private void sendAddDoorReq(String doorId) {
 
-        OkHttpClient client = new OkHttpClient();
+        OkHttpClient client = new OkHttpClient()
+                .newBuilder()
+                .addInterceptor(new AuthenticationInterceptor())
+                .build();
+
         String hostUrl = getString(R.string.smart_latch_url) + "/registerDoor" ;
 
         String email ="";

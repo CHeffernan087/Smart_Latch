@@ -46,7 +46,11 @@ public class FirstFragment extends Fragment {
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        OkHttpClient client = (OkHttpClient) new OkHttpClient();
+        OkHttpClient client = (OkHttpClient) new OkHttpClient()
+                .newBuilder()
+                .addInterceptor(new AuthenticationInterceptor())
+                .build();
+
         String hostUrl = getString(R.string.smart_latch_url);
         String[] doorStates = {getString(R.string.door_state_locked), getString(R.string.door_state_open)};
         mTextViewResult = view.findViewById(R.id.textview_result);

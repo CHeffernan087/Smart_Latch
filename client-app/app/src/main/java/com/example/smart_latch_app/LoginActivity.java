@@ -20,7 +20,6 @@ import com.google.android.gms.tasks.Task;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.io.IOException;
 
 import okhttp3.Call;
@@ -148,11 +147,9 @@ public class LoginActivity extends AppCompatActivity {
                     token = jObj.getString("token");
                     refreshToken = jObj.getString("refreshToken");
 
-
-                    // Heres an expired test token:
-                    String testToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRrZWxseTJAdGNkLmllIiwiZmlyc3ROYW1lIjoiVGhvbWFzIiwibGFzdE5hbWUiOiJLZWxseSIsImlkIjoiMTExNjUzMDM4ODU5Mjc5NTU2ODI1IiwiaWF0IjoxNjE1MDQwOTk3LCJleHAiOjE2MTUwNDQ1OTd9.dDTe87DQnf1tqF_vB8Mp-NPu1yFm-FwsVgk4X6EzigU";
+                    // Heres an expired test token: String testToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRrZWxseTJAdGNkLmllIiwiZmlyc3ROYW1lIjoiVGhvbWFzIiwibGFzdE5hbWUiOiJLZWxseSIsImlkIjoiMTExNjUzMDM4ODU5Mjc5NTU2ODI1IiwiaWF0IjoxNjE1MDQwOTk3LCJleHAiOjE2MTUwNDQ1OTd9.dDTe87DQnf1tqF_vB8Mp-NPu1yFm-FwsVgk4X6EzigU";
                     // store tokens
-                    editor.putString("token", testToken);
+                    editor.putString("token", token);
                     editor.putString("refreshToken", refreshToken);
                     editor.apply();
                     if (userIsVerified == true) {
