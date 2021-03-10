@@ -55,7 +55,6 @@ public class FirstFragment extends Fragment {
 
         if (getArguments() != null) {
             doorID = getArguments().getString("doorID");
-            System.out.println("Set the title of the yoke: " + doorID);
             doorIdTitle.setText(doorID);
         }
 

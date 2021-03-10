@@ -1,9 +1,11 @@
 package com.example.smart_latch_app;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -85,16 +87,12 @@ public class AuthenticationInterceptor implements Interceptor {
 
         //------------------- 401 --- 401 --- UNAUTHORIZED --- 401 --- 401 -------------------------
         System.out.println("2. Original Request responses code: "+response.code());
-        if (response.code() == RESPONSE_UNAUTHORIZED_401) { //If unauthorized (Token expired)...
+        if (response.code() == RESPONSE_UNAUTHORIZED_401) {
             response.close();
-            synchronized (processed) {                           // Gets all 401 in sync blocks,
-                // to avoid multiply token updates...
+            synchronized (processed) {
 
                 String currentToken = prefs.getString("token", defaultToken);
                 System.out.println("3. Inside sync bit of 401 section. Token pulled here is " + currentToken);
-
-                //Compares current token with token that was stored before,
-                // if it was not updated - do update..
 
                 if(currentToken != null && currentToken.equals(token)) {
                     try {
@@ -111,22 +109,25 @@ public class AuthenticationInterceptor implements Interceptor {
                                     ||
                                     code == RESPONSE_HTTP_SERVER_ERROR ){   // If failed by error 5xx...
 
-                                logout();                                   // ToDo GoTo login screen
-                                return response;                            // Todo Shows auth error to user
+                                logout();
+
+                                Toast.makeText(applicationContext, "Token refreshing failed.", Toast.LENGTH_SHORT).show();
+
+                                return response;
                             }
-                        }   // <<--------------------------------------------New Auth. Token acquired --
+                        }
                     } catch (Exception e) {
                         System.out.println(e);
                     }
 
-                }   // <<-----------------------------------New Auth. Token acquired double check --
+                }
 
 
                 // --- --- RETRYING ORIGINAL REQUEST --- --- RETRYING ORIGINAL REQUEST --- --------|
-                System.out.println("5. Retrying");
+                System.out.println("5. Retrying the original request");
                 if(prefs.getString("token", "defaultToken") != null) {
                     String retryToken = prefs.getString("token", "defaultToken");
-//                    setAuthHeader(builder, retryToken);   // Add Current Auth. Token
+
                     builder.removeHeader("x-auth-token");
                     builder.addHeader("x-auth-token", retryToken);
                     request = builder.build();                          // O/w the original request
@@ -137,7 +138,7 @@ public class AuthenticationInterceptor implements Interceptor {
                                     +"Headers:"+request.headers()+"\n"
                                     );  //Shows the magic...
 
-//                    response.close();
+
                     //-----------------------------------------------------------------------------|
                     Response responseRetry = chain.proceed(request);// Sends request (w/ New Auth.)
                     //-----------------------------------------------------------------------------|
@@ -174,15 +175,11 @@ public class AuthenticationInterceptor implements Interceptor {
 
     // Refresh/renew Synchronously Authentication Token & refresh token----------------------------|
     private int refreshToken(String refreshToken, String email) {
-        //Refresh token, synchronously, save it, and return result code
-        //you might use retrofit here
-        System.out.println("3. Going to hit RefreshToken endpoint");
-
         OkHttpClient refreshClient = new OkHttpClient();
 
         String hostName = this.applicationContext.getString(R.string.smart_latch_url);
         String url = hostName + "/refreshToken?refreshToken=" + refreshToken + "&email=" + email;
-        System.out.println("3. REFRESHING AT this endpoint: " + url);
+        System.out.println("3. Refreshing: " + url);
         Request refreshRequest = new Request.Builder()
                 .url(url)
                 .build();
@@ -197,18 +194,18 @@ public class AuthenticationInterceptor implements Interceptor {
             public void onResponse(Call call, Response response) throws IOException {
                 synchronized (processed) {
                     responseString = response.body().string();
-                    System.out.println("3. RESPONSE AUTH REFRESH: " + responseString);
+                    System.out.println("3. Response to refreshToken request: " + responseString);
                     try {
                         jObj = new JSONObject(responseString);
                         token = jObj.getString("token");
 
                         // store tokens
-                        System.out.println("3. PUT TOKEN INTO PREFS: " + token);
+                        System.out.println("3. Put the new token in prefs: " + token);
                         editor.putString("token", token);
                         editor.apply();
                         refreshResponse = 200;
                         // call repeat request
-                        processed.notify();
+                        processed.notify(); // allow thread execution to continue
 
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -223,6 +220,7 @@ public class AuthenticationInterceptor implements Interceptor {
     private int logout() {
         System.out.println("go to logout");
         //logout your user
-        return 0; //TODO...
+        // Todo: Log the user out
+        return 0;
     }
 }

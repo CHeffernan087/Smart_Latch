@@ -199,10 +199,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         OkHttpClient client = new OkHttpClient().newBuilder()
             .addInterceptor(new AuthenticationInterceptor()).build();
 
-        String hostUrl = getString(R.string.smart_latch_url) + "/testAuthMiddleware";
-
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        String token = prefs.getString("token", "defaultToken");
+        String hostUrl = getString(R.string.smart_latch_url) + "/getUserDoors?email=" + email;
 
         RequestBody formBody = new FormBody.Builder()
                 .build();
@@ -210,7 +207,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .url(hostUrl)
                 .post(formBody)
                 .build();
-        System.out.println("1. MAKING THIS INITIAL REQUEST: " + request.toString());
+
+        System.out.println("1. Making initial request: " + request.toString());
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -220,8 +218,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 responseString = response.body().string();
-                System.out.println("1. RESPONSE ORIGINAL: " + responseString);
-                System.out.println("1. STATUS: " + response.code());
+                System.out.println("1. Response to original request: " + responseString);
+
                 try {
                     jObj = new JSONObject(responseString);
                     responseMessage = jObj.getString("message");

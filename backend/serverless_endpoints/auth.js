@@ -115,14 +115,13 @@ exports.verifyUser = async (req, res) => {
 };
 
 exports.getOldToken = async (req, res) => {
-	console.log(`get old token`);
+	
 	const email = req.query && req.query.email;
 	const issuedAt = new Date();
 	issuedAt.setDate(issuedAt.getDate() - 2)
 	Math.floor(Date.now() / 1000)
 	const oldTS = Math.floor(issuedAt / 1000)
-	console.log(`ISSUED AT: ${issuedAt}`);
-	console.log(`ISSUED AT: ${oldTS}`);
+
 	readInJwtSecret()
 				.then((jwt_secret) => {
 					getUserDetails(email)
@@ -161,14 +160,14 @@ exports.refreshToken = async (req, res) => {
 			if (!verifyRefreshToken) {
 				res.send({
 					verifiedRefreshToken: verifyRefreshToken, 
-					message: "Refresh token failed verification."
+					message: "Refresh token failed verification. Please re-login."
 				}).status(401);
 				return; 
 			}
 		})
 		.then(() => {
 			const issuedAt = Math.floor(Date.now() / 1000)
-			console.log(`ISSUED AT: ${issuedAt}`);
+	
 			readInJwtSecret()
 				.then((jwt_secret) => {
 					getUserDetails(email)
@@ -177,8 +176,6 @@ exports.refreshToken = async (req, res) => {
 							const lastName = details._fieldsProto.lastname.stringValue;
 							const userId = details._fieldsProto.userId.stringValue;
 
-							console.log(`First name, etc.: ${firstName} - ${lastName} - ${userId}`);
-				
 							const token = jwt.sign(
 								{ email: email, firstName: firstName, lastName: lastName, id: userId, iat: issuedAt, exp: issuedAt + 86400}, // persist for 1 day
 								jwt_secret
@@ -186,12 +183,10 @@ exports.refreshToken = async (req, res) => {
 		
 							res.send({token: token}).status(200);
 						}).catch((e) => {
-							console.log(`Error in getUserDetails: ${e}`);
-							res.send({error: "Error accessing user details."}).status(401);
+							res.send({error: `Error accessing user details: ${e}`}).status(401);
 						});
 				}).catch((e) => {
-					console.log(`Error accessing JWT secret: ${e}`);
-					console.log(e)
+					res.send({ message: `Error accessing JWT secret: ${e}`}).status(401);
 				});
 		});	
 };

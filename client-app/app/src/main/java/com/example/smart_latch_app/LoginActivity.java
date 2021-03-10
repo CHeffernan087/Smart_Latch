@@ -127,7 +127,7 @@ public class LoginActivity extends AppCompatActivity {
     private void validateTokenOnServer(String idToken, String userName) {
         String hostName = getString(R.string.smart_latch_url);
         String url = hostName + "/verifyUser?idToken=" + idToken;
-        System.out.println("ID TOKEN: " + idToken);
+
         Request request = new Request.Builder()
                 .url(url)
                 .build();
@@ -149,8 +149,8 @@ public class LoginActivity extends AppCompatActivity {
                     refreshToken = jObj.getString("refreshToken");
                     // store tokens
                     System.out.println("REFRESH TOKEN: " + refreshToken);
-                    String testToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRrZWxseTJAdGNkLmllIiwiZmlyc3ROYW1lIjoiVGhvbWFzIiwibGFzdE5hbWUiOiJLZWxseSIsImlkIjoiMTExNjUzMDM4ODU5Mjc5NTU2ODI1IiwiaWF0IjoxNjE1MDQwOTk3LCJleHAiOjE2MTUwNDQ1OTd9.dDTe87DQnf1tqF_vB8Mp-NPu1yFm-FwsVgk4X6EzigU";
-                    editor.putString("token", testToken);
+                    // Heres an expired test token: String testToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRrZWxseTJAdGNkLmllIiwiZmlyc3ROYW1lIjoiVGhvbWFzIiwibGFzdE5hbWUiOiJLZWxseSIsImlkIjoiMTExNjUzMDM4ODU5Mjc5NTU2ODI1IiwiaWF0IjoxNjE1MDQwOTk3LCJleHAiOjE2MTUwNDQ1OTd9.dDTe87DQnf1tqF_vB8Mp-NPu1yFm-FwsVgk4X6EzigU";
+                    editor.putString("token", token);
                     editor.putString("refreshToken", refreshToken);
                     editor.apply();
                     if (userIsVerified == true) {
