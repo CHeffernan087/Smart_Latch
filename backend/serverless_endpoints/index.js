@@ -4,7 +4,7 @@ const user = require("./user");
 const { authed } = require("./middleware/auth");
 
 exports.deleteUser = user.deleteUser;
-exports.getUserDoors = doors.getUserDoors;
+exports.getUserDoors = authed(doors.getUserDoors);
 exports.logout = authed(auth.logout);
 exports.registerDoor = doors.registerDoor;
 exports.registerUser = user.registerUser;

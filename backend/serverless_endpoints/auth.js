@@ -114,11 +114,10 @@ exports.verifyUser = async (req, res) => {
 		});
 };
 
-exports.getOldToken = async (req, res) => {
-	
+exports.getOldToken = async (req, res) => { // endpoint can be used to get old tokens for testing 
 	const email = req.query && req.query.email;
 	const issuedAt = new Date();
-	issuedAt.setDate(issuedAt.getDate() - 2)
+	issuedAt.setDate(issuedAt.getDate() - 2) // 2 days ago
 	Math.floor(Date.now() / 1000)
 	const oldTS = Math.floor(issuedAt / 1000)
 
@@ -177,7 +176,7 @@ exports.refreshToken = async (req, res) => {
 							const userId = details._fieldsProto.userId.stringValue;
 
 							const token = jwt.sign(
-								{ email: email, firstName: firstName, lastName: lastName, id: userId, iat: issuedAt, exp: issuedAt + 86400}, // persist for 1 day
+								{ email: email, firstName: firstName, lastName: lastName, id: userId, iat: issuedAt, exp: issuedAt + 43200}, // persist for 12 hours
 								jwt_secret
 							);
 		

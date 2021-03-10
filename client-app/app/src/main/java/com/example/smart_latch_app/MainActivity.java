@@ -2,8 +2,6 @@ package com.example.smart_latch_app;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -15,7 +13,6 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
-import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -46,7 +43,6 @@ import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private GoogleSignInClient mGoogleSignInClient;
-    private String welcomeText;
     private MainFragment mainFragment = new MainFragment();
     private FirstFragment firstFragment = new FirstFragment();
     private FragmentManager fragmentManager = getSupportFragmentManager();
@@ -76,8 +72,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
-        welcomeText = "Welcome, " + getIntent().getStringExtra("USER_NAME");
-        Toast.makeText(this, welcomeText, Toast.LENGTH_SHORT).show();
+
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -208,7 +203,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .post(formBody)
                 .build();
 
-        System.out.println("1. Making initial request: " + request.toString());
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -218,7 +212,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 responseString = response.body().string();
-                System.out.println("1. Response to original request: " + responseString);
 
                 try {
                     jObj = new JSONObject(responseString);

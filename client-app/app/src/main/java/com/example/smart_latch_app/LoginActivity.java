@@ -1,11 +1,9 @@
 package com.example.smart_latch_app;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -103,8 +101,10 @@ public class LoginActivity extends AppCompatActivity {
                 String email = account.getEmail();
 
                 editor.putString("email", email);
+                editor.putString("name", name);
                 validateTokenOnServer(idToken, name);
-
+                String welcomeText = "Welcome, " + name;
+                Toast.makeText(this, welcomeText, Toast.LENGTH_SHORT).show();
             } catch (ApiException e) {
                 e.printStackTrace();
                 Toast.makeText(this, "Login failed", Toast.LENGTH_SHORT).show();
@@ -147,10 +147,12 @@ public class LoginActivity extends AppCompatActivity {
                     userIsVerified = jObj.getBoolean("success");
                     token = jObj.getString("token");
                     refreshToken = jObj.getString("refreshToken");
+
+
+                    // Heres an expired test token:
+                    String testToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRrZWxseTJAdGNkLmllIiwiZmlyc3ROYW1lIjoiVGhvbWFzIiwibGFzdE5hbWUiOiJLZWxseSIsImlkIjoiMTExNjUzMDM4ODU5Mjc5NTU2ODI1IiwiaWF0IjoxNjE1MDQwOTk3LCJleHAiOjE2MTUwNDQ1OTd9.dDTe87DQnf1tqF_vB8Mp-NPu1yFm-FwsVgk4X6EzigU";
                     // store tokens
-                    System.out.println("REFRESH TOKEN: " + refreshToken);
-                    // Heres an expired test token: String testToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRrZWxseTJAdGNkLmllIiwiZmlyc3ROYW1lIjoiVGhvbWFzIiwibGFzdE5hbWUiOiJLZWxseSIsImlkIjoiMTExNjUzMDM4ODU5Mjc5NTU2ODI1IiwiaWF0IjoxNjE1MDQwOTk3LCJleHAiOjE2MTUwNDQ1OTd9.dDTe87DQnf1tqF_vB8Mp-NPu1yFm-FwsVgk4X6EzigU";
-                    editor.putString("token", token);
+                    editor.putString("token", testToken);
                     editor.putString("refreshToken", refreshToken);
                     editor.apply();
                     if (userIsVerified == true) {
