@@ -1,7 +1,7 @@
 package com.example.smart_latch_app;
 
+import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -43,7 +43,6 @@ import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private GoogleSignInClient mGoogleSignInClient;
-    private String welcomeText;
     private MainFragment mainFragment = new MainFragment();
     private FirstFragment firstFragment = new FirstFragment();
     private FragmentManager fragmentManager = getSupportFragmentManager();
@@ -53,6 +52,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     JSONObject jObj = null;
     JSONArray responseDoors;
 
+    public static Context contextOfApplication;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +61,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        contextOfApplication = getApplicationContext();
+
 
         // Setup Google stuff for signing out
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -69,8 +72,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
-        welcomeText = "Welcome, " + getIntent().getStringExtra("USER_NAME");
-        Toast.makeText(this, welcomeText, Toast.LENGTH_SHORT).show();
+
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -189,7 +191,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             email = acct.getEmail();
         }
 
-        OkHttpClient client = new OkHttpClient();
+        OkHttpClient client = new OkHttpClient().newBuilder()
+            .addInterceptor(new AuthenticationInterceptor()).build();
+
         String hostUrl = getString(R.string.smart_latch_url) + "/getUserDoors?email=" + email;
 
         RequestBody formBody = new FormBody.Builder()
@@ -198,7 +202,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .url(hostUrl)
                 .post(formBody)
                 .build();
-
 
         client.newCall(request).enqueue(new Callback() {
             @Override
@@ -233,6 +236,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             arr[i]=array.optString(i);
         }
         return arr;
+    }
+
+    public static Context getContextOfApplication(){
+        return contextOfApplication;
     }
 
 }
