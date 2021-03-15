@@ -2,6 +2,7 @@ package com.example.smart_latch_app;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -13,6 +14,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -71,7 +73,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .requestEmail().build();
 
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
-
 
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -162,6 +163,45 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void signOut () {
+        OkHttpClient logoutClient = new OkHttpClient()
+                .newBuilder()
+                .addInterceptor(new AuthenticationInterceptor())
+                .build();
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String refreshToken = prefs.getString("refreshToken", "defaultToken");
+        String email = prefs.getString("email", "defaultToken");
+
+        String hostName = this.getString(R.string.smart_latch_url);
+        String url = hostName + "/logout?refreshToken=" + refreshToken + "&email=" + email;
+
+        RequestBody formBody = new FormBody.Builder()
+                .build();
+        Request request = new Request.Builder()
+                .url(url)
+                .post(formBody)
+                .build();
+
+        logoutClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+
+                    responseString = response.body().string();
+                    System.out.println("Response to logout: " + responseString);
+                    try {
+                        jObj = new JSONObject(responseString);
+                        String message = jObj.getString("message");
+                        System.out.println("Message " + message);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+            }
+        });
         mGoogleSignInClient.signOut()
                 .addOnCompleteListener(this, new OnCompleteListener<Void>() {
                     @Override

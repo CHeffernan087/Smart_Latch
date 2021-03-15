@@ -1,6 +1,8 @@
 package com.example.smart_latch_app;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.widget.Toast;
@@ -86,7 +88,7 @@ public class AuthenticationInterceptor implements Interceptor {
 
                             if(code == RESPONSE_HTTP_CLIENT_ERROR           // If failed by error 4xx...
                                     ||
-                                    code == RESPONSE_HTTP_SERVER_ERROR ){   // If failed by error 5xx...
+                                    code == RESPONSE_HTTP_SERVER_ERROR){   // If failed by error 5xx...
 
                                 logout();
 
@@ -180,9 +182,13 @@ public class AuthenticationInterceptor implements Interceptor {
     }
 
     private int logout() {
-        System.out.println("go to logout");
-        //logout your user
-        // Todo: Log the user out
+        Intent intent = new Intent();
+        intent.setClass(applicationContext, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra("SILENT_SIGN_IN", false);
+
+        applicationContext.startActivity(intent);
+        ((Activity)applicationContext).finish();
         return 0;
     }
 }

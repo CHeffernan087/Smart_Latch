@@ -79,9 +79,16 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+
+        Boolean silent = true;
+        Bundle b = getIntent().getExtras();
+        if (b != null) {
+            silent  = b.getBoolean("SILENT_SIGN_IN"); // if this is false, don't allow a silent sign in
+        }
+
         GoogleSignInAccount account = GoogleSignIn
                 .getLastSignedInAccount(this);
-        if (account != null) {
+        if (account != null && silent) { // if !silent, prevent silent sign in.
             startSignInIntent();
             Toast.makeText(this, "Signing in...", Toast.LENGTH_SHORT).show();
         }

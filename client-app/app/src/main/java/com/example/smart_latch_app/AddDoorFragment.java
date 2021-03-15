@@ -113,13 +113,6 @@ public class AddDoorFragment extends DialogFragment {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.v(TAG,"NFC ID: 0x" + doorId);
-                    }
-                });
             }
         });
     }

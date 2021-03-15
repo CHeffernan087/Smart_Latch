@@ -53,8 +53,9 @@ exports.logout = (req, res) => {
 	if (!isRequestAllowed(req, "POST")) {
 		return res.status(400).send({ error: "Expected request type POST" });
 	}
-	const { email } = getUser(req);
-	const { refreshToken } = req.body;
+	
+	const { email } = req.query;
+	const { refreshToken } = req.query;
 	if (!refreshToken) {
 		return res.status(400).send({
 			error:
