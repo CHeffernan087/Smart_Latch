@@ -7,3 +7,6 @@ esp32_code/esp-idf/websocket_client/build
 sdkconfig*
 .idea
 .env
+*.png
+venv/
+smart-latch-fd041937391e.json
