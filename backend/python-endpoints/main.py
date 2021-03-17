@@ -16,6 +16,8 @@ from flask import jsonify
 
 app = flask.Flask(__name__)
 
+THRESHOLD = 0.5
+
 @app.route("/", methods=["POST"])
 def facial_recognition(request):
     # nparr = numpy.fromstring(request.data, numpy.uint8)
@@ -37,7 +39,10 @@ def facial_recognition(request):
         if score < lowest_score:
             lowest_score_person = person
             lowest_score = score
-    return jsonify({'Person' : lowest_score_person, 'Score' : lowest_score})
+    if lowest_score <= THRESHOLD:
+      return jsonify({'Person' : lowest_score_person, 'Score' : lowest_score})
+    else:
+      return "Error - Couldn't classify image"
 
     
 def extract_face(image, required_size=(224, 224)):
