@@ -1,0 +1,12 @@
+Flask==1.0.2
+opencv-python
+numpy
+keras_applications
+tensorflow
+keras_vggface
+mtcnn
+scipy
+pandas
+google-cloud-storage
+functions-framework
+h5py < 3.0.0
