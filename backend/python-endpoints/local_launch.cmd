@@ -1,0 +1,1 @@
+functions_framework --target=%1
