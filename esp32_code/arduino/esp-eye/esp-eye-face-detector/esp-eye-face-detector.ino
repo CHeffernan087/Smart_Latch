@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <WebSocketsClient.h>
 
+
 #include "esp_timer.h"
 #include "esp_camera.h"
 #include "camera_index.h"
@@ -91,13 +92,11 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
  
             // send message to server when Connected
             Serial.println("[WSc] SENT: Connected");
-            webSocket.sendTXT("Connected");
         }
             break;
         case WStype_TEXT:            
-            Serial.printf("\nResponse Recieved - Toggling Servo ...\n");
-            Serial.printf("[WSc] RESPONSE of length: %u\n", length);
-            hexdump(payload, length);
+            Serial.printf("\nResponse Recieved - Toggling Servo ...\n");            
+            Serial.printf("[WSc] RESPONSE: %s\n", payload);
             break;
         case WStype_BIN:
             Serial.printf("[WSc] get binary length: %u\n", length);
@@ -199,7 +198,8 @@ void setup() {
     webSocket.begin("echo.websocket.org", 80, "/");
     
     // websocket event handler
-    webSocket.onEvent(webSocketEvent);
+    webSocket.onEvent(webSocketEvent);  
+    
 }
 
 
@@ -209,13 +209,13 @@ dl_matrix3du_t *image_matrix = NULL;  // allocate image matrix RGB mem
 unsigned long lastUpdate = millis();  // update timer value
 
 void loop() {
-
+    
     // websocket object update must be called every loop
     webSocket.loop();
 
     // if connected and message interval is reached we send message to server
     // will be adding in comms from the esp32 board to init this
-    if (connected && lastUpdate+messageInterval<millis()){
+    if (lastUpdate+messageInterval<millis()){
 
         // get current time
         int64_t start_time = esp_timer_get_time();
@@ -254,16 +254,13 @@ void loop() {
 
         // if face was detected, boxes would be generated
         if (net_boxes){
-          
-            // increment frame num
-            frame_num++;
 
             // print how many faces were detected
-            Serial.printf("DETECTED: %d\n", frame_num);        
+            Serial.printf("\nFACE DETECTED\n");        
 
             // sending RGB image bin
-            Serial.println("[WSc] SENT: Simple js client message!!");
-            webSocket.sendTXT(image_matrix->item);
+            Serial.println("[WSc] SENDING - Detected Face Image");
+            webSocket.sendBIN(fb->buf, fb->len);
             Serial.println("-> Message Sent - Waiting for Response ...");
 
             // update last detection timer
@@ -273,6 +270,6 @@ void loop() {
 
         // free image allcoation mem
         dl_matrix3du_free(image_matrix);
-   
+
     }
 }
