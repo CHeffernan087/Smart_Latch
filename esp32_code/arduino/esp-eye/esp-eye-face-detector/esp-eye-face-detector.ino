@@ -1,7 +1,7 @@
 #include <Arduino.h>
+#include <esp_now.h>
 #include <WiFi.h>
 #include <WebSocketsClient.h>
-
 
 #include "esp_timer.h"
 #include "esp_camera.h"
@@ -29,14 +29,20 @@ const char* ssid = "";
 const char* password = "";
 #endif
 
-// websocket object
-WebSocketsClient webSocket; // WebSocket object
+// RECEIVER MAC Address
+// All F's sends to all boards on network
+uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
-// websocket connection status
-bool connected = false;
+// Specific to McNally's Boards
+//uint8_t broadcastAddress[] = {0xAC, 0x67, 0xB2, 0x67, 0xA1, 0x9C};
+//uint8_t broadcastAddress[] = {0x24, 0x0A, 0xC4, 0xE7, 0xF7, 0x94};
 
-// timing 
-unsigned long messageInterval = 5000; // time interval to prevent button bounce
+// websocket
+WebSocketsClient webSocket; // websocket object
+bool connected = false;     // websocket connection status
+
+// motion detection
+bool motionDetected = false;  // motion detection status
 
 // config face detection model parameters
 static inline mtmn_config_t app_mtmn_config()
@@ -59,6 +65,41 @@ static inline mtmn_config_t app_mtmn_config()
 }
 mtmn_config_t mtmn_config = app_mtmn_config();
 
+// Structure of send data
+typedef struct struct_message {
+  char a[32];
+  int b;
+  float c;
+  String d;
+  bool e;
+} struct_message;
+
+// Create a struct_message called myData
+struct_message myData;
+
+// callback function that will be executed when data is received
+void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+  memcpy(&myData, incomingData, sizeof(myData));
+  Serial.print("Bytes received: ");
+  Serial.println(len);
+  Serial.print("Char: ");
+  Serial.println(myData.a);
+  Serial.print("Int: ");
+  Serial.println(myData.b);
+  Serial.print("Float: ");
+  Serial.println(myData.c);
+  Serial.print("String: ");
+  Serial.println(myData.d);
+  Serial.print("Bool: ");
+  Serial.println(myData.e);
+  Serial.println();
+
+  // if string is motion and bool is true
+  if(myData.e && (myData.d == "motion")){
+    motionDetected = true;
+  }
+}
+
 
 // NOTE: likely to be depricated in the future
 // if binary is recieved we print dump in hex form
@@ -66,10 +107,8 @@ void hexdump(const void *mem, uint32_t len, uint8_t cols = 16)
 {
     const uint8_t *src = (const uint8_t *)mem;
     Serial.printf("\n[HEXDUMP] Address: 0x%08X len: 0x%X (%d)", (ptrdiff_t)src, len, len);
-    for (uint32_t i = 0; i < len; i++)
-    {
-        if (i % cols == 0)
-        {
+    for (uint32_t i = 0; i < len; i++){
+        if (i % cols == 0){
             Serial.printf("\n[0x%08X] 0x%08X: ", (ptrdiff_t)src, i);
         }
         Serial.printf("%02X ", *src);
@@ -148,13 +187,13 @@ void setup() {
     
     //init with high specs to pre-allocate larger buffers
     if (psramFound()) {
-      config.frame_size = FRAMESIZE_UXGA;
-      config.jpeg_quality = 10;
-      config.fb_count = 2;
+        config.frame_size = FRAMESIZE_UXGA;
+        config.jpeg_quality = 10;
+        config.fb_count = 2;
     } else {
-      config.frame_size = FRAMESIZE_SVGA;
-      config.jpeg_quality = 12;
-      config.fb_count = 1;
+        config.frame_size = FRAMESIZE_SVGA;
+        config.jpeg_quality = 12;
+        config.fb_count = 1;
     }
     
     #if defined(CAMERA_MODEL_ESP_EYE)
@@ -165,8 +204,8 @@ void setup() {
     // camera init
     esp_err_t err = esp_camera_init(&config);
     if (err != ESP_OK) {
-      Serial.printf("Camera init failed with error 0x%x", err);
-      return;
+        Serial.printf("Camera init failed with error 0x%x", err);
+        return;
     }
 
     // set frame size
@@ -180,42 +219,65 @@ void setup() {
         delay(1000);
     }
 
+
+    // Set the device as a Station and Soft Access Point simultaneously
+    WiFi.mode(WIFI_AP_STA);
+    
+    // Set device as a Wi-Fi Station
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(1000);
+      Serial.println("Setting as a Wi-Fi Station..");
+    }
+    Serial.print("Station IP Address: ");
+    Serial.println(WiFi.localIP());
+    Serial.print("Wi-Fi Channel: ");
+    Serial.println(WiFi.channel());
+  
+    // Init ESP-NOW
+    if (esp_now_init() != ESP_OK) {
+      Serial.println("Error initializing ESP-NOW");
+      return;
+    }
+    
+    // Once ESPNow is successfully Init, we will register for recv CB to
+    // get recv packer info
+    esp_now_register_recv_cb(OnDataRecv);
+  
     // connect to wifi
     WiFi.begin(ssid, password);
 
     // connection delay
     while ( WiFi.status() != WL_CONNECTED ) {
-      delay ( 500 );
-      Serial.print ( "." );
+        delay(500);
+        Serial.print(".");
     }
-
-    // print device IP
-    Serial.print("Local IP: "); 
-    Serial.println(WiFi.localIP());
+    Serial.println();
     
     // server address, port and URL
     // just using this websocket service for now to get a default response
     webSocket.begin("echo.websocket.org", 80, "/");
     
     // websocket event handler
-    webSocket.onEvent(webSocketEvent);  
-    
+    webSocket.onEvent(webSocketEvent); 
+     
+    // connection delay
+    delay(2000);
 }
 
 
 size_t frame_num = 0;                 // init frame number
 camera_fb_t *fb = NULL;               // allocate image mem
 dl_matrix3du_t *image_matrix = NULL;  // allocate image matrix RGB mem
-unsigned long lastUpdate = millis();  // update timer value
 
 void loop() {
-    
+
     // websocket object update must be called every loop
     webSocket.loop();
 
     // if connected and message interval is reached we send message to server
     // will be adding in comms from the esp32 board to init this
-    if (lastUpdate+messageInterval<millis()){
+    if (connected && motionDetected){
 
         // get current time
         int64_t start_time = esp_timer_get_time();
@@ -263,13 +325,11 @@ void loop() {
             webSocket.sendBIN(fb->buf, fb->len);
             Serial.println("-> Message Sent - Waiting for Response ...");
 
-            // update last detection timer
-            lastUpdate = millis();
-
+            // reset motion status flag
+            motionDetected = false;
         }
 
         // free image allcoation mem
         dl_matrix3du_free(image_matrix);
-
-    }
+    }    
 }
