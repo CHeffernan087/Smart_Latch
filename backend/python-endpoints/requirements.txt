@@ -1,8 +1,10 @@
+tensorflow==1.14.
 Flask==1.0.2
+keras==2.2.5
 opencv-python
 numpy
 keras_applications
-tensorflow
+google-cloud-vision
 keras_vggface
 mtcnn
 scipy
