@@ -3,6 +3,7 @@ const {
 	addDoorToUser,
 	getUserDoors,
 	isDoorActive,
+	isAuthorised,
 	setDoorAdmin,
 } = require("./databaseApi");
 
@@ -14,8 +15,8 @@ exports.getUserDoors = (req, res) => {
 	});
 };
 
-const openDoor = ({ doorId, userId }) => {
-	return smartLatchPost("/openDoor", { doorId, userId });
+const openDoor = ({ doorId, email }) => {
+	return smartLatchPost("/openDoor", { doorId, userId: email });
 };
 
 exports.registerDoor = (req, res) => {
@@ -55,33 +56,35 @@ exports.registerDoor = (req, res) => {
 exports.toggleLatch = (req, res) => {
 	const desiredState = req.query && req.query.state;
 	const doorId = req.query && req.query.doorId;
-	const userId = req.query && req.query.userId;
+	const { email } = req.user;
 	// todo : add some validation here if the user is allowed to open the door
-	const userIsAuthorized = true;
-	if (userIsAuthorized) {
-		return openDoor({ doorId: 31415, userId: 420 })
-			.then((response) => {
-				if (response.status === 200) {
-					return {
-						status: 200,
-						response: { Authorization: "ok", newDoorState: desiredState },
-					};
-				} else {
-					return {
-						status: 400,
-						response: "Door not online",
-						// message: response.json(),
-					};
-				}
-			})
-			.then(({ status, response }) => {
-				res.status(status).send({ response: response });
-			})
-			.catch((err) => {
-				res.status(400).send({ error: err });
-			});
-	} else {
-		// todo close connection on the board
-		res.status(400).send({ error: "You are not authorised to open this door" });
-	}
+
+	return isAuthorised(email, doorId)
+		.then((userIsAuthorized) => {
+			if (userIsAuthorized) {
+				return openDoor({ doorId, email });
+			} else {
+				throw new Error("User not Authorised");
+			}
+		})
+		.then((response) => {
+			if (response.status === 200) {
+				return {
+					status: 200,
+					response: { Authorization: "ok", newDoorState: desiredState },
+				};
+			} else {
+				return {
+					status: 400,
+					response: "Door not online",
+				};
+			}
+		})
+		.then(({ status, response }) => {
+			return res.status(status).send({ response: response });
+		})
+		.catch((error) => res.status(400).send({ error }));
+
+	// todo close connection on the board
+	// ;
 };
