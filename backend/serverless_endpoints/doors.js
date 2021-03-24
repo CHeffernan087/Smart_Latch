@@ -4,14 +4,37 @@ const {
 	getUserDoors,
 	isDoorActive,
 	setDoorAdmin,
+	getDoorDetails,
 } = require("./databaseApi");
 
 exports.getUserDoors = (req, res) => {
 	const email = req.query && req.query.email;
-
+	let doorDetails = {};
+	let doorCount = 0; 
 	getUserDoors(email).then((doors) => {
-		res.send({ message: "Not implemented yet.", doors });
+		doors.forEach((door) => {
+			getDoorDetails(door)
+				.then((details) => {
+					doorDetails = {
+						...doorDetails,
+						[door]: details,
+					}
+					doorCount++;
+					if (doors.length === doorCount) {
+						sendDoorResponse(doors);
+					}
+				}).catch((e) => {
+					res.send({error: e});
+				});
+		})
+	})
+	.catch((e) => {
+		res.send({ error: e});
 	});
+
+	function sendDoorResponse(doors) {
+			res.send({ doors, doorDetails });
+	}
 };
 
 const openDoor = ({ doorId, userId }) => {
@@ -24,7 +47,7 @@ exports.registerDoor = (req, res) => {
 			error: "No such endpoint. Did you specify the wrong request type?",
 		});
 	}
-	const { doorId, email } = req.body;
+	const { doorId, email, nfcId } = req.body;
 
 	if (doorId && email) {
 		isDoorActive(doorId)
@@ -35,7 +58,8 @@ exports.registerDoor = (req, res) => {
 					throw "Door is not currently active";
 				}
 			})
-			.then(() => addDoorToUser(email, doorId))
+			// .then(() => addDoorToUser(email, doorId)) --> Door should already be assigned to the person making this call 
+			.then(() => setDoorNfcId(doorId, nfcId))
 			.then(() => res.status(200).send({ message: "Success! New door added" }))
 			.catch((err) => res.status(401).send({ err }));
 	} else {

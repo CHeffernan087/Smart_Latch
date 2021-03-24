@@ -2,12 +2,13 @@ const admin = require("firebase-admin");
 admin.initializeApp();
 const firestoreDb = admin.firestore();
 
-//TODO comment out
 const Firestore = require("@google-cloud/firestore");
+// Comment out if not running locally and uncomment above line 3 ---->
 // const firestoreDb = new Firestore({
 // 	projectId: "smart-latch",
 // 	keyFilename: "../../smart-latch-3f77ccdb8958.json",
 // });
+// <------------
 
 function addAsAuthorised(email, doorId) {
 	doorDocument = firestoreDb.collection("Doors").doc(doorId);
@@ -100,7 +101,6 @@ exports.getUserRefreshToken = (email, refreshToken) => {
 		.get()
 		.then((rawJson) => rawJson.data())
 		.then((refreshObj) => {
-			console.log(`OBJ: ${JSON.stringify(refreshObj)}`);
 			return refreshObj.refreshToken === refreshToken;
 		});
 };
@@ -150,7 +150,24 @@ exports.setDoorAdmin = async (email, doorId) => {
 	return doorDocument.update({ Admin: userDoc });
 };
 
+
+exports.getDoorDetails = (doorId) => {
+	return firestoreDb
+		.collection("Doors")
+		.doc(doorId)
+		.get()
+		.then((rawJson) => {
+			return rawJson.data();
+		});
+};
+
+exports.setDoorNfcId = (doorId, nfcId) => { 
+		let doorDoc = firestoreDb.collection("Doors").doc(doorId);
+		return doorDoc.update({ nfcId: nfcId});
+};
+
 function setDoorAsActive(doorId) {
 	doorDocument = firestoreDb.collection("Doors").doc(doorId);
 	return doorDocument.update({ IsActive: true });
 }
+

@@ -14,6 +14,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -53,6 +54,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     String responseMessage = "";
     JSONObject jObj = null;
     JSONArray responseDoors;
+    JSONObject responseDetails;
 
     public static Context contextOfApplication;
 
@@ -155,9 +157,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         finish();
     }
 
-    private void gotoMyDoorsActivity(String[] doors) {
+    private void gotoMyDoorsActivity(String[] doors, JSONObject doorDetails) {
         Intent i = new Intent(MainActivity.this, MyDoorsActivity.class);
         i.putExtra("DOORS", doors);
+        i.putExtra("DETAILS", doorDetails.toString());
         startActivity(i);
         finish();
     }
@@ -231,8 +234,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             email = acct.getEmail();
         }
 
-        OkHttpClient client = new OkHttpClient().newBuilder()
-            .addInterceptor(new AuthenticationInterceptor()).build();
+        OkHttpClient client = new OkHttpClient().newBuilder().build();
+//            .addInterceptor(new AuthenticationInterceptor()).build();
 
         String hostUrl = getString(R.string.smart_latch_url) + "/getUserDoors?email=" + email;
 
@@ -252,13 +255,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 responseString = response.body().string();
-
+                System.out.println("RESPONSE BOYO: " + responseString);
                 try {
                     jObj = new JSONObject(responseString);
-                    responseMessage = jObj.getString("message");
                     responseDoors = jObj.getJSONArray("doors");
+                    responseDetails = jObj.getJSONObject("doorDetails");
+
                     String[] userDoorsAsStringArray = toStringArray(responseDoors);
-                    gotoMyDoorsActivity(userDoorsAsStringArray);
+
+                    System.out.println("HERE ARE THE DEETZ WE WANTED: " + responseDetails.getJSONObject("1005").getString("nfcId"));
+                    gotoMyDoorsActivity(userDoorsAsStringArray, responseDetails);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }

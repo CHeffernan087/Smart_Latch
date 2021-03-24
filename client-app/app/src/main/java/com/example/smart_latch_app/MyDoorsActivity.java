@@ -17,13 +17,18 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.Arrays;
 
 public class MyDoorsActivity extends AppCompatActivity implements Listener{
 
     public static final String TAG = MainActivity.class.getSimpleName();
     String[] doors = new String[] {};
-    private Button mBtScan;
+    JSONObject doorDetails;
+//    private Button mBtScan;
+    private String clickedDoorId = null;
     private AddDoorFragment mAddDoorFragment;
     private boolean isDialogDisplayed = false;
     private NfcAdapter mNfcAdapter;
@@ -37,22 +42,43 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
         Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
         ListView listView = (ListView) findViewById(R.id.list);
 
-        initViews();
+//        initViews();
         initNFC();
 
         Bundle b = getIntent().getExtras();
         if (b != null) {
             doors = b.getStringArray("DOORS");
+            try {
+                doorDetails = new JSONObject(b.getString("DETAILS"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            System.out.println("NOW IN MYDOORS, we HAVE THE GOOODS: " + doorDetails);
         }
 
-        // use your custom layout
         MySimpleArrayAdapter adapter = new MySimpleArrayAdapter(this, doors);
         listView.setAdapter(adapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                gotoFirstFragment(doors[position]);
+                clickedDoorId = doors[position];
+                try {
+                    System.out.println("Clicked is initialised? : ->" + doorDetails.getJSONObject(doors[position]).getString("nfcId") + "<-");
+                    System.out.println("AHHHH LENGRTH"  +doorDetails.getJSONObject(doors[position]).getString("nfcId").length());
+                    if(doorDetails.getJSONObject(doors[position]).getString("nfcId").length() == 0) {
+                        System.out.println("We need to initialise it!!");
+                        showAddDoorFragment();
+
+                    } else {
+                        gotoFirstFragment(doors[position]);
+                    }
+
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
             }
         });
 
@@ -70,12 +96,8 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
         finish();
     }
 
-    private void initViews() {
-        mBtScan = (Button) findViewById(R.id.btn_read);
-        mBtScan.setOnClickListener(view -> showAddDoorFragment());
-    }
-
     private void initNFC(){
+        System.out.println("> Init NFC");
         mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
     }
 
@@ -128,6 +150,7 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
         Tag tag = (Tag) intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
         assert tag != null;
         detectTagData(tag);
+        System.out.println("UNIQUE ID, BUT IN RAW TAG FORM: " + tag);
 
     }
 
@@ -136,7 +159,7 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
         StringBuilder sb = new StringBuilder();
         byte[] id = tag.getId();
         sb.append(toHex(id));
-
+        System.out.println("UNIQUE NFC IDENTIFIER" + sb);
         if (isDialogDisplayed) {
                 Toast.makeText(this, "NFC Tag Detected !", Toast.LENGTH_SHORT).show();
                 mAddDoorFragment = (AddDoorFragment) getSupportFragmentManager().findFragmentByTag(AddDoorFragment.TAG);
@@ -155,7 +178,8 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
                 * }
                 *
                 * */
-                mAddDoorFragment.onNfcDetected("1005");
+                // pass clicked door id and nfctag_id
+                mAddDoorFragment.onNfcDetected(clickedDoorId, sb.toString());
         }
     }
 
@@ -173,7 +197,7 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
 
     private void gotoFirstFragment(String selectedDoor) {
         Bundle bundle = new Bundle();
-        bundle.putString("doorID", selectedDoor );
+        bundle.putString("doorID", selectedDoor);
         firstFragment.setArguments(bundle);
         fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.fragmentContainer,firstFragment);

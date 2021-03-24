@@ -92,10 +92,4 @@
         app:layout_constraintTop_toTopOf="parent"
 
         app:srcCompat="@drawable/ic_unlocked_icon" />
-
-
-
-
-
-
 </androidx.constraintlayout.widget.ConstraintLayout>

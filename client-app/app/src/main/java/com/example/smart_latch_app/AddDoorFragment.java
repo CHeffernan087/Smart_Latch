@@ -63,19 +63,20 @@ public class AddDoorFragment extends DialogFragment {
         mListener.onDialogDismissed();
     }
 
-    public void onNfcDetected(String doorId){
+    public void onNfcDetected(String doorId, String nfcTagId){
         Log.v(TAG,"NFC ID: " + doorId);
         Log.v(TAG,"Sending Request to add door.");
-        sendAddDoorReq(doorId);
-        ((MyDoorsActivity) getActivity()).appendDoor(doorId);
+        System.out.println("> onNfcDetected");
+        sendAddDoorReq(doorId, nfcTagId);
+//        ((MyDoorsActivity) getActivity()).appendDoor(doorId);
     }
 
 
-    private void sendAddDoorReq(String doorId) {
+    private void sendAddDoorReq(String doorId, String nfcTagId) {
 
         OkHttpClient client = new OkHttpClient()
                 .newBuilder()
-                .addInterceptor(new AuthenticationInterceptor())
+//                .addInterceptor(new AuthenticationInterceptor())
                 .build();
 
         String hostUrl = getString(R.string.smart_latch_url) + "/registerDoor" ;
@@ -89,12 +90,14 @@ public class AddDoorFragment extends DialogFragment {
         RequestBody formBody = new FormBody.Builder()
                 .add("doorId", doorId)
                 .add("email",  email)
+                .add("nfcId", nfcTagId)
                 .build();
         Request request = new Request.Builder()
                 .url(hostUrl)
                 .post(formBody)
                 .build();
 
+        System.out.println("SENDING THE NFCID IN THE REQUEST: " + nfcTagId);
         // sending request to add door for scanned NFC ID
         client.newCall(request).enqueue(new Callback() {
             @Override
@@ -105,7 +108,7 @@ public class AddDoorFragment extends DialogFragment {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 responseString = response.body().string();
-
+                System.out.println(responseString);
                 try {
                     jObj = new JSONObject(responseString);
                     responseMessage = jObj.getString("message");

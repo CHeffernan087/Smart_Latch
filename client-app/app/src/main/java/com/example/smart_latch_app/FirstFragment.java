@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -27,6 +28,7 @@ public class FirstFragment extends Fragment {
     private TextView mTextViewResult;
     private TextView doorIdTitle;
     private ImageButton backBtn;
+    private Button initialiseButton;
 
     String responseString = "";
 
@@ -145,6 +147,7 @@ public class FirstFragment extends Fragment {
 
             }
         });
+
     }
 
     private void gotoMyDoorActivity() {
