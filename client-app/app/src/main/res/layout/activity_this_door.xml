@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".FirstFragment">
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        android:minHeight="?attr/actionBarSize"
+        android:theme="?attr/actionBarTheme"
+        tools:layout_editor_absoluteX="1dp"
+        app:layout_constraintEnd_toStartOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+        <ImageButton
+            android:id="@+id/back_nav"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:padding="15dp"
+            android:scaleType="fitCenter"
+            android:layout_gravity="left"
+            android:background="@drawable/ic_arrow_back" />
+
+        <TextView
+            android:id="@+id/textview_doorid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="30dp"
+            android:hint="@string/test_door_id"
+            android:text=""
+            android:textColor="@color/white"
+            android:textColorHint="@color/white"
+            android:textSize="20dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/back_nav"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.appcompat.widget.Toolbar>
+
+
+    <ImageButton
+        android:id="@+id/nfc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="80px"
+        android:background="@android:color/transparent"
+        android:backgroundTint="@android:color/transparent"
+
+        android:backgroundTintMode="screen"
+        app:layout_constraintBottom_toTopOf="@id/grant_access"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.144"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/toolbar2"
+        app:srcCompat="@drawable/nfc" />
+
+
+    <ImageButton
+        android:id="@+id/grant_access"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:backgroundTint="@android:color/transparent"
+        android:backgroundTintMode="screen"
+
+        app:layout_constraintBottom_toTopOf="@id/button1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.144"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/nfc"
+        app:srcCompat="@drawable/grant_access" />
+
+    <ImageButton
+        android:id="@+id/button1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:backgroundTint="@android:color/transparent"
+        android:backgroundTintMode="screen"
+        android:scaleX="5"
+        android:scaleY="5"
+        app:layout_constraintBottom_toTopOf="@id/textview_result"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/button2"
+        app:layout_constraintTop_toBottomOf="@id/grant_access"
+        app:srcCompat="@drawable/ic_locked_icon" />
+
+    <ImageButton
+        android:id="@+id/button2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:backgroundTint="@android:color/transparent"
+        android:scaleX="5"
+        android:scaleY="5"
+        app:layout_constraintBottom_toTopOf="@id/textview_result"
+        app:layout_constraintEnd_toStartOf="@id/button1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/grant_access"
+        app:srcCompat="@drawable/ic_unlocked_icon" />
+
+    <TextView
+        android:id="@+id/textview_result"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="@string/current_door_status_hint"
+        android:scaleX="1.5"
+        android:scaleY="1.5"
+        android:text=""
+        android:textColor="#000000"
+        android:textColorHint="#000000"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/button2"/>
+
+    <TextView
+        android:id="@+id/editTextTextPersonName"
+        android:layout_width="224dp"
+        android:layout_height="119dp"
+        android:ems="10"
+        android:fontFamily="serif-monospace"
+        android:inputType="textPersonName"
+        android:lines="2"
+        android:maxLines="2"
+        android:minLines="2"
+        android:shadowColor="#FFFFFF"
+        android:text="Tap door NFC tag to authenticate."
+        android:textColor="#000000"
+        android:textColorHint="#FFFFFF"
+        android:textSize="22sp"
+        tools:layout_editor_absoluteX="166dp"
+        tools:layout_editor_absoluteY="140dp" />
+
+    <TextView
+        android:id="@+id/editTextTextPersonName2"
+        android:layout_width="224dp"
+        android:layout_height="119dp"
+        android:ems="10"
+        android:fontFamily="serif-monospace"
+        android:inputType="textPersonName"
+        android:lines="2"
+        android:maxLines="2"
+        android:minLines="2"
+        android:shadowColor="#FFFFFF"
+        android:text="Grant another user access to this door."
+        android:textColor="#000000"
+        android:textColorHint="#FFFFFF"
+        android:textSize="22sp"
+        tools:layout_editor_absoluteX="166dp"
+        tools:layout_editor_absoluteY="314dp" />
+</androidx.constraintlayout.widget.ConstraintLayout>

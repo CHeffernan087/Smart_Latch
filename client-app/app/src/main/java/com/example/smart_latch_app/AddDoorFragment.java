@@ -112,6 +112,9 @@ public class AddDoorFragment extends DialogFragment {
                 try {
                     jObj = new JSONObject(responseString);
                     responseMessage = jObj.getString("message");
+                    JSONObject specificDoorDetailsObject = MyDoorsActivity.doorDetails.getJSONObject(doorId);
+                    specificDoorDetailsObject.put("nfcId", nfcTagId);
+
 
                 } catch (JSONException e) {
                     e.printStackTrace();

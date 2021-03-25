@@ -13,7 +13,6 @@ import androidx.fragment.app.FragmentTransaction;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -24,15 +23,14 @@ import java.util.Arrays;
 
 public class MyDoorsActivity extends AppCompatActivity implements Listener{
 
-    public static final String TAG = MainActivity.class.getSimpleName();
+    public static boolean doorNeedsToBeInitialised;
+
     String[] doors = new String[] {};
-    JSONObject doorDetails;
-//    private Button mBtScan;
+    public static JSONObject doorDetails;
     private String clickedDoorId = null;
     private AddDoorFragment mAddDoorFragment;
     private boolean isDialogDisplayed = false;
     private NfcAdapter mNfcAdapter;
-    private FirstFragment firstFragment = new FirstFragment();
     private FragmentTransaction fragmentTransaction;
 
     @Override
@@ -42,7 +40,6 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
         Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
         ListView listView = (ListView) findViewById(R.id.list);
 
-//        initViews();
         initNFC();
 
         Bundle b = getIntent().getExtras();
@@ -64,14 +61,14 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 clickedDoorId = doors[position];
                 try {
-                    System.out.println("Clicked is initialised? : ->" + doorDetails.getJSONObject(doors[position]).getString("nfcId") + "<-");
-                    System.out.println("AHHHH LENGRTH"  +doorDetails.getJSONObject(doors[position]).getString("nfcId").length());
-                    if(doorDetails.getJSONObject(doors[position]).getString("nfcId").length() == 0) {
+                    doorNeedsToBeInitialised = doorDetails.getJSONObject(doors[position]).getString("nfcId").length() == 0; // if no nfcId, door needs to be initialised
+                    System.out.println("is initialised? : ->" + doorNeedsToBeInitialised + "<-");
+                    if(doorNeedsToBeInitialised) {
                         System.out.println("We need to initialise it!!");
                         showAddDoorFragment();
-
                     } else {
-                        gotoFirstFragment(doors[position]);
+//                        gotoFirstFragment(doors[position]);
+                        gotoThisDoorActivity(doors[position]);
                     }
 
 
@@ -150,8 +147,6 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
         Tag tag = (Tag) intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
         assert tag != null;
         detectTagData(tag);
-        System.out.println("UNIQUE ID, BUT IN RAW TAG FORM: " + tag);
-
     }
 
     //For NFC detection handling
@@ -159,7 +154,6 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
         StringBuilder sb = new StringBuilder();
         byte[] id = tag.getId();
         sb.append(toHex(id));
-        System.out.println("UNIQUE NFC IDENTIFIER" + sb);
         if (isDialogDisplayed) {
                 Toast.makeText(this, "NFC Tag Detected !", Toast.LENGTH_SHORT).show();
                 mAddDoorFragment = (AddDoorFragment) getSupportFragmentManager().findFragmentByTag(AddDoorFragment.TAG);
@@ -194,32 +188,14 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
         return sb.toString();
     }
 
-
-    private void gotoFirstFragment(String selectedDoor) {
-        Bundle bundle = new Bundle();
-        bundle.putString("doorID", selectedDoor);
-        firstFragment.setArguments(bundle);
-        fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.replace(R.id.fragmentContainer,firstFragment);
-        fragmentTransaction.commit();
-    }
-
-    public void appendDoor(String doorId) {
-        if (Arrays.asList(doors).contains(doorId)) {
-            Toast.makeText(this, "This door has already been added.", Toast.LENGTH_SHORT).show();
-        } else {
-            // appends new doorId
-            doors = Arrays.copyOf(doors, doors.length + 1);
-            doors[doors.length - 1] = doorId; // Assign 40 to the last element
-
-            Toast.makeText(this, "Door " + doorId + " has been added.", Toast.LENGTH_SHORT).show();
-            finish(); // restart the activity with the new doors
-
-            Intent intent = getIntent();
-            Bundle b = new Bundle();
-            b.putStringArray("DOORS", doors);
-            intent.putExtras(b);
-            startActivity(intent);
-        }
+    private void gotoThisDoorActivity(String selectedDoor) {
+        Intent i = new Intent(MyDoorsActivity.this, ThisDoorActivity.class);
+        System.out.println("Selected Door: " + selectedDoor);
+        i.putExtra("doorId", selectedDoor);
+        System.out.println("1. Mandem, here is the doors going into ThiSDoor: " + Arrays.toString(doors));
+        i.putExtra("DOORS", doors);
+        i.putExtra("DETAILS", doorDetails.toString());
+        startActivity(i);
+        finish();
     }
 }

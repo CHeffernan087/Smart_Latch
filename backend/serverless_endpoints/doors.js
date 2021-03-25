@@ -5,6 +5,7 @@ const {
 	isDoorActive,
 	setDoorAdmin,
 	getDoorDetails,
+	setDoorNfcId,
 } = require("./databaseApi");
 
 exports.getUserDoors = (req, res) => {

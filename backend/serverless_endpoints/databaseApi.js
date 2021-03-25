@@ -161,9 +161,9 @@ exports.getDoorDetails = (doorId) => {
 		});
 };
 
-exports.setDoorNfcId = (doorId, nfcId) => { 
+exports.setDoorNfcId = (doorId, nfcID) => { 
 		let doorDoc = firestoreDb.collection("Doors").doc(doorId);
-		return doorDoc.update({ nfcId: nfcId});
+		return doorDoc.update({ nfcId: nfcID});
 };
 
 function setDoorAsActive(doorId) {
