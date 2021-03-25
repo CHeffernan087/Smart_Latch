@@ -6,6 +6,7 @@ const {
 	setDoorAdmin,
 	getDoorDetails,
 	setDoorNfcId,
+	updateDoorNfcState,
 } = require("./databaseApi");
 
 exports.getUserDoors = (req, res) => {
@@ -44,7 +45,7 @@ const openDoor = ({ doorId, userId }) => {
 
 exports.registerDoor = (req, res) => {
 	if (!isRequestAllowed(req, "POST")) {
-		return res.status(401).send({
+		return res.status(404).send({ // 404 --> Not found 
 			error: "No such endpoint. Did you specify the wrong request type?",
 		});
 	}
@@ -81,7 +82,7 @@ exports.toggleLatch = (req, res) => {
 	const desiredState = req.query && req.query.state;
 	const doorId = req.query && req.query.doorId;
 	const userId = req.query && req.query.userId;
-	// todo : add some validation here if the user is allowed to open the door
+	
 	const userIsAuthorized = true;
 	if (userIsAuthorized) {
 		return openDoor({ doorId: 31415, userId: 420 })
@@ -95,7 +96,6 @@ exports.toggleLatch = (req, res) => {
 					return {
 						status: 400,
 						response: "Door not online",
-						// message: response.json(),
 					};
 				}
 			})
@@ -110,3 +110,36 @@ exports.toggleLatch = (req, res) => {
 		res.status(400).send({ error: "You are not authorised to open this door" });
 	}
 };
+
+exports.nfcUpdate = (req, res) => {
+	const { nfcId, doorId } = req.body;  
+
+	if(nfcId && doorId) {
+		getDoorDetails(doorId, nfcId)
+			.then((doorObject) => {
+				if (doorObject.nfcId === nfcId){
+					updateDoorNfcState(doorId)
+						.then(() => {
+							res.send({ message: "Successfully updated NFC state to true for 2FA." }).status(200);
+						})
+						.catch((e) => res.send({error: e}));
+				} else {
+					res.send({ message: `You are using the wrong door in the app (${doorId}) for this NFC tag. `});
+				}
+			})
+			.catch((e) => { 
+				res.send({ err: e }).status(500);
+			});
+	} else {
+		const missingFields = [];
+		if (!doorId) {
+			missingFields.unshift("doorId");
+		}
+		if (!email) {
+			missingFields.unshift("email");
+		}
+		return res
+			.status(400)
+			.send({ error: `Missing field(s) ${missingFields.toString()}` });
+	}
+}

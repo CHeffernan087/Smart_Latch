@@ -24,6 +24,8 @@ import java.io.IOException;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -37,6 +39,7 @@ public class ThisDoorActivity extends AppCompatActivity {
     private ImageButton grantAccessBtn;
     private String dialogTextBox = "";
 
+    // NFC setup
     NfcAdapter nfcAdapter;
     PendingIntent pendingIntent;
 
@@ -48,6 +51,11 @@ public class ThisDoorActivity extends AppCompatActivity {
 
     JSONObject jObj = null;
     Integer state = 0;
+
+    // variables for /2fa endpoint
+    String responseString2fa = "";
+    JSONObject jObj2fa = null;
+    String responseMessage = "";
 
     @Override
     protected void onResume () {
@@ -232,16 +240,14 @@ public class ThisDoorActivity extends AppCompatActivity {
 
                         builder.show();
                     } else {
-                        System.out.println("Give the door admin a shout.");
+
+                        System.out.println("Get onto your door admin");
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
         });
-
-
-
     }
 
     private void gotoMyDoorActivity() {
@@ -262,11 +268,42 @@ public class ThisDoorActivity extends AppCompatActivity {
         String nfcId = sb.toString();
         Toast.makeText(this, "NFC authenticated!", Toast.LENGTH_SHORT).show();
 
-        System.out.println(nfcId);
-        // 1. send tag up to new endpoint, with the door
-        // 2. Check that the door has a field with the right nfc identifier!
-        // 3. put a field in the DB under the door called "nfcState": true
-        // 4. when the door locks OR after some kind of timeout, we should set "nfcState": false
+        OkHttpClient client = (OkHttpClient) new OkHttpClient()
+                .newBuilder()
+                .addInterceptor(new AuthenticationInterceptor())
+                .build();
+
+        String url = this.getString(R.string.smart_latch_url) + "/nfcUpdate";
+
+        RequestBody formBody = new FormBody.Builder()
+                .add("nfcId", nfcId)
+                .add("doorId", doorID)
+                .build();
+        Request request = new Request.Builder()
+                .url(url)
+                .post(formBody)
+                .build();
+
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                responseString2fa = response.body().string();
+                System.out.println(responseString);
+                try {
+                    jObj2fa = new JSONObject(responseString);
+                    responseMessage = jObj.getString("message");
+                    System.out.println("response message: " + responseMessage);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     private String toHex(byte[] bytes) {

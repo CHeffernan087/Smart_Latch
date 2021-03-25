@@ -2,12 +2,11 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/nav_graph"
-    app:startDestination="@id/FirstFragment">
+    android:id="@+id/nav_graph">
 
-    <fragment
-        android:id="@+id/FirstFragment"
-        android:name="com.example.smart_latch_app.FirstFragment"
-        android:label="@string/first_fragment_label"
-        tools:layout="@layout/activity_this_door"/>
+<!--    <fragment-->
+<!--        android:id="@+id/FirstFragment"-->
+<!--        android:name="com.example.smart_latch_app."-->
+<!--        android:label="@string/first_fragment_label"-->
+<!--        tools:layout="@layout/activity_this_door"/>-->
 </navigation>

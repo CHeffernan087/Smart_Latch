@@ -66,9 +66,8 @@ public class AddDoorFragment extends DialogFragment {
     public void onNfcDetected(String doorId, String nfcTagId){
         Log.v(TAG,"NFC ID: " + doorId);
         Log.v(TAG,"Sending Request to add door.");
-        System.out.println("> onNfcDetected");
+
         sendAddDoorReq(doorId, nfcTagId);
-//        ((MyDoorsActivity) getActivity()).appendDoor(doorId);
     }
 
 
@@ -76,7 +75,7 @@ public class AddDoorFragment extends DialogFragment {
 
         OkHttpClient client = new OkHttpClient()
                 .newBuilder()
-//                .addInterceptor(new AuthenticationInterceptor())
+                .addInterceptor(new AuthenticationInterceptor())
                 .build();
 
         String hostUrl = getString(R.string.smart_latch_url) + "/registerDoor" ;
@@ -97,8 +96,6 @@ public class AddDoorFragment extends DialogFragment {
                 .post(formBody)
                 .build();
 
-        System.out.println("SENDING THE NFCID IN THE REQUEST: " + nfcTagId);
-        // sending request to add door for scanned NFC ID
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {

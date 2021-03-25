@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
-    tools:context=".FirstFragment">
+    tools:context=".ThisDoorActivity">
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar2"
         android:layout_width="match_parent"
@@ -52,7 +52,8 @@
         android:layout_marginTop="80px"
         android:background="@android:color/transparent"
         android:backgroundTint="@android:color/transparent"
-
+        android:scaleX="0.75"
+        android:scaleY="0.75"
         android:backgroundTintMode="screen"
         app:layout_constraintBottom_toTopOf="@id/grant_access"
         app:layout_constraintEnd_toEndOf="parent"
@@ -69,7 +70,8 @@
         android:background="@android:color/transparent"
         android:backgroundTint="@android:color/transparent"
         android:backgroundTintMode="screen"
-
+        android:scaleX="0.75"
+        android:scaleY="0.75"
         app:layout_constraintBottom_toTopOf="@id/button1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.144"
@@ -122,38 +124,32 @@
         app:layout_constraintTop_toBottomOf="@id/button2"/>
 
     <TextView
-        android:id="@+id/editTextTextPersonName"
-        android:layout_width="224dp"
-        android:layout_height="119dp"
-        android:ems="10"
+        android:id="@+id/nfcText"
+        android:layout_width="195dp"
+        android:layout_height="55dp"
+        android:layout_marginBottom="100dp"
+
         android:fontFamily="serif-monospace"
-        android:inputType="textPersonName"
-        android:lines="2"
-        android:maxLines="2"
-        android:minLines="2"
-        android:shadowColor="#FFFFFF"
-        android:text="Tap door NFC tag to authenticate."
+        android:text="@string/nfc_waiting"
         android:textColor="#000000"
-        android:textColorHint="#FFFFFF"
-        android:textSize="22sp"
-        tools:layout_editor_absoluteX="166dp"
-        tools:layout_editor_absoluteY="140dp" />
+        android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@id/grant_access"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.507"
+        app:layout_constraintStart_toEndOf="@id/nfc" />
 
     <TextView
-        android:id="@+id/editTextTextPersonName2"
-        android:layout_width="224dp"
-        android:layout_height="119dp"
-        android:ems="10"
+        android:id="@+id/grantText"
+        android:layout_width="198dp"
+        android:layout_height="80dp"
+        android:layout_marginLeft="10px"
         android:fontFamily="serif-monospace"
-        android:inputType="textPersonName"
-        android:lines="2"
-        android:maxLines="2"
-        android:minLines="2"
         android:shadowColor="#FFFFFF"
-        android:text="Grant another user access to this door."
+        android:text="@string/grant_access"
         android:textColor="#000000"
-        android:textColorHint="#FFFFFF"
-        android:textSize="22sp"
-        tools:layout_editor_absoluteX="166dp"
-        tools:layout_editor_absoluteY="314dp" />
+        android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@id/button1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/grant_access"
+        app:layout_constraintTop_toBottomOf="@id/nfcText" />
 </androidx.constraintlayout.widget.ConstraintLayout>

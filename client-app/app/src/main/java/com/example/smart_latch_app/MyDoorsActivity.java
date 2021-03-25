@@ -50,7 +50,6 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            System.out.println("NOW IN MYDOORS, we HAVE THE GOOODS: " + doorDetails);
         }
 
         MySimpleArrayAdapter adapter = new MySimpleArrayAdapter(this, doors);
@@ -62,12 +61,10 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
                 clickedDoorId = doors[position];
                 try {
                     doorNeedsToBeInitialised = doorDetails.getJSONObject(doors[position]).getString("nfcId").length() == 0; // if no nfcId, door needs to be initialised
-                    System.out.println("is initialised? : ->" + doorNeedsToBeInitialised + "<-");
                     if(doorNeedsToBeInitialised) {
-                        System.out.println("We need to initialise it!!");
+
                         showAddDoorFragment();
                     } else {
-//                        gotoFirstFragment(doors[position]);
                         gotoThisDoorActivity(doors[position]);
                     }
 
@@ -94,7 +91,6 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
     }
 
     private void initNFC(){
-        System.out.println("> Init NFC");
         mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
     }
 
@@ -190,9 +186,7 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
 
     private void gotoThisDoorActivity(String selectedDoor) {
         Intent i = new Intent(MyDoorsActivity.this, ThisDoorActivity.class);
-        System.out.println("Selected Door: " + selectedDoor);
         i.putExtra("doorId", selectedDoor);
-        System.out.println("1. Mandem, here is the doors going into ThiSDoor: " + Arrays.toString(doors));
         i.putExtra("DOORS", doors);
         i.putExtra("DETAILS", doorDetails.toString());
         startActivity(i);

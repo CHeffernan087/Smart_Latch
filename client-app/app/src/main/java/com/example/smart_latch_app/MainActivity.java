@@ -195,11 +195,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onResponse(Call call, Response response) throws IOException {
 
                     responseString = response.body().string();
-                    System.out.println("Response to logout: " + responseString);
+
                     try {
                         jObj = new JSONObject(responseString);
                         String message = jObj.getString("message");
-                        System.out.println("Message " + message);
+                        System.out.println("Logout message " + message);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -228,8 +228,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             email = acct.getEmail();
         }
 
-        OkHttpClient client = new OkHttpClient().newBuilder().build();
-//            .addInterceptor(new AuthenticationInterceptor()).build();
+        OkHttpClient client = new OkHttpClient().newBuilder().addInterceptor(new AuthenticationInterceptor()).build();
 
         String hostUrl = getString(R.string.smart_latch_url) + "/getUserDoors?email=" + email;
 
@@ -249,15 +248,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 responseString = response.body().string();
-                System.out.println("RESPONSE BOYO: " + responseString);
+
                 try {
                     jObj = new JSONObject(responseString);
                     responseDoors = jObj.getJSONArray("doors");
                     responseDetails = jObj.getJSONObject("doorDetails");
 
                     String[] userDoorsAsStringArray = toStringArray(responseDoors);
-
-                    System.out.println("HERE ARE THE DEETZ WE WANTED: " + responseDetails.getJSONObject("1005").getString("nfcId"));
                     gotoMyDoorsActivity(userDoorsAsStringArray, responseDetails);
                 } catch (JSONException e) {
                     e.printStackTrace();

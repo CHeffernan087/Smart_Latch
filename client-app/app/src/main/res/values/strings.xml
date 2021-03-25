@@ -29,4 +29,7 @@
     <string name="message_read_tag">Scan NFC Tag</string>
     <string name="message_tap_tag">This door is uninitialised. Tap it\'s NFC tag to initialise it!</string>
     <string name="hint_message">Message</string>
+    <string name="nfc_waiting">Tap door NFC tag \nto authenticate.</string>
+    <string name="grant_access">Grant another user \naccess to this door.</string>
+
 </resources>
