@@ -19,7 +19,6 @@ import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Arrays;
 
 public class MyDoorsActivity extends AppCompatActivity implements Listener{
 
@@ -62,13 +61,10 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
                 try {
                     doorNeedsToBeInitialised = doorDetails.getJSONObject(doors[position]).getString("nfcId").length() == 0; // if no nfcId, door needs to be initialised
                     if(doorNeedsToBeInitialised) {
-
                         showAddDoorFragment();
                     } else {
                         gotoThisDoorActivity(doors[position]);
                     }
-
-
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -153,13 +149,12 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
         if (isDialogDisplayed) {
                 Toast.makeText(this, "NFC Tag Detected !", Toast.LENGTH_SHORT).show();
                 mAddDoorFragment = (AddDoorFragment) getSupportFragmentManager().findFragmentByTag(AddDoorFragment.TAG);
-                System.out.println(sb.toString());
                 // for testing. Update this to add yourself to a particular door
                 /*
                 * {
                 *   1003: cheffernan087@gmail.com
                 *   1004: cheffernan087@gmail.com
-                *   1005:
+                *   1005: tkelly2@tcd.ie
                 *   1006:
                 *   1007:
                 *   1008:

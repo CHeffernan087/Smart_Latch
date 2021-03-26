@@ -1,13 +1,13 @@
 const admin = require("firebase-admin");
 admin.initializeApp();
-// const firestoreDb = admin.firestore();
+const firestoreDb = admin.firestore();
 
 const Firestore = require("@google-cloud/firestore");
 // Comment out if not running locally and uncomment above line 3 ---->
-const firestoreDb = new Firestore({
-	projectId: "smart-latch",
-	keyFilename: "../../smart-latch-3f77ccdb8958.json",
-});
+// const firestoreDb = new Firestore({
+// 	projectId: "smart-latch",
+// 	keyFilename: "../../smart-latch-3f77ccdb8958.json",
+// });
 // <------------
 
 function addAsAuthorised(email, doorId) {

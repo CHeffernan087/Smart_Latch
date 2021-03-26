@@ -294,10 +294,10 @@ public class ThisDoorActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 responseString2fa = response.body().string();
-                System.out.println(responseString);
+                System.out.println("updateNfc response" + responseString);
                 try {
                     jObj2fa = new JSONObject(responseString);
-                    responseMessage = jObj.getString("message");
+                    responseMessage = jObj2fa.getString("message");
                     System.out.println("response message: " + responseMessage);
                 } catch (JSONException e) {
                     e.printStackTrace();

@@ -26,7 +26,7 @@ exports.getUserDoors = (req, res) => {
 						sendDoorResponse(doors);
 					}
 				}).catch((e) => {
-					res.send({error: e});
+					return res.send({error: e});
 				});
 		})
 	})

@@ -228,7 +228,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             email = acct.getEmail();
         }
 
-        OkHttpClient client = new OkHttpClient().newBuilder().addInterceptor(new AuthenticationInterceptor()).build();
+        OkHttpClient client = new OkHttpClient()
+                .newBuilder()
+                .addInterceptor(new AuthenticationInterceptor())
+                .build();
 
         String hostUrl = getString(R.string.smart_latch_url) + "/getUserDoors?email=" + email;
 
