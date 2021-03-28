@@ -4,16 +4,17 @@ import numpy
 from scipy.spatial.distance import cosine
 from PIL import Image
 from numpy import asarray
-import mtcnn
 from google.cloud import storage
 import pandas
 import flask
-from keras_vggface.vggface import VGGFace
-from keras_vggface.utils import preprocess_input
 from sys import maxsize
 from flask import jsonify
 from google.cloud import vision
 import io
+from pathlib import Path
+from time import time
+import tempfile
+import os
 
 
 THRESHOLD = 0.5
@@ -23,13 +24,28 @@ def facial_recognition(request):
     # nparr = numpy.fromstring(request.data, numpy.uint8)
     # # decode image
     # img = cv2.imdecode(nparr, cv2.IMREAD_GRAYSCALE)
-    img_file = flask.request.files['image']
-    img_file.save('received.jpg')
-    img = cv2.imread("received.jpg")
-    face_vertices_list = get_faces_coords("received.jpg")
-    for index, face_vertices in enumerate(face_vertices_list):
-      crop_out_face("received.jpg", face_vertices, f"received_face_{index}.jpg")
-    return "Done"
+    try:
+        timestamp = time()
+        tempdir = tempfile.gettempdir()
+        people_at_door = []
+        image_path_str = f'{tempdir}/received.jpg'
+        img_file = flask.request.files['image']
+        img_file.save(image_path_str)
+        img = cv2.imread(image_path_str)
+        face_vertices_list = get_faces_coords(image_path_str)
+        for index, face_vertices in enumerate(face_vertices_list):
+            crop_out_face(image_path_str, face_vertices,
+                          f"{tempdir}/received_face_{index}.jpg")
+        for faces_img_paths in Path(tempdir).glob("**/received_face*.jpg"):
+            person = classify_image(faces_img_paths.name)
+            people_at_door.append(person)
+            os.remove(faces_img_paths)
+        # return str(people_at_door)
+        os.remove(image_path_str)
+        return str(face_vertices_list)
+    except Exception as e:
+        os.remove(image_path_str)
+        return str(e)
 
     candidate_embedding = get_embedding(img)
     download_blob("vggface-bucket", "embeddings.csv", "embeddings.csv")
@@ -49,6 +65,11 @@ def facial_recognition(request):
     else:
         return "Error - Couldn't classify image"
 
+
+def classify_image(filename):
+    pass
+
+
 def crop_out_face(image_src_path, vertices_list, output_image_path):
     x = vertices_list[0][0]
     y = vertices_list[0][1]
@@ -56,6 +77,8 @@ def crop_out_face(image_src_path, vertices_list, output_image_path):
     heigth = vertices_list[2][1] - y
     img = cv2.imread(image_src_path)
     cropped_img = img[y:y+heigth, x:x+width]
+    cropped_img = cv2.resize(cropped_img, (224, 224),
+                             interpolation=cv2.INTER_AREA)
     cv2.imwrite(output_image_path, cropped_img)
 
 
@@ -94,7 +117,8 @@ def get_faces_coords(path):
     faces_vertices_list = []
 
     for face in faces:
-        vertices = [(vertex.x, vertex.y) for vertex in face.bounding_poly.vertices]
+        vertices = [(vertex.x, vertex.y)
+                    for vertex in face.bounding_poly.vertices]
 
         faces_vertices_list.append(vertices)
 
@@ -117,13 +141,22 @@ def get_embedding(image):
     # convert into an array of samples
     samples = asarray(faces, 'float32')
     # prepare the face for the model, e.g. center pixels
-    samples = preprocess_input(samples, version=2)
+    samples = preprocess_input(samples)
     # create a vggface model
     model = VGGFace(model='resnet50', include_top=False,
                     input_shape=(224, 224, 3), pooling='avg')
     # perform prediction
     yhat = model.predict(samples)
     return yhat
+
+
+def preprocess_input(input):
+    x_temp = numpy.copy(input)
+    x_temp = x_temp[..., ::-1]
+    x_temp[..., 0] -= 91.4953
+    x_temp[..., 1] -= 103.8827
+    x_temp[..., 2] -= 131.0912
+    return x_temp
 
 
 def is_match(known_embedding, candidate_embedding, thresh=0.5):
@@ -150,3 +183,16 @@ def download_blob(bucket_name, source_blob_name, destination_file_name):
     # using `Bucket.blob` is preferred here.
     blob = bucket.blob(source_blob_name)
     blob.download_to_filename(destination_file_name)
+
+
+def upload_blob(bucket_name, source_file_name, destination_blob_name):
+    """Uploads a file to the bucket."""
+    # bucket_name = "your-bucket-name"
+    # source_file_name = "local/path/to/file"
+    # destination_blob_name = "storage-object-name"
+
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(destination_blob_name)
+
+    blob.upload_from_filename(source_file_name)

@@ -1,14 +1,10 @@
-tensorflow==1.14.
 Flask==1.0.2
-keras==2.2.5
 opencv-python
 numpy
-keras_applications
-google-cloud-vision
-keras_vggface
-mtcnn
 scipy
 pandas
+google-cloud-vision
 google-cloud-storage
 functions-framework
 h5py < 3.0.0
+Pillow
