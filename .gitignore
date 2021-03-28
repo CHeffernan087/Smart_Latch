@@ -12,3 +12,11 @@ sdkconfig*
 venv/
 smart-latch-fd041937391e.json
 __pycache__/
+temp/
+cloudml-samples/
+upload_py_endpoints/
+vgg_model/
+*.json
+*.cmd
+keras_export/
+temp.py
