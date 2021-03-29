@@ -30,10 +30,8 @@ uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 // Structure of send data
 typedef struct struct_message {
   char a[32];
-  int b;
-  float c;
-  String d;
-  bool e;
+  String b;
+  bool c;
 } struct_message;
 
 // Create a struct_message called myData
@@ -113,10 +111,8 @@ void loop() {
     
     // Set motion values to send
     strcpy(myData.a, "ESP32 -> ESP-EYE");
-    myData.b = 0;
-    myData.c = 0;
-    myData.d = "motion";
-    myData.e = true;
+    myData.b = "motion";
+    myData.c = true;
   
     // Send message via ESP-NOW
     esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
