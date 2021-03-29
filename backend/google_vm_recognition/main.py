@@ -15,10 +15,15 @@ from flask import jsonify
 from time import time
 import os
 import base64
+import traceback
 
 app = flask.Flask(__name__)
 
 THRESHOLD = 0.5
+
+
+class NoFaceFoundException(Exception):
+    pass
 
 
 def download_blob(bucket_name, source_blob_name, destination_file_name):
@@ -48,21 +53,17 @@ EMBEDDINGS_2D_LIST = EMBEDDINGS.values.tolist()
 
 @app.route("/recog", methods=["POST"])
 def facial_recognition():
-    # nparr = numpy.fromstring(request.data, numpy.uint8)
-    # # decode image
-    # img = cv2.imdecode(nparr, cv2.IMREAD_GRAYSCALE)
-    # img_file = flask.request.files['image']
+    response = None
     try:
         img_path_str = f"{time()}_received.png"
         with open(img_path_str, 'wb') as file_to_save:
             decoded_image_data = base64.b64decode(flask.request.json["image"])
-            # base64_img_bytes = encoded_string.encode('utf-8')
-            file_to_save.write(decoded_image_data)
+            temp = base64.b64encode(decoded_image_data).decode('ascii').encode()
+            file_to_save.write(base64.decodebytes(temp))
 
-        # with open(img_path_str, 'wb') as file_to_save:
-        #     decoded_image_data = base64.b64decode(flask.request.json["image"])
-        #     file_to_save.write(decoded_image_data)
-        # img_file.save(img_path_str)
+        # with open("string.txt", "w") as text_file:
+        #     text_file.write(base64.b64encode(decoded_image_data).decode('ascii'))
+
         img = cv2.imread(img_path_str)
         candidate_embedding = get_embedding(img)
         lowest_score_person = None
@@ -75,13 +76,16 @@ def facial_recognition():
                 lowest_score_person = person
                 lowest_score = score
         if lowest_score <= THRESHOLD:
-            os.remove(img_path_str)
-            return jsonify({'Person': lowest_score_person, 'Score': lowest_score})
+            response = jsonify({'Person': lowest_score_person, 'Score': lowest_score})
         else:
-            os.remove(img_path_str)
-            return "Error - Couldn't classify image"
+            response = jsonify({"Error": "Couldn't classify image"})
+    except NoFaceFoundException:
+        response = jsonify({"Error": "No Face Found In Image"})
     except Exception as e:
-        return str(e)
+        response = jsonify({"Error": str(traceback.format_exc())})
+    finally:
+        os.remove(img_path_str)
+        return response
 
 
 def extract_face(image, required_size=(224, 224)):
@@ -89,6 +93,9 @@ def extract_face(image, required_size=(224, 224)):
     detector = MTCNN
     # detect faces in the image
     results = detector.detect_faces(image)
+
+    if len(results) == 0:
+        raise NoFaceFoundException
 
     # extract the bounding box from the first face
     x1, y1, width, height = results[0]['box']

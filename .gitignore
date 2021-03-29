@@ -18,5 +18,6 @@ upload_py_endpoints/
 vgg_model/
 *.json
 *.cmd
+response.txt
+string.txt
 keras_export/
-temp.py
