@@ -18,6 +18,7 @@
 
 // Select camera model
 #define CAMERA_MODEL_ESP_EYE
+#define CAM_TIMEOUT 10000
 
 #define CONOR
 
@@ -52,7 +53,8 @@ HTTPClient http;
         
 // motion detection
 bool motionDetected = false;  // motion detection status
-
+unsigned long startTime = millis();
+unsigned long currentTime = millis();
 
 // config face detection model parameters
 static inline mtmn_config_t app_mtmn_config(){
@@ -106,6 +108,8 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len){
   // if string is motion and bool is true
   if(myData.c && (myData.b == "motion")){
     motionDetected = true;
+    startTime = millis();
+    currentTime = millis();
   }
 }
 
@@ -325,7 +329,7 @@ void loop() {
           
   // if connected and message interval is reached we send message to server
   // will be adding in comms from the esp32 board to init this
-  if (connected && motionDetected){
+  if (connected && motionDetected && (currentTime-startTime<CAM_TIMEOUT)){
 
     // get current time
     int64_t start_time = esp_timer_get_time();
@@ -430,5 +434,7 @@ void loop() {
 
     // free image allcoation mem
     dl_matrix3du_free(image_matrix);
+
+    currentTime = millis();
   }    
 }
