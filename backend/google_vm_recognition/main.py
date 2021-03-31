@@ -51,7 +51,7 @@ EMBEDDINGS = pandas.read_csv("embeddings.csv")
 EMBEDDINGS_2D_LIST = EMBEDDINGS.values.tolist()
 
 
-@app.route("/recog", methods=["POST"])
+@app.route("/", methods=["POST"])
 def facial_recognition():
     response = None
     try:
@@ -140,4 +140,4 @@ def is_match(known_embedding, candidate_embedding, thresh=0.5):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=9090)
+    app.run(debug=True, port=8080)

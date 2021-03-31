@@ -17,7 +17,7 @@ with open('temp.png', 'wb') as file_to_save:
 data = {"image": encoded_string}
 # print(data)
 # url = "http://127.0.0.1:9090/recog"
-url = "http://smart-latchxyz.xyz/recog"
+url = "https://recognition.smart-latchxyz.xyz/"
 headers = {'Content-type': 'application/json'}
 response = requests.post(url, json=data, headers=headers)
 # print(response)
