@@ -16,18 +16,6 @@
         android:layout_height="match_parent" />
 
 
-    <Button
-        android:id="@+id/btn_read"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:layout_marginEnd="20dp"
-        android:layout_marginBottom="20dp"
-        android:background="@drawable/ic_add_circle"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.117"
-        app:layout_constraintVertical_bias="0.08" />
-
     <ListView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
