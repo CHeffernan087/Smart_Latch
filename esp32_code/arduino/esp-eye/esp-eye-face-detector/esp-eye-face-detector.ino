@@ -18,6 +18,8 @@
 
 // Select camera model
 #define CAMERA_MODEL_ESP_EYE
+
+// timeouts
 #define MOTION_TIMEOUT     10000
 #define NFC_TIMEOUT        10000
 #define FACE_RECOG_TIMEOUT 10000
@@ -40,13 +42,14 @@ const char* img_recog_url = "http://recognition.smart-latchxyz.xyz/";
 //const char* img_recog_url = "http://httpbin.org/post";
 
 // websocket server URL
-//const char* wss_url = "wss://smart-latchxyz.xyz";
+const char* wss_url = "http://smart-latchxyz.xyz/healthcheck/";
 // test WSS url
-const char* wss_url = "echo.websocket.org";
+//const char* wss_url = "echo.websocket.org";
 
 // RECEIVER MAC Address
 // All F's sends to all boards on network
 uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+String myMACAddress     = "AC67B267A19C";
 
 // websocket
 WebSocketsClient webSocket; // websocket object
@@ -57,7 +60,7 @@ bool motionDetected = false;  // motion detection status
 
 // verification flags
 bool faceRecogFlag = false;
-bool NFCFlag       = false;
+bool nfcFlag       = false;
 
 // http client
 HTTPClient http;
@@ -102,14 +105,14 @@ struct_message myData;
 
 // callback when data is sent
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status){
-  Serial.print("\r\nLast Packet Send Status:\t");
+  Serial.print("[ESP-NOW] Last Packet Send Status:\t");
   Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
 }
 
 // callback function that will be executed when data is received
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len){
   memcpy(&myData, incomingData, sizeof(myData));
-  Serial.print("[ESP-NOW] Packet Recieved:");
+  Serial.print("\n[ESP-NOW] Packet Recieved:\n");
   Serial.print("Bytes received: ");
   Serial.println(len);
   Serial.print("Char: ");
@@ -129,13 +132,21 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len){
   }
 
   // if string is closed and bool is true
-  if(myData.c && (myData.b == "closed")){
-    motionDetected = true;
-    Serial.println("[ESP-NOW] Latch Closed\n");
-    // sending person name over websocket
-    Serial.println("[WSc] Notifying Cloud");
-    webSocket.sendTXT("closed");
+  if(myData.b == "latch"){
+    if (myData.c) {
+      Serial.println("[ESP-NOW] Latch Opened\n");
+      // sending person name over websocket
+      Serial.println("[WSc] Notifying Cloud");
+      webSocket.sendTXT("opened");
+    }
+    else {
+      Serial.println("[ESP-NOW] Latch Closed\n");
+      // sending person name over websocket
+      Serial.println("[WSc] Notifying Cloud");
+      webSocket.sendTXT("closed");
+    }
   }
+  
 }
 
 // function to change latch state over esp-now
@@ -193,7 +204,7 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
       Serial.printf("[WSc] RESPONSE: %s\n", payload);
       if (!memcmp(payload, "toggle", length)){
         Serial.printf("[WSc] NFC Verified\n", payload);
-        NFCFlag = true;
+        nfcFlag = true;
         nfcStartTime = millis();
       }
       break;
@@ -402,11 +413,11 @@ void loop() {
         // base64 encoding of the image
         String img_buffer = base64::encode((uint8_t *) fb->buf, fb->len);
         // generating json payload
-        String payload = "{\"image\": \"" + img_buffer + "\"}";
+        String payload = "{\"image\": \"" + img_buffer + "\", \"doorID\": \"" + myMACAddress + "\"}";
 
         // sending image to recognition server in HTTP POST request
         Serial.println("[HTTP-POST] Sending image payload...\n"); 
-//        Serial.println(payload);
+        Serial.println(payload);
         http.addHeader("Content-Type", "application/json");     
         int httpResponseCode = http.POST(payload);
 
@@ -436,7 +447,7 @@ void loop() {
             // reset motion status flag
             motionDetected = false; // finished with motion detected
             faceRecogFlag  = true;  // asserting facial recog flag
-            frStartTime    = true;  // starting facial recog timeout
+            frStartTime    = millis();  // starting facial recog timeout
           }
         }
         else{
@@ -456,31 +467,28 @@ void loop() {
 
   // motionDetection timeout    
   mdCurrTime = millis();
-  if (mdCurrTime - mdStartTime < MOTION_TIMEOUT){
+  if (mdCurrTime - mdStartTime > MOTION_TIMEOUT){
     motionDetected = false;
   }
 
   // nfc verification timeout    
   nfcCurrTime = millis();
-  if (nfcCurrTime - nfcStartTime < NFC_TIMEOUT){
+  if (nfcCurrTime - nfcStartTime > NFC_TIMEOUT){
     nfcFlag = false;
   }
   
   // facial recognision timeout    
   frCurrTime = millis();
-  if (frCurrTime - frStartTime < FACE_RECOG_TIMEOUT){
+  if (frCurrTime - frStartTime > FACE_RECOG_TIMEOUT){
     faceRecogFlag = false;
   }
 
   // 2FA - and operation on both verifation flags :)
   if (nfcFlag && faceRecogFlag){
+//  if (faceRecogFlag){
     changeLatchState();
     nfcFlag = false;
     faceRecogFlag = false;
-    Serial.println("[2FA] \n2FA!!! Toggling Latch\n");
-    // sending person name over websocket
-    Serial.println("[WSc] Notifying Cloud");
-    webSocket.sendTXT("opened");
+    Serial.println("\n[2FA] \n2FA!!! Toggling Latch\n");
   }
-  
 }
