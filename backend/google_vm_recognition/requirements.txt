@@ -8,5 +8,6 @@ mtcnn
 scipy
 pandas
 google-cloud-storage
+google-cloud-firestore
 functions-framework
 h5py < 3.0.0

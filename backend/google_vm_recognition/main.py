@@ -14,31 +14,31 @@ from sys import maxsize
 from flask import jsonify
 from time import time
 import os
+from google.cloud import firestore
 import base64
 import traceback
+import json
+import ast
 
 app = flask.Flask(__name__)
 
 THRESHOLD = 0.5
+VECTOR_SIZE = 2048
 
 
 class NoFaceFoundException(Exception):
     pass
 
+class NoDocumentFoundException(Exception):
+    pass
+
 
 def download_blob(bucket_name, source_blob_name, destination_file_name):
     """Downloads a blob from the bucket."""
-    # bucket_name = "your-bucket-name"
-    # source_blob_name = "storage-object-name"
-    # destination_file_name = "local/path/to/file"
-    storage_client = storage.Client()
+    storage_client = storage.Client()   
     # storage_client = storage.Client.from_service_account_json("smart-latch-fd041937391e.json")
     bucket = storage_client.bucket(bucket_name)
 
-    # Construct a client side representation of a blob.
-    # Note `Bucket.blob` differs from `Bucket.get_blob` as it doesn't retrieve
-    # any content from Google Cloud Storage. As we don't need additional data,
-    # using `Bucket.blob` is preferred here.
     blob = bucket.blob(source_blob_name)
     blob.download_to_filename(destination_file_name)
 
@@ -49,6 +49,48 @@ VGG_FACE = VGGFace(model='resnet50', include_top=False,
 download_blob("vggface-bucket", "embeddings.csv", "embeddings.csv")
 EMBEDDINGS = pandas.read_csv("embeddings.csv")
 EMBEDDINGS_2D_LIST = EMBEDDINGS.values.tolist()
+DB = firestore.Client()
+# DB = firestore.Client.from_service_account_json("smart-latch-fd041937391e.json")
+
+@app.route("/check")
+def check():
+    return "Healthcheck"
+
+@app.route("/register", methods=["POST"])
+def register_face():
+    response = None
+    try:
+        image_path_str = f"{time()}_register.jpg"
+        email = flask.request.form.to_dict()['email']
+        img_file = flask.request.files['image']
+        img_file.save(image_path_str)
+        image = cv2.imread(image_path_str)
+        face_vector = get_embedding(image)
+        doc_ref = DB.collection('Users').document(email)
+        user_doc = doc_ref.get()
+        if user_doc.exists is False:
+            raise NoDocumentFoundException(f"No doc for {email}")
+        doc_ref.update({
+            'face_vector' : face_vector.tolist()[0]
+        })
+        # with open("uploaded.txt", "w") as uploaded_file:
+        #     uploaded_file.write(str(face_vector.tolist()[0]))
+
+        fields_dict = doc_ref.get().to_dict()
+
+        # with open("gotten.txt", "w") as gotten_file:
+        #     gotten_file.write(str(fields_dict['face_vector']))
+        if 'face_vector' in fields_dict and len(fields_dict['face_vector']) == VECTOR_SIZE:
+            response = jsonify({"Message" : f"Successfully wrote {len(fields_dict['face_vector'])} vector to user {email}"}), 200
+        else:
+            response = jsonify({"Error" : f"Failed to write recognition vector to user {email}"}), 500
+    except Exception as e:
+        response = jsonify({"Error": str(traceback.format_exc())}), 500
+    finally:
+        if os.path.exists(image_path_str):
+            os.remove(image_path_str)
+        return response
+
 
 
 @app.route("/", methods=["POST"])
@@ -84,26 +126,21 @@ def facial_recognition():
     except Exception as e:
         response = jsonify({"Error": str(traceback.format_exc())})
     finally:
-        os.remove(img_path_str)
+        if os.path.exists(img_path_str):
+            os.remove(img_path_str)
         return response
 
 
 def extract_face(image, required_size=(224, 224)):
-    # create the detector, using default weights
     detector = MTCNN
-    # detect faces in the image
     results = detector.detect_faces(image)
-
     if len(results) == 0:
         raise NoFaceFoundException
-
     # extract the bounding box from the first face
     x1, y1, width, height = results[0]['box']
     x2, y2 = x1 + width, y1 + height
-
     # extract the face
     face = image[y1:y2, x1:x2, :]
-
     # resize pixels to the model size
     image = Image.fromarray(face)
     image = image.resize((224, 224))
@@ -116,28 +153,13 @@ def get_match_score(known_embedding, candidate_embedding):
 
 
 def get_embedding(image):
-    # get faces
     # faces = [cv2.imread((str(f)))for f in filenames]
     faces = [extract_face(image)]
-    # convert into an array of samples
     samples = asarray(faces, 'float32')
-    # prepare the face for the model, e.g. center pixels
     samples = preprocess_input(samples, version=2)
-    # create a vggface model
     model = VGG_FACE
-    # perform prediction
     yhat = model.predict(samples)
     return yhat
-
-
-def is_match(known_embedding, candidate_embedding, thresh=0.5):
-    # calculate distance between embeddings
-    score = cosine(known_embedding, candidate_embedding)
-    if score <= thresh:
-        print('>face is a Match (%.3f <= %.3f)' % (score, thresh))
-    else:
-        print('>face is NOT a Match (%.3f > %.3f)' % (score, thresh))
-
 
 if __name__ == '__main__':
     app.run(debug=True, port=8080)
