@@ -1,7 +1,7 @@
 "use strict";
 // const http = require("http");
 const redis = require("redis");
-const REDISHOST = process.env.REDISHOST || "10.15.143.187";
+const REDISHOST = process.env.REDISHOST || "redis.smart-latchxyz.xyz";
 const REDISPORT = process.env.REDISPORT || 6379;
 
 const publisher = redis.createClient(REDISPORT, REDISHOST);

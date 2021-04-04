@@ -7,7 +7,7 @@ const express = require("express");
 const redis = require("redis");
 
 const port = process.env.PORT || 3000;
-const REDISHOST = process.env.REDISHOST || "10.15.143.187";
+const REDISHOST = process.env.REDISHOST || "redis.smart-latchxyz.xyz";
 const REDISPORT = process.env.REDISPORT || 6379;
 
 var subscriber = redis.createClient(REDISPORT, REDISHOST);
