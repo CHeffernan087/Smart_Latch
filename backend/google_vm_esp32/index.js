@@ -104,7 +104,6 @@ PUB/SUB redis stuff
 
 subscriber.on("message", function (doorId, payload) {
 	const message = JSON.parse(payload);
-	console.log(message);
 	const { userId } = message;
 	console.log(`[${userId}]: wants to interact with door ${doorId}`);
 	if (doorId && openConnections[doorId] != undefined) {
