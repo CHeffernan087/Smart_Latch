@@ -25,20 +25,22 @@ exports.getUserDoors = (req, res) => {
 						};
 						doorCount++;
 						if (doors.length === doorCount) {
-							sendDoorResponse(doors);
+							return sendDoorResponse(doors);
 						}
 					})
 					.catch((e) => {
-						return res.send({ error: e });
+						return res.status(400).send({ error: e });
 					});
 			});
 		})
 		.catch((e) => {
-			res.send({ error: e });
+			res.status(400).send({ error: e });
 		});
 
 	function sendDoorResponse(doors) {
-		res.send({ doors, doorDetails });
+		console.log("[CHEFF debug]: HERE ARE THE DOOR DETAILS");
+		console.log(doors);
+		return res.send({ doors, doorDetails });
 	}
 };
 
