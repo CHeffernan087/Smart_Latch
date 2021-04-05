@@ -1,7 +1,7 @@
 #include <esp_now.h>
 #include <esp_wifi.h>
 #include <WiFi.h>
-#include <Servo.h>
+#include <ESP32Servo.h>
 
 #define MOTION_PIN 32
 #define GREEN_LED  33

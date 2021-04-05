@@ -41,15 +41,16 @@ const char* img_recog_url = "http://recognition.smart-latchxyz.xyz/";
 // test POST url
 //const char* img_recog_url = "http://httpbin.org/post";
 
-// websocket server URL
-const char* wss_url = "http://smart-latchxyz.xyz/healthcheck/";
+// websocket server URL - health_check: http://smart-latchxyz.xyz/healthcheck/
+const char* wss_url = "ws.smart-latchxyz.xyz";
 // test WSS url
 //const char* wss_url = "echo.websocket.org";
 
 // RECEIVER MAC Address
 // All F's sends to all boards on network
 uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-String myMACAddress     = "AC67B267A19C";
+//String myMACAddress     = "AC67B267A19C";
+String myMACAddress     = "31415";
 
 // websocket
 WebSocketsClient webSocket; // websocket object
@@ -198,14 +199,20 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
       connected = true;
       // send message to server when Connected
       Serial.println("[WSc] SENT: Connected");
+      
       break;
     case WStype_TEXT:            
       Serial.printf("\nResponse Recieved\n");            
       Serial.printf("[WSc] RESPONSE: %s\n", payload);
-      if (!memcmp(payload, "toggle", length)){
+      if (!memcmp(payload, "ToggleLatch", length)){
         Serial.printf("[WSc] NFC Verified\n", payload);
         nfcFlag = true;
         nfcStartTime = millis();
+      }
+      if (!memcmp(payload, "boardIdReq", length)){
+        Serial.printf("[WSc] Sending Board Id\n");
+        String boardIdResp = "message:boardIdRes,doorId:" + myMACAddress;
+        webSocket.sendTXT(boardIdResp);
       }
       break;
     case WStype_BIN:
@@ -343,7 +350,7 @@ void setup() {
   
   // server address, port and URL
   // just using this websocket service for now to get a default response
-  webSocket.begin(wss_url, 80, "/");
+  webSocket.beginSSL(wss_url, 443);
 
   // websocket event handler
   webSocket.onEvent(webSocketEvent);
@@ -413,7 +420,7 @@ void loop() {
         // base64 encoding of the image
         String img_buffer = base64::encode((uint8_t *) fb->buf, fb->len);
         // generating json payload
-        String payload = "{\"image\": \"" + img_buffer + "\", \"doorID\": \"" + myMACAddress + "\"}";
+        String payload = "{\"image\": \"" + img_buffer + "\", \"door\": \"" + myMACAddress + "\"}";
 
         // sending image to recognition server in HTTP POST request
         Serial.println("[HTTP-POST] Sending image payload...\n"); 
@@ -426,9 +433,12 @@ void loop() {
 
           Serial.print("[HTTP-POST] Response Code: ");
           Serial.println(httpResponseCode);
-
+          
           // parsing the response data
           String response = http.getString();              // get response data
+          Serial.print("[HTTP-POST] Response: ");
+          Serial.println(response);
+          
           int ind1 = response.indexOf(',');                // finds location of first comma
           String person = response.substring(1, ind1);     // captures person data String
           int ind2 = response.indexOf(',', ind1+1 );       // finds location of second comma
@@ -467,19 +477,22 @@ void loop() {
 
   // motionDetection timeout    
   mdCurrTime = millis();
-  if (mdCurrTime - mdStartTime > MOTION_TIMEOUT){
+  if ((mdCurrTime - mdStartTime > MOTION_TIMEOUT) && motionDetected){
+    Serial.println("[TIMEOUT] Motion Detection Timeout\n");
     motionDetected = false;
   }
 
   // nfc verification timeout    
   nfcCurrTime = millis();
-  if (nfcCurrTime - nfcStartTime > NFC_TIMEOUT){
+  if ((nfcCurrTime - nfcStartTime > NFC_TIMEOUT) && nfcFlag){
+    Serial.println("[TIMEOUT] NFC Timeout\n");
     nfcFlag = false;
   }
   
   // facial recognision timeout    
   frCurrTime = millis();
-  if (frCurrTime - frStartTime > FACE_RECOG_TIMEOUT){
+  if ((frCurrTime - frStartTime > FACE_RECOG_TIMEOUT) && faceRecogFlag){
+    Serial.println("[TIMEOUT] Facial Recog Timeout\n");
     faceRecogFlag = false;
   }
 
