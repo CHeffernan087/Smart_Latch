@@ -16,9 +16,6 @@
 
 #define MOTION_PIN 32
 
-const char* ssid = "McNallys";
-const char* password = "mcnally123";
-
 // RECEIVER MAC Address
 // All F's sends to all boards on network
 uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
@@ -37,8 +34,6 @@ typedef struct struct_message {
 // Create a struct_message called myData
 struct_message myData;
 
-// WIFI SSID
-constexpr char WIFI_SSID[] = "McNallys";
 
 // Gets WIFI channel using WIFI SSID
 int32_t getWiFiChannel(const char *ssid) {
@@ -69,9 +64,11 @@ void setup() {
   
   // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
+  WiFi.begin(); // this connects to the last used WiFi network
+//  WiFi.begin(ssid, password);
 
   // Get WIFI channel
-  int32_t channel = getWiFiChannel(WIFI_SSID);
+  int32_t channel = getWiFiChannel(WiFi.SSID().c_str());
 
   // Set WIFI channel
   WiFi.printDiag(Serial); // Uncomment to verify channel number before
