@@ -19,17 +19,6 @@
 // Select camera model
 #define CAMERA_MODEL_ESP_EYE
 
-#define CONOR
-
-#if defined(CONOR)
-const char* ssid = "McNallys";
-const char* password = "mcnally123";
-#endif
-
-#if defined(CIARAN)
-const char* ssid = "";
-const char* password = "";
-#endif
 
 // face recognision server URL path
 const char* img_recog_url = "http://smart-latchxyz.xyz/recog";
@@ -49,7 +38,7 @@ bool connected = false;     // websocket connection status
 
 // http client
 HTTPClient http;
-        
+
 // motion detection
 bool motionDetected = false;  // motion detection status
 
@@ -102,7 +91,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len){
   Serial.print("Bool: ");
   Serial.println(myData.c);
   Serial.println();
-  
+
   // if string is motion and bool is true
   if(myData.c && (myData.b == "motion")){
     motionDetected = true;
@@ -115,12 +104,12 @@ void changeLatchState(void){
   strcpy(myData.a, "ESP-EYE -> ESP32");
   myData.b = "toggle";
   myData.c = true;
-  
+
   // Send message via ESP-NOW
   esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
   Serial.print("ESP-EYE -> ESP32: sending string - ");
   Serial.println(myData.b);
-  
+
   if (result == ESP_OK) {
     Serial.println("Sent with success");
   }
@@ -137,7 +126,7 @@ void hexdump(const void *mem, uint32_t len, uint8_t cols = 16){
   Serial.printf("\n[HEXDUMP] Address: 0x%08X len: 0x%X (%d)", (ptrdiff_t)src, len, len);
   for (uint32_t i = 0; i < len; i++){
     if (i % cols == 0){
-        Serial.printf("\n[0x%08X] 0x%08X: ", (ptrdiff_t)src, i);
+      Serial.printf("\n[0x%08X] 0x%08X: ", (ptrdiff_t)src, i);
     }
     Serial.printf("%02X ", *src);
     src++;
@@ -147,7 +136,7 @@ void hexdump(const void *mem, uint32_t len, uint8_t cols = 16){
 
 // callback for when a response is recieved
 void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
- 
+
   switch(type) {
     case WStype_DISCONNECTED:
       Serial.printf("[WSc] Disconnected!\n");
@@ -159,8 +148,8 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
       // send message to server when Connected
       Serial.println("[WSc] SENT: Connected");
       break;
-    case WStype_TEXT:            
-      Serial.printf("\nResponse Recieved\n");            
+    case WStype_TEXT:
+      Serial.printf("\nResponse Recieved\n");
       Serial.printf("[WSc] RESPONSE: %s\n", payload);
       if (!memcmp(payload, "toggle", length)){
         changeLatchState();
@@ -188,11 +177,11 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
       break;
   }
 }
- 
-void setup() {  
+
+void setup() {
   Serial.begin(115200);
   Serial.println();
-  
+
   // configure camera pins
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
@@ -215,7 +204,7 @@ void setup() {
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;
   config.pixel_format = PIXFORMAT_JPEG;
-  
+
   //init with high specs to pre-allocate larger buffers
   if (psramFound()) {
     config.frame_size = FRAMESIZE_UXGA;
@@ -226,12 +215,12 @@ void setup() {
     config.jpeg_quality = 12;
     config.fb_count = 1;
   }
-  
-  #if defined(CAMERA_MODEL_ESP_EYE)
+
+#if defined(CAMERA_MODEL_ESP_EYE)
   pinMode(13, INPUT_PULLUP);
   pinMode(14, INPUT_PULLUP);
-  #endif
-  
+#endif
+
   // camera init
   esp_err_t err = esp_camera_init(&config);
   if (err != ESP_OK) {
@@ -242,7 +231,7 @@ void setup() {
   // set frame size
   sensor_t * s = esp_camera_sensor_get();
   s->set_framesize(s, FRAMESIZE_QVGA);
-  
+
   // init boot process
   for(uint8_t t = 4; t > 0; t--) {
     Serial.printf("[SETUP] BOOT WAIT %d...\n", t);
@@ -253,9 +242,10 @@ void setup() {
 
   // Set the device as a Station and Soft Access Point simultaneously
   WiFi.mode(WIFI_AP_STA);
-  
+
   // Set device as a Wi-Fi Station
-  WiFi.begin(ssid, password);
+  WiFi.begin(); // this connects to the last used WiFi network
+  //  WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
     Serial.println("Setting as a Wi-Fi Station..");
@@ -270,7 +260,7 @@ void setup() {
     Serial.println("Error initializing ESP-NOW");
     return;
   }
-  
+
   // Once ESPNow is successfully Init, we will register for recv CB to
   // get recv packer info
   esp_now_register_recv_cb(OnDataRecv);
@@ -278,21 +268,21 @@ void setup() {
   // Once ESPNow is successfully Init, we will register for Send CB to
   // get the status of Trasnmitted packet
   esp_now_register_send_cb(OnDataSent);
-  
+
   // Register peer device
   esp_now_peer_info_t peerInfo;
   memcpy(peerInfo.peer_addr, broadcastAddress, 6);
-  peerInfo.channel = 0;  
+  peerInfo.channel = 0;
   peerInfo.encrypt = false;
-  
-  // Add peer device       
+
+  // Add peer device
   if (esp_now_add_peer(&peerInfo) != ESP_OK){
     Serial.println("Failed to add peer");
     return;
   }
 
   // connect to wifi
-  WiFi.begin(ssid, password);
+  WiFi.begin();
 
   // connection delay
   while ( WiFi.status() != WL_CONNECTED ) {
@@ -300,14 +290,14 @@ void setup() {
     Serial.print(".");
   }
   Serial.println();
-  
+
   // server address, port and URL
   // just using this websocket service for now to get a default response
   webSocket.begin(wss_url, 80, "/");
 
   // websocket event handler
   webSocket.onEvent(webSocketEvent);
-   
+
   // connection delay
   delay(2000);
 }
@@ -322,14 +312,14 @@ void loop() {
   // websocket object update must be called every loop
   webSocket.loop();
 
-          
+
   // if connected and message interval is reached we send message to server
   // will be adding in comms from the esp32 board to init this
   if (connected && motionDetected){
 
     // get current time
     int64_t start_time = esp_timer_get_time();
-    
+
     // get one image with camera
     fb = esp_camera_fb_get();
     // if image was not retrieved
@@ -341,10 +331,10 @@ void loop() {
     // get time again
     int64_t fb_get_time = esp_timer_get_time();
     Serial.printf("Get one frame in %lld ms.\n", (fb_get_time - start_time) / 1000);
-    
+
     // allocate image matrix to store RGB data
     image_matrix = dl_matrix3du_alloc(1, fb->width, fb->height, 3);
-    
+
     // transform image to RGB
     uint32_t res = fmt2rgb888(fb->buf, fb->len, fb->format, image_matrix->item);
     // could not transfrom to RGB
@@ -356,36 +346,36 @@ void loop() {
 
     // halt camera
     esp_camera_fb_return(fb);
-    
+
     // do face detection
     box_array_t *net_boxes = face_detect(image_matrix, &mtmn_config);
     // print detection time in ms
-    Serial.printf("Detection time consumption: %lldms\n", (esp_timer_get_time() - fb_get_time) / 1000);        
+    Serial.printf("Detection time consumption: %lldms\n", (esp_timer_get_time() - fb_get_time) / 1000);
 
     // if face was detected, boxes would be generated
     if (net_boxes){
-      
-      Serial.printf("\nFACE DETECTED\n");        
+
+      Serial.printf("\nFACE DETECTED\n");
 
       if(WiFi.status()== WL_CONNECTED){
-        
-//      // sending RGB image bin over websocket
-//      Serial.println("[WSc] SENDING - Detected Face Image");
-//      webSocket.sendBIN(fb->buf, fb->len);
-//      webSocket.sendTXT("toggle");
-//      Serial.println("-> Message Sent - Waiting for Response ...");
-        
+
+        //      // sending RGB image bin over websocket
+        //      Serial.println("[WSc] SENDING - Detected Face Image");
+        //      webSocket.sendBIN(fb->buf, fb->len);
+        //      webSocket.sendTXT("toggle");
+        //      Serial.println("-> Message Sent - Waiting for Response ...");
+
         // http post request
         http.begin(img_recog_url);
-        
+
         String img_buffer = base64::encode((uint8_t *) fb->buf, fb->len);
         String payload = "{\"image\": \"" + img_buffer + "\"}";
-        
+
         Serial.println(payload);
-        
-        http.addHeader("Content-Type", "application/json");     
+
+        http.addHeader("Content-Type", "application/json");
         int httpResponseCode = http.POST(payload);
-        
+
         if (httpResponseCode>0){
 
           String response = http.getString();
@@ -399,17 +389,17 @@ void loop() {
 
         // free resources
         http.end();
-        
+
       }
       else{
-        Serial.println("\nWIFI: Disconnected\n");  
+        Serial.println("\nWIFI: Disconnected\n");
       }
-      
+
       // reset motion status flag
       motionDetected = false;
     }
 
     // free image allcoation mem
     dl_matrix3du_free(image_matrix);
-  }    
+  }
 }
