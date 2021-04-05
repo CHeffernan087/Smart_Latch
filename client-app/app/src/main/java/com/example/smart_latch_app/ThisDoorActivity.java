@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.preference.PreferenceManager;
 import android.text.InputType;
 import android.view.View;
@@ -56,6 +57,10 @@ public class ThisDoorActivity extends AppCompatActivity {
     String responseString2fa = "";
     JSONObject jObj2fa = null;
     String responseMessage = "";
+
+    // nfc countdown reset stuff
+    int NFC_RESET_TIME = 20000;
+    int NFC_COUNTDOWN_INTERVAL = 1000;
 
     @Override
     protected void onResume () {
@@ -138,7 +143,7 @@ public class ThisDoorActivity extends AppCompatActivity {
         openBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String url = hostUrl + "/toggleLatch?state=1?doorId=" + doorID;
+                String url = hostUrl + "/toggleLatch?state=1&doorId=" + doorID + "&userId=" + email;
                 Request request = new Request.Builder().url(url).build();
                 client.newCall(request).enqueue(new Callback() {
                     @Override
@@ -176,7 +181,7 @@ public class ThisDoorActivity extends AppCompatActivity {
         closeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String url = hostUrl + "/toggleLatch?state=0?doorId=" + doorID;
+                String url = hostUrl + "/toggleLatch?state=0&doorId=" + doorID + "&userId=" + email;
 
                 Request request2 = new Request.Builder().url(url).build();
 
@@ -283,6 +288,17 @@ public class ThisDoorActivity extends AppCompatActivity {
                 .url(url)
                 .post(formBody)
                 .build();
+
+
+        mTextViewResult.setText(R.string.current_door_status_hint + "YES");
+        new CountDownTimer(NFC_RESET_TIME, NFC_COUNTDOWN_INTERVAL) {
+            public void onTick(long millisUntilFinished) {}
+
+            public void onFinish() {
+                mTextViewResult.setText(R.string.current_door_status_hint + "NO");
+            }
+
+        }.start();
 
 
         client.newCall(request).enqueue(new Callback() {

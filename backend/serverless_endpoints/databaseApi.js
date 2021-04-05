@@ -1,14 +1,16 @@
 const admin = require("firebase-admin");
 admin.initializeApp();
-const firestoreDb = admin.firestore();
+// const firestoreDb = admin.firestore();
 
 const Firestore = require("@google-cloud/firestore");
-// Comment out if not running locally and uncomment above line 3 ---->
-// const firestoreDb = new Firestore({
-// 	projectId: "smart-latch",
-// 	keyFilename: "../../smart-latch-3f77ccdb8958.json",
-// });
+// If running on the cloud, comment this out and uncomment line 3 ---->
+const firestoreDb = new Firestore({
+	projectId: "smart-latch",
+	keyFilename: "../../smart-latch-3f77ccdb8958.json",
+});
 // <------------
+
+const NFC_RESET_INTERVAL = 20000;
 
 function addAsAuthorised(email, doorId) {
 	doorDocument = firestoreDb.collection("Doors").doc(doorId);
@@ -168,10 +170,9 @@ exports.setDoorNfcId = (doorId, nfcID) => {
 
 exports.updateDoorNfcState = (doorId) => {
 	/* 
-		Note: at the moment, assume this function only ever sets the state to true. 
-		- We might want a timeout of say 20s and then set it back to false, in case the user tapped nfc then walked off. --> TODO!!
-		- We also want the door closing to set this back to false, which would need to be a request spawned from the ESP32.  
+		Todo: When the door is closed, nfcState should be set back to false
 	*/
+	const timer = setTimeout(() => resetNfcAfterTimeout(doorId), NFC_RESET_INTERVAL);
 	return firestoreDb
 		.collection("Doors")
 		.doc(doorId)
@@ -179,6 +180,15 @@ exports.updateDoorNfcState = (doorId) => {
 			nfcState: true,
 		});
 };
+
+function resetNfcAfterTimeout(doorId) {
+	firestoreDb
+		.collection("Doors")
+		.doc(doorId)
+		.update({
+			nfcState: false,
+		});
+}
 
 function setDoorAsActive(doorId) {
 	doorDocument = firestoreDb.collection("Doors").doc(doorId);

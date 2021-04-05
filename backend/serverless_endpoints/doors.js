@@ -83,41 +83,34 @@ exports.toggleLatch = (req, res) => {
 	const doorId = req.query && req.query.doorId;
 	const userId = req.query && req.query.userId;
 	
-	const userIsAuthorized = true;
-	if (userIsAuthorized) {
-		return openDoor({ doorId: 31415, userId: 420 })
-			.then((response) => {
-				if (response.status === 200) {
-					return {
-						status: 200,
-						response: { Authorization: "ok", newDoorState: desiredState },
-					};
-				} else {
-					return {
-						status: 400,
-						response: "Door not online",
-					};
-				}
-			})
-			.then(({ status, response }) => {
-				res.status(status).send({ response: response });
-			})
-			.catch((err) => {
-				res.status(400).send({ error: err });
-			});
-	} else {
-		// todo close connection on the board
-		res.status(400).send({ error: "You are not authorised to open this door" });
-	}
+	return openDoor({ doorId: doorId, userId: userId })
+		.then((response) => {
+			if (response.status === 200) {
+				return {
+					status: 200,
+					response: { Authorization: "ok", newDoorState: desiredState },
+				};
+			} else {
+				return {
+					status: 400,
+					response: "Door not online",
+				};
+			}
+		})
+		.then(({ status, response }) => {
+			res.status(status).send({ response: response });
+		})
+		.catch((err) => {
+			res.status(400).send({ error: err });
+		});
 };
 
 exports.nfcUpdate = (req, res) => {
 	const { nfcId, doorId } = req.body;  
-
 	if(nfcId && doorId) {
 		getDoorDetails(doorId, nfcId)
 			.then((doorObject) => {
-				if (doorObject.nfcId === nfcId){
+				if (doorObject.nfcId === nfcId) {
 					updateDoorNfcState(doorId)
 						.then(() => {
 							res.send({ message: "Successfully updated NFC state to true for 2FA." }).status(200);
