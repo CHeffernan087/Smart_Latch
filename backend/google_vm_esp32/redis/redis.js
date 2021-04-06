@@ -1,7 +1,7 @@
 "use strict";
 const redis = require("redis");
 const WebSocket = require("ws");
-const { setDoorLocked } = require("../cloud functions api/cloudFunctions");
+const { toggleLockState } = require("../cloud functions api/cloudFunctions");
 
 const REDISHOST = process.env.REDISHOST || "redis.smart-latchxyz.xyz";
 const REDISPORT = process.env.REDISPORT || 6379;
@@ -17,7 +17,7 @@ exports.initialiseRedisClient = (redisSubscriber, openConnections) => {
 		if (doorId && openConnections[doorId] != undefined) {
 			const client = openConnections[doorId];
 			if (client.readyState === WebSocket.OPEN) {
-				setDoorLocked(doorId, false).then(() => client.send("ToggleLatch"));
+				toggleLockState(doorId).then(() => client.send("ToggleLatch"));
 			}
 		}
 	});
