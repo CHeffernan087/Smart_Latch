@@ -13,45 +13,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-<!--    <androidx.appcompat.widget.Toolbar-->
-<!--        android:id="@+id/toolbar2"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:background="?attr/colorPrimary"-->
-<!--        android:minHeight="?attr/actionBarSize"-->
-<!--        android:theme="?attr/actionBarTheme"-->
-<!--        tools:layout_editor_absoluteX="1dp"-->
-<!--        app:layout_constraintEnd_toStartOf="parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="@id/toolbar2">-->
-
-<!--        <ImageButton-->
-<!--            android:id="@+id/back_nav"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_alignParentRight="true"-->
-<!--            android:layout_centerVertical="true"-->
-<!--            android:padding="15dp"-->
-<!--            android:scaleType="fitCenter"-->
-<!--            android:layout_gravity="left"-->
-<!--            android:background="@drawable/ic_arrow_back" />-->
-
-<!--        <TextView-->
-<!--            android:id="@+id/textview_doorid"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_marginStart="30dp"-->
-<!--            android:hint="Selfie Upload"-->
-<!--            android:text=""-->
-<!--            android:textColor="@color/white"-->
-<!--            android:textColorHint="@color/white"-->
-<!--            android:textSize="20dp"-->
-<!--            app:layout_constraintBottom_toBottomOf="parent"-->
-<!--            app:layout_constraintEnd_toEndOf="parent"-->
-<!--            app:layout_constraintStart_toStartOf="@id/back_nav"-->
-<!--            app:layout_constraintTop_toTopOf="parent" />-->
-<!--    </androidx.appcompat.widget.Toolbar>-->
-
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="wrap_content"
