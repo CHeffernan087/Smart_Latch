@@ -14,8 +14,8 @@ const authEndpoint = (req, res, next) => {
 			next(req, res);
 		})
 		.catch((err) => {
-			return res.status(401).send({ error: "Invalid token.", err }); // Unauthorized. 
-		});	
+			return res.status(401).send({ error: "Invalid token.", err }); // Unauthorized.
+		});
 };
 
 exports.authed = (endpointHandler) => {

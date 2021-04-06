@@ -62,7 +62,6 @@ exports.isAuthorised = async (email, doorId) => {
 	).docs;
 	for (let index = 0; index < doorsAuthorisedForUser.length; index++) {
 		const doorDocument = doorsAuthorisedForUser[index];
-		console.log(doorDocument.id);
 		if (doorDocument.id == doorId) {
 			return true;
 		}
@@ -150,6 +149,7 @@ exports.setDoorAdmin = async (email, doorId) => {
 	return doorDocument.update({ Admin: userDoc });
 };
 
+const getDoor = (doorId) => firestoreDb.collection("Doors").doc(doorId);
 
 exports.getDoorDetails = (doorId) => {
 	return firestoreDb
@@ -161,9 +161,21 @@ exports.getDoorDetails = (doorId) => {
 		});
 };
 
-exports.setDoorNfcId = (doorId, nfcID) => { 
-		let doorDoc = firestoreDb.collection("Doors").doc(doorId);
-		return doorDoc.update({ nfcId: nfcID});
+exports.setDoorNfcId = (doorId, nfcID) => {
+	let doorDoc = firestoreDb.collection("Doors").doc(doorId);
+	return doorDoc.update({ nfcId: nfcID });
+};
+
+exports.toggleLockState = (doorId) => {
+	return firestoreDb
+		.collection("Doors")
+		.doc(doorId)
+		.get()
+		.then((doc) => {
+			if (doc.exists) {
+				return doc.ref.update({ locked: !doc.data().locked });
+			}
+		});
 };
 
 exports.updateDoorNfcState = (doorId) => {
@@ -172,16 +184,17 @@ exports.updateDoorNfcState = (doorId) => {
 		- We might want a timeout of say 20s and then set it back to false, in case the user tapped nfc then walked off. --> TODO!!
 		- We also want the door closing to set this back to false, which would need to be a request spawned from the ESP32.  
 	*/
-	return firestoreDb
-		.collection("Doors")
-		.doc(doorId)
-		.update({
-			nfcState: true,
-		});
+	return firestoreDb.collection("Doors").doc(doorId).update({
+		nfcState: true,
+	});
+};
+
+exports.setLockState = (doorId, isLocked) => {
+	doorDocument = firestoreDb.collection("Doors").doc(doorId);
+	return doorDocument.update({ locked: isLocked });
 };
 
 function setDoorAsActive(doorId) {
 	doorDocument = firestoreDb.collection("Doors").doc(doorId);
 	return doorDocument.update({ IsActive: true });
 }
-

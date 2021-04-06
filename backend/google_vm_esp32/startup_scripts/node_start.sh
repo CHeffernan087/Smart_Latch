@@ -8,7 +8,7 @@ git config --global credential.helper gcloud.sh
 sudo gcloud source repos clone github_cheffernan087_smart_latch /opt/app/smart-latch
 
 cd /opt/app/smart-latch
-sudo git pull origin add-nginx-config
+sudo git pull origin main
 cd backend/google_vm_esp32/
 
 # nginx config

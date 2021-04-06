@@ -138,7 +138,7 @@ public class ThisDoorActivity extends AppCompatActivity {
         openBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String url = hostUrl + "/toggleLatch?state=1?doorId=" + doorID;
+                String url = hostUrl + "/toggleLatch?state=1&doorId=" + doorID;
                 Request request = new Request.Builder().url(url).build();
                 client.newCall(request).enqueue(new Callback() {
                     @Override
