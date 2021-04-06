@@ -25,7 +25,13 @@ public class MySimpleArrayAdapter extends ArrayAdapter<String> {
         View rowView = inflater.inflate(R.layout.doordisplaybox, parent, false);
         TextView textView = (TextView) rowView.findViewById(R.id.doorIdTextView);
         ImageView imageView = (ImageView) rowView.findViewById(R.id.doorImage);
-        textView.setText(values[position]);
+
+        // limit the length of the string
+        if (values[position].length() > 10) {
+            textView.setText(values[position].substring(0,10) + "...");
+        } else {
+            textView.setText(values[position]);
+        }
         imageView.setImageResource(R.drawable.ic_door);
 
         return rowView;

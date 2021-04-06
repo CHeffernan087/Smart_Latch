@@ -1,10 +1,17 @@
+"use strict";
 /* requirements */
 var bodyParser = require("body-parser");
 const WebSocket = require("ws");
 const http = require("http");
 const express = require("express");
+const redis = require("redis");
 
 const port = process.env.PORT || 3000;
+const REDISHOST = process.env.REDISHOST || "redis.smart-latchxyz.xyz";
+const REDISPORT = process.env.REDISPORT || 6379;
+
+var subscriber = redis.createClient(REDISPORT, REDISHOST);
+subscriber.on("error", (err) => console.error("ERR:REDIS:", err));
 
 /*
 server definition and config
@@ -65,6 +72,7 @@ const handleMessageFromBoard = (messageObj, client) => {
 			openConnections[doorId] = client;
 			client.id = doorId;
 			console.log(`added ${doorId} to the list of open web socket connections`);
+			subscriber.subscribe(doorId);
 			break;
 		default:
 			return;
@@ -85,8 +93,25 @@ webSocketServer.on("connection", (webSocket) => {
 		handleMessageFromBoard(messageObj, webSocket);
 	});
 	webSocket.on("close", () => {
+		subscriber.unsubscribe(webSocket.id);
 		delete openConnections[webSocket.id];
 	});
+});
+
+/*
+PUB/SUB redis stuff
+*/
+
+subscriber.on("message", function (doorId, payload) {
+	const message = JSON.parse(payload);
+	const { userId } = message;
+	console.log(`[${userId}]: wants to interact with door ${doorId}`);
+	if (doorId && openConnections[doorId] != undefined) {
+		const client = openConnections[doorId];
+		if (client.readyState === WebSocket.OPEN) {
+			client.send("ToggleLatch");
+		}
+	}
 });
 
 /*
