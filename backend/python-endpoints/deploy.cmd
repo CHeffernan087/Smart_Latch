@@ -1,1 +1,0 @@
-gcloud functions deploy %1 --runtime python37 --trigger-http --allow-unauthenticated --region europe-west2
