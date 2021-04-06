@@ -16,3 +16,4 @@ exports.verifyUser = auth.verifyUser;
 exports.refreshToken = auth.refreshToken;
 exports.getOldToken = auth.getOldToken;
 exports.nfcUpdate = authed(doors.nfcUpdate);
+exports.setLockState = doors.setLockState;
