@@ -4,18 +4,14 @@ var bodyParser = require("body-parser");
 const WebSocket = require("ws");
 const http = require("http");
 const express = require("express");
-const redis = require("redis");
 const app = express();
 const { initialiseWebsocketServer } = require("./websocket/websocketServer");
 const { healthchecks } = require("./http/healthcheck");
 const { home } = require("./http/home");
+const { initialiseRedisClient, redisSubscriber } = require("./redis/redis");
 
 const port = process.env.PORT || 8080;
-const REDISHOST = process.env.REDISHOST || "redis.smart-latchxyz.xyz";
-const REDISPORT = process.env.REDISPORT || 6379;
-
-var subscriber = redis.createClient(REDISPORT, REDISHOST);
-subscriber.on("error", (err) => console.error("ERR:REDIS:", err));
+const openConnections = {};
 
 /*
 server definition and config
@@ -32,28 +28,14 @@ home(app);
 web socket stuff
 */
 
-const openConnections = {};
-
 const webSocketServer = new WebSocket.Server({
 	server,
 });
-initialiseWebsocketServer(webSocketServer, subscriber, openConnections);
+initialiseWebsocketServer(webSocketServer, redisSubscriber, openConnections);
 /*
 PUB/SUB redis stuff
 */
-
-subscriber.on("message", function (doorId, payload) {
-	const message = JSON.parse(payload);
-	const { userId } = message;
-	console.log(`[${userId}]: wants to interact with door ${doorId}`);
-	if (doorId && openConnections[doorId] != undefined) {
-		const client = openConnections[doorId];
-		if (client.readyState === WebSocket.OPEN) {
-			client.send("ToggleLatch");
-		}
-	}
-});
-
+initialiseRedisClient(redisSubscriber, openConnections);
 /*
 activate server
 */
