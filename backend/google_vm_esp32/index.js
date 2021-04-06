@@ -27,7 +27,6 @@ home(app);
 /*
 web socket stuff
 */
-
 const webSocketServer = new WebSocket.Server({
 	server,
 });
