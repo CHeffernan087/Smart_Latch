@@ -2,6 +2,7 @@
 #include <esp_wifi.h>
 #include <WiFi.h>
 #include <ESP32Servo.h>
+#include "OTA.h"
 
 #define MOTION_PIN 32
 #define GREEN_LED  33
@@ -14,9 +15,6 @@
 
 // create servo object to control a servo
 Servo myservo;
-
-const char* ssid = "McNallys";
-const char* password = "mcnally123";
 
 // RECEIVER MAC Address
 // All F's sends to all boards on network
@@ -58,6 +56,9 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
   Serial.print("[ESP-NOW] Last Packet Send Status:\t");
   Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
 }
+
+// Over-the-air (OTA) updates
+OTA ota_updater("1.0", "esp32", "https://europe-west2-smart-latch.cloudfunctions.net/getDownloadUrl");
 
 
 // callback function that will be executed when data is received
@@ -149,9 +150,19 @@ void setup() {
 
   // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
+  WiFi.begin(); // this connects to the last used WiFi network
+//  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Establishing connection to WiFi..");
+  }
+  Serial.println("Connected to network");
+
+  // check if updates are avilable and download if so
+  ota_updater.checkForUpdates();
 
   // Get WIFI channel
-  int32_t channel = getWiFiChannel(ssid);
+  int32_t channel = getWiFiChannel(WiFi.SSID().c_str());
 
   // Set WIFI channel
   WiFi.printDiag(Serial); // Uncomment to verify channel number before

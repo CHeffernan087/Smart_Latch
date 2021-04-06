@@ -2,6 +2,7 @@ const auth = require("./auth");
 const doors = require("./doors");
 const redis = require("./redis");
 const user = require("./user");
+const ota = require("./ota");
 const { authed } = require("./middleware/auth");
 
 exports.deleteUser = user.deleteUser;
@@ -18,3 +19,8 @@ exports.toggleLatch = authed(doors.toggleLatch);
 exports.toggleLockState = doors.toggleLockState;
 exports.userExists = user.userExists;
 exports.verifyUser = auth.verifyUser;
+exports.refreshToken = auth.refreshToken;
+exports.getOldToken = auth.getOldToken;
+exports.nfcUpdate = authed(doors.nfcUpdate); 
+exports.insertFirmwaresOnBigquery = ota.insertFirmwaresOnBigquery;
+exports.getDownloadUrl = ota.getDownloadUrl;
