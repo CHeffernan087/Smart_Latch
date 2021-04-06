@@ -19,11 +19,10 @@ server definition and config
 app.use(bodyParser.json());
 const server = http.createServer(app);
 /*
-end points
+http end points
 */
 healthchecks(app);
 home(app);
-
 /*
 web socket stuff
 */
