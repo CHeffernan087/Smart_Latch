@@ -27,6 +27,10 @@ app.get("/healthcheck", (req, res) => {
 	res.send({ message: "smart latch server is running" });
 });
 
+app.post("/postHealthcheck", (req, res) => {
+	res.send({ message: "smart latch server is running" });
+});
+
 app.get("/", (req, res, next) => {
 	next("Error: Not found. Please specify a valid endpoint");
 });
