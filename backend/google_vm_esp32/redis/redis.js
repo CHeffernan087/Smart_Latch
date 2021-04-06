@@ -1,5 +1,6 @@
 "use strict";
 const redis = require("redis");
+const WebSocket = require("ws");
 
 const REDISHOST = process.env.REDISHOST || "redis.smart-latchxyz.xyz";
 const REDISPORT = process.env.REDISPORT || 6379;
