@@ -13,6 +13,7 @@
 #include <esp_now.h>
 #include <esp_wifi.h>
 #include <WiFi.h>
+#include "OTA.h"
 
 #define MOTION_PIN 32
 
@@ -53,6 +54,9 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
   Serial.print("\r\nLast Packet Send Status:\t");
   Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
 }
+
+// Over-the-air (OTA) updates
+OTA ota_updater("1.1", "esp32", "https://europe-west2-smart-latch.cloudfunctions.net/getDownloadUrl");
 
 
 void setup() {
@@ -98,7 +102,8 @@ void setup() {
     Serial.println("Failed to add peer");
     return;
   }
-    
+   // check if updates are avilable and download if so
+  ota_updater.checkForUpdates();
 }
  
 void loop() {
