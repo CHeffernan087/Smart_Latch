@@ -7,6 +7,7 @@ const {
 	getDoorDetails,
 	setDoorNfcId,
 	setLockState,
+	toggleLockState,
 	updateDoorNfcState,
 } = require("./databaseApi");
 const { publishUpdate } = require("./redis");
@@ -153,9 +154,20 @@ exports.setLockState = (req, res) => {
 	isLocked = isLocked == "true";
 	setLockState(doorId, isLocked)
 		.then(() => {
-			res.status(200).send({ res: "200" });
+			return res.status(200).send({ res: "200" });
 		})
 		.catch((err) => {
-			res.status(400).send(err);
+			return res.status(400).send(err);
+		});
+};
+
+exports.toggleLockState = (req, res) => {
+	let { doorId } = req.query;
+	toggleLockState(doorId)
+		.then(() => {
+			return res.status(200).send({ res: "200" });
+		})
+		.catch((err) => {
+			return res.status(400).send(err);
 		});
 };

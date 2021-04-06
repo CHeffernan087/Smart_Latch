@@ -167,6 +167,18 @@ exports.setDoorNfcId = (doorId, nfcID) => {
 	return doorDoc.update({ nfcId: nfcID });
 };
 
+exports.toggleLockState = (doorId) => {
+	firestoreDb
+		.collection("Doors")
+		.doc(doorId)
+		.get()
+		.then((doc) => {
+			if (doc.exists) {
+				return doc.ref.update({ locked: !doc.data().locked });
+			}
+		});
+};
+
 exports.updateDoorNfcState = (doorId) => {
 	/* 
 		Note: at the moment, assume this function only ever sets the state to true. 
