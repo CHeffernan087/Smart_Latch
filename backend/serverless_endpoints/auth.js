@@ -156,7 +156,6 @@ exports.refreshToken = async (req, res) => {
 	
 	getUserRefreshToken(email, refreshToken)
 		.then((verifyRefreshToken) => {
-			console.log(`Refresh token is: ${verifyRefreshToken}`);
 			if (!verifyRefreshToken) {
 				res.send({
 					verifiedRefreshToken: verifyRefreshToken, 

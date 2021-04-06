@@ -14,6 +14,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -46,13 +47,13 @@ import okhttp3.Response;
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private GoogleSignInClient mGoogleSignInClient;
     private MainFragment mainFragment = new MainFragment();
-    private FirstFragment firstFragment = new FirstFragment();
     private FragmentManager fragmentManager = getSupportFragmentManager();
     private FragmentTransaction fragmentTransaction;
     String responseString = "";
     String responseMessage = "";
     JSONObject jObj = null;
     JSONArray responseDoors;
+    JSONObject responseDetails;
 
     public static Context contextOfApplication;
 
@@ -138,7 +139,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             getUserDoorsAndNavToMyDoors();
             Toast.makeText(MainActivity.this, "View available doors", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_manual) {
-            gotoFirstFragment();
+
             Toast.makeText(MainActivity.this, "We can add buttons here to operate without NFC", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_share) {
             gotoMainFragment();
@@ -155,9 +156,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         finish();
     }
 
-    private void gotoMyDoorsActivity(String[] doors) {
+    private void gotoMyDoorsActivity(String[] doors, JSONObject doorDetails) {
         Intent i = new Intent(MainActivity.this, MyDoorsActivity.class);
         i.putExtra("DOORS", doors);
+        i.putExtra("DETAILS", doorDetails.toString());
+
         startActivity(i);
         finish();
     }
@@ -192,11 +195,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onResponse(Call call, Response response) throws IOException {
 
                     responseString = response.body().string();
-                    System.out.println("Response to logout: " + responseString);
+
                     try {
                         jObj = new JSONObject(responseString);
                         String message = jObj.getString("message");
-                        System.out.println("Message " + message);
+                        System.out.println("Logout message " + message);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -218,12 +221,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fragmentTransaction.commit();// replace the fragment
     }
 
-    private void gotoFirstFragment() {
-        fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.fragmentContainer,firstFragment);
-        fragmentTransaction.commit();// replace the fragment
-    }
-
     private void getUserDoorsAndNavToMyDoors () {
         String email ="";
         GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
@@ -231,8 +228,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             email = acct.getEmail();
         }
 
-        OkHttpClient client = new OkHttpClient().newBuilder()
-            .addInterceptor(new AuthenticationInterceptor()).build();
+        OkHttpClient client = new OkHttpClient()
+                .newBuilder()
+                .addInterceptor(new AuthenticationInterceptor())
+                .build();
 
         String hostUrl = getString(R.string.smart_latch_url) + "/getUserDoors?email=" + email;
 
@@ -255,10 +254,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 try {
                     jObj = new JSONObject(responseString);
-                    responseMessage = jObj.getString("message");
                     responseDoors = jObj.getJSONArray("doors");
+                    responseDetails = jObj.getJSONObject("doorDetails");
+
                     String[] userDoorsAsStringArray = toStringArray(responseDoors);
-                    gotoMyDoorsActivity(userDoorsAsStringArray);
+                    gotoMyDoorsActivity(userDoorsAsStringArray, responseDetails);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }

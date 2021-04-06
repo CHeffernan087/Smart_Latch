@@ -15,9 +15,6 @@ const authEndpoint = (req, res, next) => {
 		})
 		.catch((err) => {
 			return res.status(401).send({ error: "Invalid token.", err }); // Unauthorized.
-		})
-		.finally(() => {
-			next(req, res);
 		});
 };
 
