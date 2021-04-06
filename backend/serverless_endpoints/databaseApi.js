@@ -168,7 +168,7 @@ exports.setDoorNfcId = (doorId, nfcID) => {
 };
 
 exports.toggleLockState = (doorId) => {
-	firestoreDb
+	return firestoreDb
 		.collection("Doors")
 		.doc(doorId)
 		.get()
