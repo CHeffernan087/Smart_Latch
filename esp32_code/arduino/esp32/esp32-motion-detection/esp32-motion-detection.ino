@@ -9,7 +9,6 @@
   copies or substantial portions of the Software.
 */
 
-
 #include <esp_now.h>
 #include <esp_wifi.h>
 #include <WiFi.h>
@@ -56,7 +55,7 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
 }
 
 // Over-the-air (OTA) updates
-OTA ota_updater("1.1", "esp32", "https://europe-west2-smart-latch.cloudfunctions.net/getDownloadUrl");
+OTA ota_updater("1.0", "esp32", "https://europe-west2-smart-latch.cloudfunctions.net/getDownloadUrl");
 
 
 void setup() {
@@ -70,6 +69,14 @@ void setup() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(); // this connects to the last used WiFi network
 //  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Establishing connection to WiFi..");
+  }
+  Serial.println("Connected to network");
+
+  // check if updates are avilable and download if so
+  ota_updater.checkForUpdates();
 
   // Get WIFI channel
   int32_t channel = getWiFiChannel(WiFi.SSID().c_str());
@@ -102,8 +109,6 @@ void setup() {
     Serial.println("Failed to add peer");
     return;
   }
-   // check if updates are avilable and download if so
-  ota_updater.checkForUpdates();
 }
  
 void loop() {
