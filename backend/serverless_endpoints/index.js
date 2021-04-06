@@ -1,6 +1,7 @@
 const auth = require("./auth");
 const doors = require("./doors");
 const user = require("./user");
+const ota = require("./ota");
 const { authed } = require("./middleware/auth");
 
 exports.deleteUser = user.deleteUser;
@@ -15,3 +16,5 @@ exports.verifyUser = auth.verifyUser;
 exports.refreshToken = auth.refreshToken;
 exports.getOldToken = auth.getOldToken;
 exports.nfcUpdate = authed(doors.nfcUpdate); 
+exports.insertFirmwaresOnBigquery = ota.insertFirmwaresOnBigquery;
+exports.getDownloadUrl = ota.getDownloadUrl;
