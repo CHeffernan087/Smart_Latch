@@ -12,7 +12,7 @@ publisher.on("error", (err) => console.error("ERR:REDIS:", err));
 */
 exports.publishUpdate = (doorId, userId) => {
 	return new Promise((resolve, reject) => {
-		publisher.publish(doorId, `{"userId":${userId}}`, (error) => {
+		publisher.publish(doorId, `{"userId":\"${userId}\"}`, (error) => {
 			if (error) {
 				reject(error);
 			}

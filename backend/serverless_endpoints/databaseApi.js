@@ -62,7 +62,6 @@ exports.isAuthorised = async (email, doorId) => {
 	).docs;
 	for (let index = 0; index < doorsAuthorisedForUser.length; index++) {
 		const doorDocument = doorsAuthorisedForUser[index];
-		console.log(doorDocument.id);
 		if (doorDocument.id == doorId) {
 			return true;
 		}

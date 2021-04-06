@@ -3,6 +3,7 @@ const {
 	addDoorToUser,
 	getUserDoors,
 	isDoorActive,
+	isAuthorised,
 	setDoorAdmin,
 	getDoorDetails,
 	setDoorNfcId,
@@ -40,15 +41,12 @@ exports.getUserDoors = (req, res) => {
 		});
 
 	function sendDoorResponse(doors) {
-		console.log("[CHEFF debug]: HERE ARE THE DOOR DETAILS");
-		console.log(doors);
 		return res.send({ doors, doorDetails });
 	}
 };
 
 const openDoor = ({ doorId, userId }) => {
-	return publishUpdate(doorId, userId).then(() => {});
-	// return smartLatchPost("/openDoor", { doorId, userId });
+	return publishUpdate(doorId, userId);
 };
 
 exports.registerDoor = (req, res) => {
@@ -90,24 +88,27 @@ exports.registerDoor = (req, res) => {
 exports.toggleLatch = (req, res) => {
 	const desiredState = req.query && req.query.state;
 	const doorId = req.query && req.query.doorId;
-	const userId = req.query && req.query.userId;
+	const { email } = req.user;
+	// todo : add some validation here if the user is allowed to open the door
+	return isAuthorised(email, doorId)
+		.then((userIsAuthorized) => {
+			if (userIsAuthorized) {
+				return openDoor({ doorId, userId: email });
+			} else {
+				throw new Error("User not Authorised");
+			}
+		})
+		.then(() => {
+			return res
+				.status(200)
+				.send({ response: "Successfully published update" });
+		})
+		.catch((error) => {
+			return res.status(400).send({ error });
+		});
 
-	const userIsAuthorized = true;
-	if (userIsAuthorized) {
-		return openDoor({ doorId: 31415, userId: 420 })
-			.then(() => {
-				return res
-					.status(200)
-					.send({ response: "Successfully published update" });
-			})
-
-			.catch((err) => {
-				res.status(400).send({ error: err });
-			});
-	} else {
-		// todo close connection on the board
-		res.status(400).send({ error: "You are not authorised to open this door" });
-	}
+	// todo close connection on the board
+	// ;
 };
 
 exports.nfcUpdate = (req, res) => {
