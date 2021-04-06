@@ -6,6 +6,8 @@ const {
 	setDoorAdmin,
 	getDoorDetails,
 	setDoorNfcId,
+	setLockState,
+	toggleLockState,
 	updateDoorNfcState,
 } = require("./databaseApi");
 const { publishUpdate } = require("./redis");
@@ -145,4 +147,27 @@ exports.nfcUpdate = (req, res) => {
 			.status(400)
 			.send({ error: `Missing field(s) ${missingFields.toString()}` });
 	}
+};
+
+exports.setLockState = (req, res) => {
+	let { doorId, isLocked } = req.query;
+	isLocked = isLocked == "true";
+	setLockState(doorId, isLocked)
+		.then(() => {
+			return res.status(200).send({ res: "200" });
+		})
+		.catch((err) => {
+			return res.status(400).send(err);
+		});
+};
+
+exports.toggleLockState = (req, res) => {
+	let { doorId } = req.query;
+	toggleLockState(doorId)
+		.then(() => {
+			return res.status(200).send({ res: "200" });
+		})
+		.catch((err) => {
+			return res.status(400).send(err);
+		});
 };
