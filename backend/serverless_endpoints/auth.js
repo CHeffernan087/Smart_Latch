@@ -3,11 +3,14 @@ const {
 	addRefreshToken,
 	checkShouldCreateAccount,
 	registerAsUser,
+	getUserDetails,
+	getUserRefreshToken,
 	revokeToken,
 } = require("./databaseApi");
 const { getUser, isRequestAllowed, readInJwtSecret } = require("./utils");
 let randtoken = require("rand-token");
 const jwt = require("jsonwebtoken");
+const { firestore } = require("firebase-admin");
 
 const APP_GOOGLE_CLIENT_ID =
 	"639400548732-9ga9sg95ao0drj5sdtd3v561adjqptbr.apps.googleusercontent.com";
@@ -50,8 +53,9 @@ exports.logout = (req, res) => {
 	if (!isRequestAllowed(req, "POST")) {
 		return res.status(400).send({ error: "Expected request type POST" });
 	}
-	const { email } = getUser(req);
-	const { refreshToken } = req.body;
+	
+	const { email } = req.query;
+	const { refreshToken } = req.query;
 	if (!refreshToken) {
 		return res.status(400).send({
 			error:
@@ -109,4 +113,79 @@ exports.verifyUser = async (req, res) => {
 		.catch((e) => {
 			res.send({ success: false, error: "Token failed verification." });
 		});
+};
+
+exports.getOldToken = async (req, res) => { // endpoint can be used to get old tokens for testing 
+	const email = req.query && req.query.email;
+	const issuedAt = new Date();
+	issuedAt.setDate(issuedAt.getDate() - 2) // 2 days ago
+	Math.floor(Date.now() / 1000)
+	const oldTS = Math.floor(issuedAt / 1000)
+
+	readInJwtSecret()
+				.then((jwt_secret) => {
+					getUserDetails(email)
+						.then((details) => {
+							const firstName = details._fieldsProto.firstname.stringValue;
+							const lastName = details._fieldsProto.lastname.stringValue;
+							const userId = details._fieldsProto.userId.stringValue;
+				
+							const token = jwt.sign(
+								{ email: email, firstName: firstName, lastName: lastName, id: userId, iat: oldTS, exp: oldTS+3600},
+								jwt_secret
+							);
+		
+							res.send({token: token}).status(200);
+						}).catch((e) => {
+							console.log(e);
+							res.send({error: "Error accessing user details."}).status(400);
+						});
+				}).catch((e) => console.log(e));
+
+}
+
+exports.refreshToken = async (req, res) => {
+	console.log(`Refresh token endpoint`);
+	const refreshToken  = req.query && req.query.refreshToken; 
+	const email = req.query && req.query.email;
+	if (!refreshToken) {
+		res.send({ message: "Must include refreshToken parameter."}).status(400);
+	} else if (!email) {
+		res.send({ message: "Must include email parameter."}).status(400);
+	}
+	
+	getUserRefreshToken(email, refreshToken)
+		.then((verifyRefreshToken) => {
+			if (!verifyRefreshToken) {
+				res.send({
+					verifiedRefreshToken: verifyRefreshToken, 
+					message: "Refresh token failed verification. Please re-login."
+				}).status(401);
+				return; 
+			}
+		})
+		.then(() => {
+			const issuedAt = Math.floor(Date.now() / 1000)
+	
+			readInJwtSecret()
+				.then((jwt_secret) => {
+					getUserDetails(email)
+						.then((details) => {
+							const firstName = details._fieldsProto.firstname.stringValue;
+							const lastName = details._fieldsProto.lastname.stringValue;
+							const userId = details._fieldsProto.userId.stringValue;
+
+							const token = jwt.sign(
+								{ email: email, firstName: firstName, lastName: lastName, id: userId, iat: issuedAt, exp: issuedAt + 43200}, // persist for 12 hours
+								jwt_secret
+							);
+		
+							res.send({token: token}).status(200);
+						}).catch((e) => {
+							res.send({error: `Error accessing user details: ${e}`}).status(401);
+						});
+				}).catch((e) => {
+					res.send({ message: `Error accessing JWT secret: ${e}`}).status(401);
+				});
+		});	
 };

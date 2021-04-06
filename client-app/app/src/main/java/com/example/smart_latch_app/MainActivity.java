@@ -1,7 +1,8 @@
 package com.example.smart_latch_app;
 
+import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -13,6 +14,8 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import android.os.Parcelable;
+import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -43,15 +46,16 @@ import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private GoogleSignInClient mGoogleSignInClient;
-    private String welcomeText;
     private MainFragment mainFragment = new MainFragment();
-    private FirstFragment firstFragment = new FirstFragment();
     private FragmentManager fragmentManager = getSupportFragmentManager();
     private FragmentTransaction fragmentTransaction;
     String responseString = "";
     String responseMessage = "";
     JSONObject jObj = null;
     JSONArray responseDoors;
+    JSONObject responseDetails;
+
+    public static Context contextOfApplication;
 
 
     @Override
@@ -60,6 +64,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        contextOfApplication = getApplicationContext();
+
 
         // Setup Google stuff for signing out
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -69,8 +75,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
-        welcomeText = "Welcome, " + getIntent().getStringExtra("USER_NAME");
-        Toast.makeText(this, welcomeText, Toast.LENGTH_SHORT).show();
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -135,7 +139,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             getUserDoorsAndNavToMyDoors();
             Toast.makeText(MainActivity.this, "View available doors", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_manual) {
-            gotoFirstFragment();
+
             Toast.makeText(MainActivity.this, "We can add buttons here to operate without NFC", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_share) {
             gotoMainFragment();
@@ -152,14 +156,55 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         finish();
     }
 
-    private void gotoMyDoorsActivity(String[] doors) {
+    private void gotoMyDoorsActivity(String[] doors, JSONObject doorDetails) {
         Intent i = new Intent(MainActivity.this, MyDoorsActivity.class);
         i.putExtra("DOORS", doors);
+        i.putExtra("DETAILS", doorDetails.toString());
+
         startActivity(i);
         finish();
     }
 
     private void signOut () {
+        OkHttpClient logoutClient = new OkHttpClient()
+                .newBuilder()
+                .addInterceptor(new AuthenticationInterceptor())
+                .build();
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String refreshToken = prefs.getString("refreshToken", "defaultToken");
+        String email = prefs.getString("email", "defaultToken");
+
+        String hostName = this.getString(R.string.smart_latch_url);
+        String url = hostName + "/logout?refreshToken=" + refreshToken + "&email=" + email;
+
+        RequestBody formBody = new FormBody.Builder()
+                .build();
+        Request request = new Request.Builder()
+                .url(url)
+                .post(formBody)
+                .build();
+
+        logoutClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+
+                    responseString = response.body().string();
+
+                    try {
+                        jObj = new JSONObject(responseString);
+                        String message = jObj.getString("message");
+                        System.out.println("Logout message " + message);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+            }
+        });
         mGoogleSignInClient.signOut()
                 .addOnCompleteListener(this, new OnCompleteListener<Void>() {
                     @Override
@@ -176,12 +221,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fragmentTransaction.commit();// replace the fragment
     }
 
-    private void gotoFirstFragment() {
-        fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.fragmentContainer,firstFragment);
-        fragmentTransaction.commit();// replace the fragment
-    }
-
     private void getUserDoorsAndNavToMyDoors () {
         String email ="";
         GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
@@ -189,7 +228,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             email = acct.getEmail();
         }
 
-        OkHttpClient client = new OkHttpClient();
+        OkHttpClient client = new OkHttpClient()
+                .newBuilder()
+                .addInterceptor(new AuthenticationInterceptor())
+                .build();
+
         String hostUrl = getString(R.string.smart_latch_url) + "/getUserDoors?email=" + email;
 
         RequestBody formBody = new FormBody.Builder()
@@ -198,7 +241,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .url(hostUrl)
                 .post(formBody)
                 .build();
-
 
         client.newCall(request).enqueue(new Callback() {
             @Override
@@ -212,10 +254,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 try {
                     jObj = new JSONObject(responseString);
-                    responseMessage = jObj.getString("message");
                     responseDoors = jObj.getJSONArray("doors");
+                    responseDetails = jObj.getJSONObject("doorDetails");
+
                     String[] userDoorsAsStringArray = toStringArray(responseDoors);
-                    gotoMyDoorsActivity(userDoorsAsStringArray);
+                    gotoMyDoorsActivity(userDoorsAsStringArray, responseDetails);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -233,6 +276,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             arr[i]=array.optString(i);
         }
         return arr;
+    }
+
+    public static Context getContextOfApplication(){
+        return contextOfApplication;
     }
 
 }

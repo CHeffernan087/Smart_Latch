@@ -13,21 +13,23 @@ import androidx.fragment.app.FragmentTransaction;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import java.util.Arrays;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 
 public class MyDoorsActivity extends AppCompatActivity implements Listener{
 
-    public static final String TAG = MainActivity.class.getSimpleName();
+    public static boolean doorNeedsToBeInitialised;
+
     String[] doors = new String[] {};
-    private Button mBtScan;
+    public static JSONObject doorDetails;
+    private String clickedDoorId = null;
     private AddDoorFragment mAddDoorFragment;
     private boolean isDialogDisplayed = false;
     private NfcAdapter mNfcAdapter;
-    private FirstFragment firstFragment = new FirstFragment();
     private FragmentTransaction fragmentTransaction;
 
     @Override
@@ -37,22 +39,36 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
         Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
         ListView listView = (ListView) findViewById(R.id.list);
 
-        initViews();
         initNFC();
 
         Bundle b = getIntent().getExtras();
         if (b != null) {
             doors = b.getStringArray("DOORS");
+            try {
+                doorDetails = new JSONObject(b.getString("DETAILS"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
 
-        // use your custom layout
         MySimpleArrayAdapter adapter = new MySimpleArrayAdapter(this, doors);
         listView.setAdapter(adapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                gotoFirstFragment(doors[position]);
+                clickedDoorId = doors[position];
+                try {
+                    doorNeedsToBeInitialised = doorDetails.getJSONObject(doors[position]).getString("nfcId").length() == 0; // if no nfcId, door needs to be initialised
+                    if(doorNeedsToBeInitialised) {
+                        showAddDoorFragment();
+                    } else {
+                        gotoThisDoorActivity(doors[position]);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
             }
         });
 
@@ -68,11 +84,6 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
     private void gotoMainActivity() {
         startActivity(new Intent(MyDoorsActivity.this, MainActivity.class));
         finish();
-    }
-
-    private void initViews() {
-        mBtScan = (Button) findViewById(R.id.btn_read);
-        mBtScan.setOnClickListener(view -> showAddDoorFragment());
     }
 
     private void initNFC(){
@@ -128,7 +139,6 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
         Tag tag = (Tag) intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
         assert tag != null;
         detectTagData(tag);
-
     }
 
     //For NFC detection handling
@@ -136,17 +146,15 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
         StringBuilder sb = new StringBuilder();
         byte[] id = tag.getId();
         sb.append(toHex(id));
-
         if (isDialogDisplayed) {
                 Toast.makeText(this, "NFC Tag Detected !", Toast.LENGTH_SHORT).show();
                 mAddDoorFragment = (AddDoorFragment) getSupportFragmentManager().findFragmentByTag(AddDoorFragment.TAG);
-                System.out.println(sb.toString());
                 // for testing. Update this to add yourself to a particular door
                 /*
                 * {
                 *   1003: cheffernan087@gmail.com
                 *   1004: cheffernan087@gmail.com
-                *   1005:
+                *   1005: tkelly2@tcd.ie
                 *   1006:
                 *   1007:
                 *   1008:
@@ -155,7 +163,8 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
                 * }
                 *
                 * */
-                mAddDoorFragment.onNfcDetected("1005");
+                // pass clicked door id and nfctag_id
+                mAddDoorFragment.onNfcDetected(clickedDoorId, sb.toString());
         }
     }
 
@@ -170,32 +179,12 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
         return sb.toString();
     }
 
-
-    private void gotoFirstFragment(String selectedDoor) {
-        Bundle bundle = new Bundle();
-        bundle.putString("doorID", selectedDoor );
-        firstFragment.setArguments(bundle);
-        fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.replace(R.id.fragmentContainer,firstFragment);
-        fragmentTransaction.commit();
-    }
-
-    public void appendDoor(String doorId) {
-        if (Arrays.asList(doors).contains(doorId)) {
-            Toast.makeText(this, "This door has already been added.", Toast.LENGTH_SHORT).show();
-        } else {
-            // appends new doorId
-            doors = Arrays.copyOf(doors, doors.length + 1);
-            doors[doors.length - 1] = doorId; // Assign 40 to the last element
-
-            Toast.makeText(this, "Door " + doorId + " has been added.", Toast.LENGTH_SHORT).show();
-            finish(); // restart the activity with the new doors
-
-            Intent intent = getIntent();
-            Bundle b = new Bundle();
-            b.putStringArray("DOORS", doors);
-            intent.putExtras(b);
-            startActivity(intent);
-        }
+    private void gotoThisDoorActivity(String selectedDoor) {
+        Intent i = new Intent(MyDoorsActivity.this, ThisDoorActivity.class);
+        i.putExtra("doorId", selectedDoor);
+        i.putExtra("DOORS", doors);
+        i.putExtra("DETAILS", doorDetails.toString());
+        startActivity(i);
+        finish();
     }
 }
