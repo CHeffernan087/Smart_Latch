@@ -8,6 +8,6 @@ const cloud_get = (endpoint = "/setLockState?doorId=31415&isLocked=true") => {
 		.catch((err) => err);
 };
 
-const setDoorLocked = (doorId, isLocked) => {
+exports.setDoorLocked = (doorId, isLocked) => {
 	return cloud_get(`/setLockState?doorId=${doorId}&isLocked=${isLocked}`);
 };
