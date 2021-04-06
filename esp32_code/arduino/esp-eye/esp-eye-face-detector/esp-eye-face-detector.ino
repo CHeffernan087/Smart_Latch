@@ -1,3 +1,4 @@
+
 #include <Arduino.h>
 #include <esp_now.h>
 #include <WiFi.h>
@@ -11,6 +12,7 @@
 #include "fd_forward.h"
 #include "fr_forward.h"
 #include "fr_flash.h"
+#include "OTA.h"
 
 // Select camera model
 #define CAMERA_MODEL_ESP_EYE
@@ -42,6 +44,8 @@ HTTPClient http;
 // motion detection
 bool motionDetected = false;  // motion detection status
 
+// Over-the-air (OTA) updates
+OTA ota_updater("1.0", "esp-eye", "https://europe-west2-smart-latch.cloudfunctions.net/getDownloadUrl");
 
 // config face detection model parameters
 static inline mtmn_config_t app_mtmn_config(){
@@ -300,6 +304,9 @@ void setup() {
 
   // connection delay
   delay(2000);
+
+  // check if updates are avilable and download if so
+  ota_updater.checkForUpdates();
 }
 
 
