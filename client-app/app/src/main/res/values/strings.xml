@@ -31,5 +31,6 @@
     <string name="hint_message">Message</string>
     <string name="nfc_waiting">Tap door NFC tag \nto authenticate.</string>
     <string name="grant_access">Grant another user \naccess to this door.</string>
-
+    <string name="takeAPhoto">Take a selfie</string>
+    <string name="uploadAPhoto">Upload photo</string>
 </resources>

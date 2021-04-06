@@ -139,8 +139,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             getUserDoorsAndNavToMyDoors();
             Toast.makeText(MainActivity.this, "View available doors", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_manual) {
-
-            Toast.makeText(MainActivity.this, "We can add buttons here to operate without NFC", Toast.LENGTH_SHORT).show();
+            gotoCameraActivity();
+            Toast.makeText(MainActivity.this, "Upload a selfie for facial recognition.", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_share) {
             gotoMainFragment();
             Toast.makeText(MainActivity.this, "Just for show", Toast.LENGTH_SHORT).show();
@@ -160,6 +160,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Intent i = new Intent(MainActivity.this, MyDoorsActivity.class);
         i.putExtra("DOORS", doors);
         i.putExtra("DETAILS", doorDetails.toString());
+
+        startActivity(i);
+        finish();
+    }
+
+    private void gotoCameraActivity() {
+        Intent i = new Intent(MainActivity.this, Selfie.class);
 
         startActivity(i);
         finish();
