@@ -210,7 +210,8 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
         nfcStartTime = millis();
       }
       if (!memcmp(payload, "boardIdReq", length)){
-        Serial.printf("[WSc] Sending Board Id\n");
+        Serial.printf("[WSc] Sending Board Id - ");
+        Serial.println(myMACAddress);
         String boardIdResp = "message:boardIdRes,doorId:" + myMACAddress;
         webSocket.sendTXT(boardIdResp);
       }
@@ -311,7 +312,11 @@ void setup() {
   Serial.println(WiFi.localIP());
   Serial.print("[WiFi] Wi-Fi Channel: ");
   Serial.println(WiFi.channel());
-
+  Serial.print("[WiFi] Board MAC Address: ");
+  Serial.println(WiFi.macAddress());
+  
+  myMACAddress = WiFi.macAddress();
+  
   // Init ESP-NOW
   if (esp_now_init() != ESP_OK) {
     Serial.println("[ESP-NOW] Error initializing ESP-NOW");
