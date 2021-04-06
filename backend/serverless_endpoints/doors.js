@@ -90,11 +90,10 @@ exports.toggleLatch = (req, res) => {
 	const doorId = req.query && req.query.doorId;
 	const { email } = req.user;
 	// todo : add some validation here if the user is allowed to open the door
-
 	return isAuthorised(email, doorId)
 		.then((userIsAuthorized) => {
 			if (userIsAuthorized) {
-				return openDoor({ doorId, email });
+				return openDoor({ doorId, userId: email });
 			} else {
 				throw new Error("User not Authorised");
 			}
@@ -104,7 +103,9 @@ exports.toggleLatch = (req, res) => {
 				.status(200)
 				.send({ response: "Successfully published update" });
 		})
-		.catch((error) => res.status(400).send({ error }));
+		.catch((error) => {
+			return res.status(400).send({ error });
+		});
 
 	// todo close connection on the board
 	// ;
