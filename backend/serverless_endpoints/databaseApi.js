@@ -179,11 +179,7 @@ exports.toggleLockState = (doorId) => {
 };
 
 exports.updateDoorNfcState = (doorId) => {
-	/* 
-		Note: at the moment, assume this function only ever sets the state to true. 
-		- We might want a timeout of say 20s and then set it back to false, in case the user tapped nfc then walked off. --> TODO!!
-		- We also want the door closing to set this back to false, which would need to be a request spawned from the ESP32.  
-	*/
+	const timer = setTimeout(() => resetNfcAfterTimeout(doorId), NFC_RESET_INTERVAL);
 	return firestoreDb.collection("Doors").doc(doorId).update({
 		nfcState: true,
 	});
@@ -193,6 +189,16 @@ exports.setLockState = (doorId, isLocked) => {
 	doorDocument = firestoreDb.collection("Doors").doc(doorId);
 	return doorDocument.update({ locked: isLocked });
 };
+
+function resetNfcAfterTimeout(doorId) {
+	firestoreDb
+		.collection("Doors")
+		.doc(doorId)
+		.update({
+			nfcState: false,
+		});
+}
+
 
 function setDoorAsActive(doorId) {
 	doorDocument = firestoreDb.collection("Doors").doc(doorId);

@@ -29,6 +29,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import android.os.CountDownTimer;
 
 public class ThisDoorActivity extends AppCompatActivity {
     private TextView mTextViewResult;
@@ -42,6 +43,8 @@ public class ThisDoorActivity extends AppCompatActivity {
     // NFC setup
     NfcAdapter nfcAdapter;
     PendingIntent pendingIntent;
+    int NFC_RESET_TIME = 20000;
+    int NFC_COUNTDOWN_INTERVAL = 1000;
 
     String responseString = "";
 
@@ -138,7 +141,7 @@ public class ThisDoorActivity extends AppCompatActivity {
         openBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String url = hostUrl + "/toggleLatch?state=1&doorId=" + doorID;
+                String url = hostUrl + "/toggleLatch?state=1&doorId=" + doorID + "&userId=" + email;
                 Request request = new Request.Builder().url(url).build();
                 client.newCall(request).enqueue(new Callback() {
                     @Override
@@ -176,7 +179,7 @@ public class ThisDoorActivity extends AppCompatActivity {
         closeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String url = hostUrl + "/toggleLatch?state=0?doorId=" + doorID;
+                String url = hostUrl + "/toggleLatch?state=0&doorId=" + doorID + "&userId=" + email;
 
                 Request request2 = new Request.Builder().url(url).build();
 
@@ -284,6 +287,15 @@ public class ThisDoorActivity extends AppCompatActivity {
                 .post(formBody)
                 .build();
 
+        mTextViewResult.setText(R.string.current_door_status_hint + "YES");
+        new CountDownTimer(NFC_RESET_TIME, NFC_COUNTDOWN_INTERVAL) {
+            public void onTick(long millisUntilFinished) {}
+
+            public void onFinish() {
+                mTextViewResult.setText(R.string.current_door_status_hint + "NO");
+            }
+
+        }.start();
 
         client.newCall(request).enqueue(new Callback() {
             @Override
