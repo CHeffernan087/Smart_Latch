@@ -126,8 +126,6 @@ public class ThisDoorActivity extends AppCompatActivity {
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
         pendingIntent = PendingIntent.getActivity(this,0,new Intent(this,this.getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),0);
 
-
-
         backBtn.setOnClickListener(new View.OnClickListener(){
             public void onClick(View view) {
                 gotoMyDoorActivity();

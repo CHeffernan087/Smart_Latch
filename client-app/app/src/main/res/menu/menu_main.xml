@@ -14,8 +14,8 @@
             android:title="My Doors" />
         <item
             android:id="@+id/nav_manual"
-            android:icon="@drawable/ic_manual"
-            android:title="Manual" />
+            android:icon="@drawable/camera_icon"
+            android:title="Selfie Upload" />
     </group>
 
     <item android:title="Communicate">

@@ -6,6 +6,11 @@
     <uses-permission android:name="android.permission.NFC" />
     <uses-sdk android:minSdkVersion="10"/>
     <uses-feature android:name="android.hardware.nfc" android:required="true" />
+    <uses-feature android:name="android.hardware.camera" android:required="true" />
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="18" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
 
     <application
         android:allowBackup="true"
@@ -33,6 +38,11 @@
             android:theme="@style/Theme.Smartlatchapp.NoActionBar">
         </activity>
         <activity
+            android:name=".Selfie"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Smartlatchapp.NoActionBar">
+        </activity>
+        <activity
             android:name=".LoginActivity"
             android:label="@string/app_name"
             android:theme="@style/Theme.Smartlatchapp.NoActionBar">
@@ -41,6 +51,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.example.android.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"></meta-data>
+        </provider>
     </application>
 
 </manifest>
