@@ -10,7 +10,7 @@
     <string name="test_url">http://10.0.2.2:3000</string>
     <string name="title_activity_login">LoginActivity</string>
     <string name="sign_in_with_google">Sign in with Google</string>
-    <string name="current_door_status_hint">Door status - </string>
+    <string name="current_door_status_hint">NFC Authenticated: </string>
     <string name="door_state_locked">Locked</string>
     <string name="door_state_open">Open</string>
     <string name="server_client_id">639400548732-9ga9sg95ao0drj5sdtd3v561adjqptbr.apps.googleusercontent.com</string>
@@ -29,7 +29,7 @@
     <string name="message_read_tag">Scan NFC Tag</string>
     <string name="message_tap_tag">This door is uninitialised. Tap it\'s NFC tag to initialise it!</string>
     <string name="hint_message">Message</string>
-    <string name="nfc_waiting">Tap door NFC tag \nto authenticate.</string>
+    <string name="nfc_waiting">Tap door NFC tag now \nto authenticate.</string>
     <string name="grant_access">Grant another user \naccess to this door.</string>
     <string name="takeAPhoto">Take a selfie</string>
     <string name="uploadAPhoto">Upload photo</string>
