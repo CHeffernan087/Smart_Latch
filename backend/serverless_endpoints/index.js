@@ -23,3 +23,4 @@ exports.getOldToken = auth.getOldToken;
 exports.nfcUpdate = doors.nfcUpdate; 
 exports.insertFirmwaresOnBigquery = ota.insertFirmwaresOnBigquery;
 exports.getDownloadUrl = ota.getDownloadUrl;
+exports.getLockState = authed(doors.getLockState);
