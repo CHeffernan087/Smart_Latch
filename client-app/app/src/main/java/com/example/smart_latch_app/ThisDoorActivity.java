@@ -4,9 +4,14 @@ import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.text.InputType;
 import android.view.View;
@@ -15,6 +20,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -31,6 +37,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import android.os.CountDownTimer;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
+
 public class ThisDoorActivity extends AppCompatActivity {
     private TextView mTextViewResult;
     private TextView doorIdTitle;
@@ -40,11 +48,14 @@ public class ThisDoorActivity extends AppCompatActivity {
     private ImageButton grantAccessBtn;
     private String dialogTextBox = "";
 
+    public static ThisDoorActivity instance = null;
+
     // NFC setup
     NfcAdapter nfcAdapter;
     PendingIntent pendingIntent;
     int NFC_RESET_TIME = 20000;
     int NFC_COUNTDOWN_INTERVAL = 1000;
+    private String macAddress = null;
 
     String responseString = "";
 
@@ -55,28 +66,40 @@ public class ThisDoorActivity extends AppCompatActivity {
     JSONObject jObj = null;
     Integer state = 0;
 
-    // variables for /2fa endpoint
-    String responseString2fa = "";
-    JSONObject jObj2fa = null;
-    String responseMessage = "";
-
     @Override
     protected void onResume () {
         super.onResume();
         assert nfcAdapter != null;
+        instance = this;
         nfcAdapter.enableForegroundDispatch(this, pendingIntent, null, null);
     }
 
     protected void onPause() {
         super.onPause();
+        instance = null;
         if (nfcAdapter != null) {
             nfcAdapter.disableForegroundDispatch(this);
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
+            Parcelable[] rawMessages =
+                    intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+            if (rawMessages.length > 0) {
+                NdefMessage msg = (NdefMessage) rawMessages[0];
+
+                if (msg.getRecords().length > 0) {
+                    NdefRecord rec = msg.getRecords()[0];
+                    String s = new String(rec.getPayload());
+                    macAddress = getMacAddr(s);
+                }
+            }
+
+        }
         setIntent(intent);
         resolveIntent(intent);
     }
@@ -264,36 +287,26 @@ public class ThisDoorActivity extends AppCompatActivity {
 
     private void detectTagData(Tag tag) {
         StringBuilder sb = new StringBuilder();
+
         byte[] id = tag.getId();
         sb.append(toHex(id));
         String nfcId = sb.toString();
-        Toast.makeText(this, "NFC authenticated!", Toast.LENGTH_SHORT).show();
+        System.out.println("We have the MAC ADDR: " + macAddress);
+
 
         OkHttpClient client = (OkHttpClient) new OkHttpClient()
                 .newBuilder()
                 .addInterceptor(new AuthenticationInterceptor())
                 .build();
 
-        String url = this.getString(R.string.smart_latch_url) + "/nfcUpdate";
+        String url = this.getString(R.string.smart_latch_url) + "/nfcUpdate?doorId=" + macAddress;
 
         RequestBody formBody = new FormBody.Builder()
-                .add("nfcId", nfcId)
-                .add("doorId", doorID)
                 .build();
         Request request = new Request.Builder()
                 .url(url)
                 .post(formBody)
                 .build();
-
-        mTextViewResult.setText(R.string.current_door_status_hint + "YES");
-        new CountDownTimer(NFC_RESET_TIME, NFC_COUNTDOWN_INTERVAL) {
-            public void onTick(long millisUntilFinished) {}
-
-            public void onFinish() {
-                mTextViewResult.setText(R.string.current_door_status_hint + "NO");
-            }
-
-        }.start();
 
         client.newCall(request).enqueue(new Callback() {
             @Override
@@ -303,14 +316,26 @@ public class ThisDoorActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                responseString2fa = response.body().string();
-                System.out.println("updateNfc response" + responseString);
+                String responseString2 = response.body().string();
                 try {
-                    jObj2fa = new JSONObject(responseString);
-                    responseMessage = jObj2fa.getString("message");
-                    System.out.println("response message: " + responseMessage);
+                    JSONObject jObj2 = new JSONObject(responseString2);
+                    String responseMessage2 = jObj2.getString("message");
+                    System.out.println("NFC response message: " + responseMessage2);
+                    ThisDoorActivity.instance.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            successfulNfcAuth();
+                        }
+                    });
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    ThisDoorActivity.instance.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(ThisDoorActivity.this, "NFC failed to authenticate.", Toast.LENGTH_SHORT).show();
+
+                        }
+                    });
                 }
             }
         });
@@ -325,5 +350,28 @@ public class ThisDoorActivity extends AppCompatActivity {
             sb.append(Integer.toHexString(b));
         }
         return sb.toString();
+    }
+
+    private String getMacAddr(String macAddrNfcString) {
+        for (int i = 0; i < macAddrNfcString.length(); i++) {
+            char c = macAddrNfcString.charAt(i);
+            if (Character.isDigit(c)) {
+                return macAddrNfcString.substring(i, macAddrNfcString.length());
+            }
+        }
+        return macAddrNfcString;
+    }
+
+    private void successfulNfcAuth() {
+        Toast.makeText(this, "NFC authenticated!", Toast.LENGTH_SHORT).show();
+        mTextViewResult.setText("NFC authenticated: YES");
+        new CountDownTimer(NFC_RESET_TIME, NFC_COUNTDOWN_INTERVAL) {
+            public void onTick(long millisUntilFinished) {}
+
+            public void onFinish() {
+                mTextViewResult.setText("NFC authenticated: NO");
+            }
+
+        }.start();
     }
 }
