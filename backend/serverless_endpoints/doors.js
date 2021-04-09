@@ -10,6 +10,7 @@ const {
 	setLockState,
 	toggleLockState,
 	updateDoorNfcState,
+	getDoorLockState,
 } = require("./databaseApi");
 const { publishUpdate } = require("./redis");
 
@@ -112,12 +113,11 @@ exports.toggleLatch = (req, res) => {
 };
 
 exports.nfcUpdate = (req, res) => {
-	const { nfcId, doorId } = req.body;
-
-	if (nfcId && doorId) {
-		getDoorDetails(doorId, nfcId)
+	const { doorId } = req.query;
+	if (doorId) {
+		getDoorDetails(doorId)
 			.then((doorObject) => {
-				if (doorObject.nfcId === nfcId) {
+				if (doorObject.ID === doorId) {
 					updateDoorNfcState(doorId)
 						.then(() => {
 							res
@@ -140,9 +140,6 @@ exports.nfcUpdate = (req, res) => {
 		const missingFields = [];
 		if (!doorId) {
 			missingFields.unshift("doorId");
-		}
-		if (!email) {
-			missingFields.unshift("email");
 		}
 		return res
 			.status(400)
@@ -172,3 +169,18 @@ exports.toggleLockState = (req, res) => {
 			return res.status(400).send(err);
 		});
 };
+
+exports.getLockState = (req, res) => {
+	const { doorId } = req.query; 
+	getDoorDetails(doorId)
+		.then((doorData) => {
+			const state = doorData.locked;
+			return res.send({
+				locked: state
+			}).status(200);
+		})
+		.catch((err) => {
+			return res.send({ error: err }).status(500);
+		});
+}
+

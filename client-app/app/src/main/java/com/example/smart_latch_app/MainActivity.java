@@ -1,11 +1,19 @@
 package com.example.smart_latch_app;
 
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
+import android.nfc.NfcAdapter;
+import android.nfc.Tag;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -14,6 +22,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import android.os.CountDownTimer;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.view.Menu;
@@ -49,18 +58,50 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private MainFragment mainFragment = new MainFragment();
     private FragmentManager fragmentManager = getSupportFragmentManager();
     private FragmentTransaction fragmentTransaction;
+    private IntentFilter[] writeTagFilters;
     String responseString = "";
     String responseMessage = "";
     JSONObject jObj = null;
     JSONArray responseDoors;
     JSONObject responseDetails;
 
+    //NFC setup
+    NfcAdapter nfcAdapter = null;
+    PendingIntent pendingIntent = null;
+    private String macAddress = null;
+
     public static Context contextOfApplication;
+    public static MainActivity instance = null;
+
+    @Override
+    protected void onResume () {
+        super.onResume();
+        instance = this;
+        if (nfcAdapter == null) {
+            nfcAdapter = NfcAdapter.getDefaultAdapter(this);
+        }
+        nfcAdapter.enableForegroundDispatch(this, pendingIntent, writeTagFilters, null);
+
+    }
+
+    protected void onPause() {
+        super.onPause();
+        instance = null;
+        if (nfcAdapter != null) {
+            nfcAdapter.disableForegroundDispatch(this);
+        }
+    }
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        nfcAdapter = NfcAdapter.getDefaultAdapter(this);
+        pendingIntent = PendingIntent.getActivity(this, 0, new Intent(this,
+                getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP
+                | Intent.FLAG_ACTIVITY_CLEAR_TOP), 0);
+
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -289,4 +330,108 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return contextOfApplication;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
+            Parcelable[] rawMessages =
+                    intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+            if (rawMessages.length > 0) {
+                NdefMessage msg = (NdefMessage) rawMessages[0];
+
+                if (msg.getRecords().length > 0) {
+                    NdefRecord rec = msg.getRecords()[0];
+                    String s = new String(rec.getPayload());
+                    macAddress = getMacAddr(s);
+                }
+            }
+
+        }
+        setIntent(intent);
+        resolveIntent(intent);
+    }
+
+    private void resolveIntent(Intent intent) {
+        String action = intent.getAction();
+        if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(action)
+                || NfcAdapter.ACTION_TECH_DISCOVERED.equals(action)
+                || NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
+            Tag tag = (Tag) intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+            assert tag != null;
+            detectTagData(tag);
+        }
+    }
+
+    private String getMacAddr(String macAddrNfcString) {
+        for (int i = 0; i < macAddrNfcString.length(); i++) {
+            char c = macAddrNfcString.charAt(i);
+            if (Character.isDigit(c)) {
+                return macAddrNfcString.substring(i, macAddrNfcString.length());
+            }
+        }
+        return macAddrNfcString;
+    }
+
+    private void detectTagData(Tag tag) {
+        StringBuilder sb = new StringBuilder();
+
+        byte[] id = tag.getId();
+        sb.append(toHex(id));
+        OkHttpClient client = (OkHttpClient) new OkHttpClient()
+                .newBuilder()
+                .addInterceptor(new AuthenticationInterceptor())
+                .build();
+
+        String url = this.getString(R.string.smart_latch_url) + "/nfcUpdate?doorId=" + macAddress;
+
+        RequestBody formBody = new FormBody.Builder()
+                .build();
+        Request request = new Request.Builder()
+                .url(url)
+                .post(formBody)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String responseString2 = response.body().string();
+                try {
+                    JSONObject jObj2 = new JSONObject(responseString2);
+                    String responseMessage2 = jObj2.getString("message");
+                    MainActivity.instance.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(MainActivity.this, "NFC authenticated!", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    MainActivity.instance.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(MainActivity.this, "NFC failed to authenticate.", Toast.LENGTH_SHORT).show();
+
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    private String toHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = bytes.length - 1; i >= 0; --i) {
+            int b = bytes[i] & 0xff;
+            if (b < 0x10)
+                sb.append('0');
+            sb.append(Integer.toHexString(b));
+        }
+        return sb.toString();
+    }
 }

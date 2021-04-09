@@ -10,6 +10,8 @@ const Firestore = require("@google-cloud/firestore");
 // });
 // <------------
 
+const NFC_RESET_INTERVAL = 20000; 
+
 function addAsAuthorised(email, doorId) {
 	doorDocument = firestoreDb.collection("Doors").doc(doorId);
 	userDoc = firestoreDb.collection("Users").doc(email);
@@ -198,7 +200,6 @@ function resetNfcAfterTimeout(doorId) {
 			nfcState: false,
 		});
 }
-
 
 function setDoorAsActive(doorId) {
 	doorDocument = firestoreDb.collection("Doors").doc(doorId);

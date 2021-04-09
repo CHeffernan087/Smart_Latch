@@ -27,7 +27,7 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
     String[] doors = new String[] {};
     public static JSONObject doorDetails;
     private String clickedDoorId = null;
-    private AddDoorFragment mAddDoorFragment;
+//    private AddDoorFragment mAddDoorFragment;
     private boolean isDialogDisplayed = false;
     private NfcAdapter mNfcAdapter;
     private FragmentTransaction fragmentTransaction;
@@ -58,17 +58,7 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 clickedDoorId = doors[position];
-                try {
-                    doorNeedsToBeInitialised = doorDetails.getJSONObject(doors[position]).getString("nfcId").length() == 0; // if no nfcId, door needs to be initialised
-                    if(doorNeedsToBeInitialised) {
-                        showAddDoorFragment();
-                    } else {
-                        gotoThisDoorActivity(doors[position]);
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
+                gotoThisDoorActivity(doors[position]);
             }
         });
 
@@ -91,14 +81,14 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
     }
 
 
-    private void showAddDoorFragment() {
-
-        mAddDoorFragment = (AddDoorFragment) getSupportFragmentManager().findFragmentByTag(AddDoorFragment.TAG);
-        if (mAddDoorFragment == null) {
-            mAddDoorFragment = AddDoorFragment.newInstance();
-        }
-        mAddDoorFragment.show(getSupportFragmentManager(),AddDoorFragment.TAG);
-    }
+//    private void showAddDoorFragment() {
+//
+//        mAddDoorFragment = (AddDoorFragment) getSupportFragmentManager().findFragmentByTag(AddDoorFragment.TAG);
+//        if (mAddDoorFragment == null) {
+//            mAddDoorFragment = AddDoorFragment.newInstance();
+//        }
+//        mAddDoorFragment.show(getSupportFragmentManager(),AddDoorFragment.TAG);
+//    }
 
     @Override
     public void onDialogDisplayed() {
@@ -148,7 +138,7 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
         sb.append(toHex(id));
         if (isDialogDisplayed) {
                 Toast.makeText(this, "NFC Tag Detected !", Toast.LENGTH_SHORT).show();
-                mAddDoorFragment = (AddDoorFragment) getSupportFragmentManager().findFragmentByTag(AddDoorFragment.TAG);
+//                mAddDoorFragment = (AddDoorFragment) getSupportFragmentManager().findFragmentByTag(AddDoorFragment.TAG);
                 // for testing. Update this to add yourself to a particular door
                 /*
                 * {
@@ -164,7 +154,7 @@ public class MyDoorsActivity extends AppCompatActivity implements Listener{
                 *
                 * */
                 // pass clicked door id and nfctag_id
-                mAddDoorFragment.onNfcDetected(clickedDoorId, sb.toString());
+//                mAddDoorFragment.onNfcDetected(clickedDoorId, sb.toString());
         }
     }
 

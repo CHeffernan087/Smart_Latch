@@ -33,4 +33,6 @@
     <string name="grant_access">Grant another user \naccess to this door.</string>
     <string name="takeAPhoto">Take a selfie</string>
     <string name="uploadAPhoto">Upload photo</string>
+    <string name="nfc_waiting_home">Tap a door\'s NFC tag now to authenticate.</string>
+    <string name="door_state">Door State:</string>
 </resources>
