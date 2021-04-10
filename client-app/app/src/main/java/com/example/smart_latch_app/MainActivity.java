@@ -364,11 +364,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private String getMacAddr(String macAddrNfcString) {
-        for (int i = 0; i < macAddrNfcString.length(); i++) {
-            char c = macAddrNfcString.charAt(i);
-            if (Character.isDigit(c)) {
-                return macAddrNfcString.substring(i, macAddrNfcString.length());
-            }
+        if (macAddrNfcString.length() > 17) {
+            return macAddrNfcString.substring(3, macAddrNfcString.length());
         }
         return macAddrNfcString;
     }
