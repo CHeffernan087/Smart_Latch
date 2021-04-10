@@ -3,9 +3,13 @@
 exports.parseMessageFromBoard = (data) => {
 	const keyValues = data.split(",");
 	const resObj = keyValues.reduce((acc, el) => {
-		const [key, value] = el.split(":");
+		const [key, ...value] = el.split(":");
+		const parsedValue = value.reduce(
+			(acc, el, index) => (el += `${index > 0 ? ":" : ""}${acc}`),
+			""
+		);
 		return {
-			[key]: value,
+			[key]: parsedValue,
 			...acc,
 		};
 	}, {});
