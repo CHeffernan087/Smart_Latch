@@ -17,7 +17,7 @@ exports.initialiseRedisClient = (redisSubscriber, openConnections) => {
 		if (doorId && openConnections[doorId] != undefined) {
 			const client = openConnections[doorId];
 			if (client.readyState === WebSocket.OPEN) {
-				toggleLockState(doorId).then(() => client.send("ToggleLatch"));
+				client.send("ToggleLatch");
 			}
 		}
 	});

@@ -1,4 +1,5 @@
 "use strict";
+const { setLockState } = require("../cloud functions api/cloudFunctions");
 
 exports.parseMessageFromBoard = (data) => {
 	const keyValues = data.split(",");
@@ -31,6 +32,18 @@ exports.handleMessageFromBoard = (
 			subscriber.subscribe(doorId);
 			console.log(`added ${doorId} to the list of open web socket connections`);
 			break;
+		case "latchUpdate":
+			const { status } = messageObj;
+			const clientId = client.id;
+			const locked = status == "closed" ? true : false;
+			console.log(`updating ${clientId} locked status to ${locked}`);
+			setLockState(clientId, locked)
+				.then(() => {
+					client.send("[SUCCESS]: lock status update successful");
+				})
+				.catch(() => {
+					client.send("[ERROR]: lock status update failed");
+				});
 		default:
 			return;
 			break;

@@ -72,56 +72,14 @@
         android:backgroundTintMode="screen"
         android:scaleX="0.75"
         android:scaleY="0.75"
-        app:layout_constraintBottom_toTopOf="@id/button1"
+        app:layout_constraintBottom_toTopOf="@id/textview_result"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.144"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/nfc"
         app:srcCompat="@drawable/grant_access" />
 
-    <ImageButton
-        android:id="@+id/button1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        android:backgroundTint="@android:color/transparent"
-        android:backgroundTintMode="screen"
-        android:scaleX="5"
-        android:scaleY="5"
-        app:layout_constraintBottom_toTopOf="@id/textview_result"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/button2"
-        app:layout_constraintTop_toBottomOf="@id/grant_access"
-        app:srcCompat="@drawable/ic_locked_icon" />
 
-    <ImageButton
-        android:id="@+id/button2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        android:backgroundTint="@android:color/transparent"
-        android:scaleX="5"
-        android:scaleY="5"
-        app:layout_constraintBottom_toTopOf="@id/textview_result"
-        app:layout_constraintEnd_toStartOf="@id/button1"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/grant_access"
-        app:srcCompat="@drawable/ic_unlocked_icon" />
-
-    <TextView
-        android:id="@+id/textview_result"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:hint="@string/current_door_status_hint"
-        android:scaleX="1.5"
-        android:scaleY="1.5"
-        android:text=""
-        android:textColor="#000000"
-        android:textColorHint="#000000"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/button2"/>
 
     <TextView
         android:id="@+id/nfcText"
@@ -133,10 +91,12 @@
         android:text="@string/nfc_waiting"
         android:textColor="#000000"
         android:textSize="16sp"
-        app:layout_constraintBottom_toTopOf="@id/grant_access"
+        app:layout_constraintBottom_toTopOf="@id/grantText"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.507"
-        app:layout_constraintStart_toEndOf="@id/nfc" />
+        app:layout_constraintStart_toEndOf="@id/nfc"
+        app:layout_constraintTop_toBottomOf="@id/toolbar2"
+        app:layout_constraintVertical_bias="0.875" />
 
     <TextView
         android:id="@+id/grantText"
@@ -148,8 +108,46 @@
         android:text="@string/grant_access"
         android:textColor="#000000"
         android:textSize="16sp"
-        app:layout_constraintBottom_toTopOf="@id/button1"
+        app:layout_constraintBottom_toTopOf="@id/textview_result"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/grant_access"
         app:layout_constraintTop_toBottomOf="@id/nfcText" />
+
+    <TextView
+        android:id="@+id/textview_result"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="@string/current_door_status_hint"
+        android:scaleX="1.5"
+        android:scaleY="1.5"
+        android:text=""
+        android:textColor="#000000"
+        android:textColorHint="#000000"
+        app:layout_constraintBottom_toTopOf="@id/refreshBtn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/grant_access"/>
+    <TextView
+        android:id="@+id/textview_door_state"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="@string/door_state"
+        android:scaleX="1.5"
+        android:scaleY="1.5"
+        android:text=""
+        android:textColor="#000000"
+        android:textColorHint="#000000"
+        app:layout_constraintBottom_toTopOf="@id/refreshBtn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/textview_result"/>
+    <Button
+        android:id="@+id/refreshBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Refresh"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/textview_result"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

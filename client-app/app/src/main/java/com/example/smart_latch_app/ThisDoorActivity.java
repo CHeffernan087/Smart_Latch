@@ -4,17 +4,24 @@ import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.text.InputType;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -35,16 +42,20 @@ public class ThisDoorActivity extends AppCompatActivity {
     private TextView mTextViewResult;
     private TextView doorIdTitle;
     private ImageButton backBtn;
-    private ImageButton openBtn;
-    private ImageButton closeBtn;
+    private Button refreshBtn;
     private ImageButton grantAccessBtn;
     private String dialogTextBox = "";
+    private View view;
+    private TextView mTextViewDoorState;
+
+    public static ThisDoorActivity instance = null;
 
     // NFC setup
     NfcAdapter nfcAdapter;
     PendingIntent pendingIntent;
     int NFC_RESET_TIME = 20000;
     int NFC_COUNTDOWN_INTERVAL = 1000;
+    private String macAddress = null;
 
     String responseString = "";
 
@@ -53,30 +64,42 @@ public class ThisDoorActivity extends AppCompatActivity {
     JSONObject doorDetails;
 
     JSONObject jObj = null;
-    Integer state = 0;
-
-    // variables for /2fa endpoint
-    String responseString2fa = "";
-    JSONObject jObj2fa = null;
-    String responseMessage = "";
+    Boolean locked = true;
 
     @Override
     protected void onResume () {
         super.onResume();
         assert nfcAdapter != null;
+        instance = this;
         nfcAdapter.enableForegroundDispatch(this, pendingIntent, null, null);
     }
 
     protected void onPause() {
         super.onPause();
+        instance = null;
         if (nfcAdapter != null) {
             nfcAdapter.disableForegroundDispatch(this);
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
+            Parcelable[] rawMessages =
+                    intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+            if (rawMessages.length > 0) {
+                NdefMessage msg = (NdefMessage) rawMessages[0];
+
+                if (msg.getRecords().length > 0) {
+                    NdefRecord rec = msg.getRecords()[0];
+                    String s = new String(rec.getPayload());
+                    macAddress = getMacAddr(s);
+                }
+            }
+
+        }
         setIntent(intent);
         resolveIntent(intent);
     }
@@ -96,18 +119,14 @@ public class ThisDoorActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_this_door);
-        OkHttpClient client = (OkHttpClient) new OkHttpClient()
-                .newBuilder()
-                .addInterceptor(new AuthenticationInterceptor())
-                .build();
 
-        String hostUrl = getString(R.string.smart_latch_url);
-        String[] doorStates = {getString(R.string.door_state_locked), getString(R.string.door_state_open)};
+
         mTextViewResult = (TextView) findViewById(R.id.textview_result);
+        mTextViewDoorState = (TextView) findViewById(R.id.textview_door_state);
         doorIdTitle = (TextView) findViewById(R.id.textview_doorid);
         backBtn = (ImageButton) findViewById(R.id.back_nav);
-        openBtn = (ImageButton) findViewById(R.id.button2);
-        closeBtn = (ImageButton) findViewById(R.id.button1);
+        refreshBtn = (Button) findViewById(R.id.refreshBtn);
+
         grantAccessBtn = (ImageButton) findViewById(R.id.grant_access);
 
         Bundle b = getIntent().getExtras();
@@ -129,89 +148,24 @@ public class ThisDoorActivity extends AppCompatActivity {
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
         pendingIntent = PendingIntent.getActivity(this,0,new Intent(this,this.getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),0);
 
+        refreshState(); // get the doors current status 'locked'
+
         backBtn.setOnClickListener(new View.OnClickListener(){
             public void onClick(View view) {
                 gotoMyDoorActivity();
             }
         });
 
-        // === OPEN ===
-        openBtn.setOnClickListener(new View.OnClickListener() {
+        // === Refresh ===
+        refreshBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String url = hostUrl + "/toggleLatch?state=1&doorId=" + doorID + "&userId=" + email;
-                Request request = new Request.Builder().url(url).build();
-                client.newCall(request).enqueue(new Callback() {
-                    @Override
-                    public void onFailure(Call call, IOException e) {
-                        e.printStackTrace();
-                    }
-
-                    @Override
-                    public void onResponse(Call call, Response response) throws IOException {
-                        responseString = response.body().string();
-
-                        try {
-                            jObj = new JSONObject(responseString);
-                            state = jObj.getInt("newDoorState");
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-
-                        String currentStatus = getString(R.string.current_door_status_hint);
-
-                        ThisDoorActivity.this.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                mTextViewResult.setText(currentStatus + " " + doorStates[state]);
-                            }
-                        });
-
-                    }
-                });
-
+               refreshState();
             }
         });
 
-        // === CLOSE ===
-        closeBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String url = hostUrl + "/toggleLatch?state=0&doorId=" + doorID + "&userId=" + email;
 
-                Request request2 = new Request.Builder().url(url).build();
-
-                client.newCall(request2).enqueue(new Callback() {
-                    @Override
-                    public void onFailure(Call call, IOException e) {
-                        e.printStackTrace();
-                    }
-
-                    @Override
-                    public void onResponse(Call call, Response response) throws IOException {
-                        responseString = response.body().string();
-
-                        try {
-                            jObj = new JSONObject(responseString);
-                            state = jObj.getInt("newDoorState");
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-
-                        String currentStatus = getString(R.string.current_door_status_hint);
-                        ThisDoorActivity.this.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                mTextViewResult.setText(currentStatus + " " + doorStates[state]);
-                            }
-                        });
-                    }
-                });
-
-
-            }
-        });
-
+        // == Grant access ==
         grantAccessBtn.setOnClickListener(new View.OnClickListener(){
             public void onClick(View view) {
                 try {
@@ -264,36 +218,22 @@ public class ThisDoorActivity extends AppCompatActivity {
 
     private void detectTagData(Tag tag) {
         StringBuilder sb = new StringBuilder();
+
         byte[] id = tag.getId();
         sb.append(toHex(id));
-        String nfcId = sb.toString();
-        Toast.makeText(this, "NFC authenticated!", Toast.LENGTH_SHORT).show();
-
         OkHttpClient client = (OkHttpClient) new OkHttpClient()
                 .newBuilder()
                 .addInterceptor(new AuthenticationInterceptor())
                 .build();
 
-        String url = this.getString(R.string.smart_latch_url) + "/nfcUpdate";
+        String url = this.getString(R.string.smart_latch_url) + "/nfcUpdate?doorId=" + macAddress;
 
         RequestBody formBody = new FormBody.Builder()
-                .add("nfcId", nfcId)
-                .add("doorId", doorID)
                 .build();
         Request request = new Request.Builder()
                 .url(url)
                 .post(formBody)
                 .build();
-
-        mTextViewResult.setText(R.string.current_door_status_hint + "YES");
-        new CountDownTimer(NFC_RESET_TIME, NFC_COUNTDOWN_INTERVAL) {
-            public void onTick(long millisUntilFinished) {}
-
-            public void onFinish() {
-                mTextViewResult.setText(R.string.current_door_status_hint + "NO");
-            }
-
-        }.start();
 
         client.newCall(request).enqueue(new Callback() {
             @Override
@@ -303,14 +243,25 @@ public class ThisDoorActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                responseString2fa = response.body().string();
-                System.out.println("updateNfc response" + responseString);
+                String responseString2 = response.body().string();
                 try {
-                    jObj2fa = new JSONObject(responseString);
-                    responseMessage = jObj2fa.getString("message");
-                    System.out.println("response message: " + responseMessage);
+                    JSONObject jObj2 = new JSONObject(responseString2);
+                    String responseMessage2 = jObj2.getString("message");
+                    ThisDoorActivity.instance.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            successfulNfcAuth();
+                        }
+                    });
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    ThisDoorActivity.instance.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(ThisDoorActivity.this, "NFC failed to authenticate.", Toast.LENGTH_SHORT).show();
+
+                        }
+                    });
                 }
             }
         });
@@ -325,5 +276,71 @@ public class ThisDoorActivity extends AppCompatActivity {
             sb.append(Integer.toHexString(b));
         }
         return sb.toString();
+    }
+
+    private String getMacAddr(String macAddrNfcString) {
+        for (int i = 0; i < macAddrNfcString.length(); i++) {
+            char c = macAddrNfcString.charAt(i);
+            if (Character.isDigit(c)) {
+                return macAddrNfcString.substring(i, macAddrNfcString.length());
+            }
+        }
+        return macAddrNfcString;
+    }
+
+    private void successfulNfcAuth() {
+        Toast.makeText(this, "NFC authenticated!", Toast.LENGTH_SHORT).show();
+        mTextViewResult.setText("NFC authenticated: YES");
+        new CountDownTimer(NFC_RESET_TIME, NFC_COUNTDOWN_INTERVAL) {
+            public void onTick(long millisUntilFinished) {}
+
+            public void onFinish() {
+                mTextViewResult.setText("NFC authenticated: NO");
+            }
+
+        }.start();
+    }
+
+    private void changeLockState(Boolean lockState) {
+        if(lockState) {
+            mTextViewDoorState.setText(getString(R.string.door_state) + " LOCKED");
+        } else {
+            mTextViewDoorState.setText(getString(R.string.door_state) + " OPEN");
+        }
+    }
+
+    private void refreshState () {
+        String url = getString(R.string.smart_latch_url) + "/getLockState?doorId=" + doorID;
+        OkHttpClient client = (OkHttpClient) new OkHttpClient()
+                .newBuilder()
+                .addInterceptor(new AuthenticationInterceptor())
+                .build();
+        Request request2 = new Request.Builder().url(url).build();
+
+        client.newCall(request2).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                responseString = response.body().string();
+                try {
+                    jObj = new JSONObject(responseString);
+                    locked = jObj.getBoolean("locked");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                ThisDoorActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        changeLockState(locked);
+                    }
+                });
+            }
+        });
+
     }
 }
