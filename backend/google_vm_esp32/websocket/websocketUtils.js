@@ -4,7 +4,8 @@ const { setLockState } = require("../cloud functions api/cloudFunctions");
 exports.parseMessageFromBoard = (data) => {
 	const keyValues = data.split(",");
 	const resObj = keyValues.reduce((acc, el) => {
-		const [key, value] = el.split(":");
+		const [key, ...value] = el.split(":");
+
 		return {
 			[key]: value,
 			...acc,
