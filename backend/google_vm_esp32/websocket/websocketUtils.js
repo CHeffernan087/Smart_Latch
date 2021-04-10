@@ -30,10 +30,10 @@ exports.handleMessageFromBoard = (
 			break;
 		case "latchUpdate":
 			const { status } = messageObj;
-			const doorId = client.id;
+			const clientId = client.id;
 			const locked = status == "closed" ? true : false;
-			console.log(`updating ${doorId} locked status to ${locked}`);
-			setLockState(doorId, locked)
+			console.log(`updating ${clientId} locked status to ${locked}`);
+			setLockState(clientId, locked)
 				.then(() => {
 					client.send("[SUCCESS]: lock status update successful");
 				})
