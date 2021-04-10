@@ -6,7 +6,7 @@ exports.parseMessageFromBoard = (data) => {
 	const resObj = keyValues.reduce((acc, el) => {
 		const [key, ...value] = el.split(":");
 		const parsedValue = value.reduce(
-			(acc, el, index) => (el += `${index > 0 ? ":" : ""}${acc}`),
+			(acc, el, index) => (acc += `${index > 0 ? ":" : ""}${el}`),
 			""
 		);
 		return {
