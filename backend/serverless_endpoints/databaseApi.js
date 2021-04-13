@@ -10,7 +10,7 @@ const Firestore = require("@google-cloud/firestore");
 // });
 // <------------
 
-const NFC_RESET_INTERVAL = 20000; 
+const NFC_RESET_INTERVAL = 20000;
 
 function addAsAuthorised(email, doorId) {
 	doorDocument = firestoreDb.collection("Doors").doc(doorId);
@@ -57,6 +57,8 @@ exports.deleteUserFromDB = (email) => {
 };
 
 exports.isAuthorised = async (email, doorId) => {
+	console.log("Checking the authorisation ");
+	let userAuthed = false;
 	userDoc = firestoreDb.collection("Users").doc(email);
 	doors = firestoreDb.collection("Doors");
 	const doorsAuthorisedForUser = (
@@ -65,10 +67,11 @@ exports.isAuthorised = async (email, doorId) => {
 	for (let index = 0; index < doorsAuthorisedForUser.length; index++) {
 		const doorDocument = doorsAuthorisedForUser[index];
 		if (doorDocument.id == doorId) {
-			return true;
+			userAuthed = true;
 		}
 	}
-	return false;
+	console.log("finished checking the authorisation");
+	return new Promise((res) => res(userAuthed));
 };
 
 exports.isDoorActive = async (doorId) => {
@@ -181,7 +184,10 @@ exports.toggleLockState = (doorId) => {
 };
 
 exports.updateDoorNfcState = (doorId) => {
-	const timer = setTimeout(() => resetNfcAfterTimeout(doorId), NFC_RESET_INTERVAL);
+	const timer = setTimeout(
+		() => resetNfcAfterTimeout(doorId),
+		NFC_RESET_INTERVAL
+	);
 	return firestoreDb.collection("Doors").doc(doorId).update({
 		nfcState: true,
 	});
@@ -193,12 +199,9 @@ exports.setLockState = (doorId, isLocked) => {
 };
 
 function resetNfcAfterTimeout(doorId) {
-	firestoreDb
-		.collection("Doors")
-		.doc(doorId)
-		.update({
-			nfcState: false,
-		});
+	firestoreDb.collection("Doors").doc(doorId).update({
+		nfcState: false,
+	});
 }
 
 function setDoorAsActive(doorId) {
