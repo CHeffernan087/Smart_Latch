@@ -13,6 +13,7 @@
 #include "fr_forward.h"
 #include "fr_flash.h"
 #include "OTA.h"
+#include "ca_cert.h"
 
 // Select camera model
 #define CAMERA_MODEL_ESP_EYE
@@ -23,11 +24,11 @@
 
 // timeouts
 #define MOTION_TIMEOUT 10000
-#define NFC_TIMEOUT 10000
-#define FACE_RECOG_TIMEOUT 10000
+#define NFC_TIMEOUT 30000
+#define FACE_RECOG_TIMEOUT 30000
 
 // face recognision server POST URL
-const char *img_recog_url = "http://recognition.smart-latchxyz.xyz/";
+const char *img_recog_url = "https://recognition.smart-latchxyz.xyz/";
 // test POST url
 //const char* img_recog_url = "http://httpbin.org/post";
 
@@ -448,7 +449,7 @@ void loop()
       {
 
         // sedning image bin over http post request
-        http.begin(img_recog_url);
+        http.begin(img_recog_url, ca_cert);
 
         // base64 encoding of the image
         String img_buffer = base64::encode((uint8_t *)fb->buf, fb->len);
@@ -537,12 +538,12 @@ void loop()
   }
 
   // 2FA - and operation on both verifation flags :)
-  if (nfcFlag && faceRecogFlag)
-  {
-    //  if (faceRecogFlag){
+//  if (nfcFlag && faceRecogFlag){
+  if (faceRecogFlag){
     changeLatchState();
     nfcFlag = false;
     faceRecogFlag = false;
     Serial.println("\n[2FA] \n2FA!!! Toggling Latch\n");
+    delay(10000);
   }
 }
