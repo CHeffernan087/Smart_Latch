@@ -538,8 +538,7 @@ void loop()
   }
 
   // 2FA - and operation on both verifation flags :)
-//  if (nfcFlag && faceRecogFlag){
-  if (faceRecogFlag){
+  if (nfcFlag && faceRecogFlag){
     changeLatchState();
     nfcFlag = false;
     faceRecogFlag = false;
