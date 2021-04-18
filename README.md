@@ -1,8 +1,10 @@
 # Smart Latch
 IoT project to securely open a door using a combination of NFC technology and facial recognition.
 
-![prototype](smart_latch.png)
-![latch](lock.jpeg)
+<p float="left">
+  <img src="smart_latch.png" alt="prototype" width="400" />
+  <img src="lock.jpeg" alt="latch" width="400" /> 
+</p>
 
 ## Introduction
 This file outlines an overview of our Smart Latch IoT system, discussed with specific consideration given to aspects of scalability, security, power consumption and capability for OTA updates. The system is based on the concept of two-factor authentication (2FA) using both NFC and facial recognition technology to provide secure and authorised access to a latch (door). An Android application is used to handle NFC interactions along with user and door management. An ESP-EYE module provides the facial recognition mechanism with a camera feed, while the door itself is controlled by an ESP32 board along with a servo motor.  
