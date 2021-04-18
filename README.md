@@ -1,5 +1,8 @@
-# Smart_Latch
+# Smart Latch
 IoT project to securely open a door using a combination of NFC technology and facial recognition.
+
+![prototype](smart_latch.png)
+![latch](lock.jpeg)
 
 ## Introduction
 This file outlines an overview of our Smart Latch IoT system, discussed with specific consideration given to aspects of scalability, security, power consumption and capability for OTA updates. The system is based on the concept of two-factor authentication (2FA) using both NFC and facial recognition technology to provide secure and authorised access to a latch (door). An Android application is used to handle NFC interactions along with user and door management. An ESP-EYE module provides the facial recognition mechanism with a camera feed, while the door itself is controlled by an ESP32 board along with a servo motor.  
@@ -29,7 +32,20 @@ The nature of 2FA and the structure of our system means that the ESP board inter
 ## Power Consumption
 To reduce power consumption in the embedded system the HC-SR501 PIR sensor is used to detect the motion of a potential user, triggering a brief image processing loop on the ESP-EYE to scan for images of the users face. The length of this scanning process is fully configurable, but is maintained to be as short as possible to prevent unnessesary power consumption. As the ESP-EYE module confirms whether a face can be found in an image, only images that actually contain faces are sent to the facial recognision server, preventing unnessesary processing in the backend. The embedded system workload is of-course increased to perfrom the inferening on the ESP32 chip. However, the power consumed by these additional computations is much lower than that consumed by the sending junk images to the backend to be procesed.
 
-## OTA 
+## Over-the-air (OTA) updates
+Firmware OTA updates are supported which allow the ESP32 and ESP-eye to remotely update their firmware when new versions are available.
+
+ - A new firmware binary can be uploaded to the `smart-latch-esp-firmware` Cloud Storage bucket using naming convention `smart-latch_[version]_[device(esp32/esp-eye)]_.bin`.
+
+ - The ESP device checks for available updates by making a https request to a cloud function. With the request, the device provides the firmware version it is currently running and what device it is (esp32/esp-eye).
+
+ - If the firmware on the cloud bucket is newer, it returns a url to download it.
+ 
+ - The device downloads the `.bin` file, performs the update and reboots.
+
+
+
+
 
 ## Running the code 
 ### App
