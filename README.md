@@ -1,9 +1,9 @@
 # Smart Latch
 IoT project to securely open a door using a combination of NFC technology and facial recognition.
 
-<p float="left">
+<p align="center">
   <img src="smart_latch.png" alt="prototype" width="400" />
-  <img src="lock.jpeg" alt="latch" width="400" /> 
+  <img src="lock.jpeg" alt="latch" width="300" /> 
 </p>
 
 ## Introduction
