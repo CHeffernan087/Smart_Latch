@@ -12,7 +12,9 @@ This file outlines an overview of our Smart Latch IoT system, discussed with spe
 ## System Overview 
 Our system is composed of 3 main components, those being the app, the ESP boards and lastly back end services. As can be observed below, the back end is comprised of multiple sub-components to enhance its scalability. 
 
-![system_overview](https://user-images.githubusercontent.com/44208016/114194625-9bc46800-9947-11eb-9138-f8816b9a61e4.png)
+<p align="center">
+  <img src="System Arcitecture.png" width="700px"/>
+</p>
 
 #### App
 The Android application manages users and door information, allowing users to view and interact with their doors. The app is also responsible for authentication by way of NFC. It includes some other functionality, like capability to upload a selfie to be used by the facial recognition system. 
